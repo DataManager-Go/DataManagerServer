@@ -1,12 +1,14 @@
 package handlers
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
 
 	"github.com/JojiiOfficial/DataManagerServer/models"
 	gaw "github.com/JojiiOfficial/GoAw"
+	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -81,7 +83,7 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 	}
 }
 
-//ListFilesHandler handler for uploading files
+//ListFilesHandler handler for listing files
 func ListFilesHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
 	var request models.FileRequest
 	if !parseUserInput(handlerData.config, w, r, &request) {
@@ -140,4 +142,55 @@ func ListFilesHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 		Files: retFiles,
 	}
 	sendResponse(w, models.ResponseSuccess, "", response)
+}
+
+//UpdateFileHandler handler for updating files
+func UpdateFileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
+	var request models.FileRequest
+	if !parseUserInput(handlerData.config, w, r, &request) {
+		return
+	}
+
+	//Select namespace
+	namespace := models.FindNamespace(handlerData.db, request.Attributes.Namespace)
+	if namespace == nil || namespace.ID == 0 {
+		sendResponse(w, models.ResponseError, "Namespace not found", 404)
+		return
+	}
+
+	vars := mux.Vars(r)
+	action, has := vars["action"]
+	if !has {
+		sendResponse(w, models.ResponseError, "missing action", nil)
+		return
+	}
+
+	switch action {
+	case "delete":
+		{
+			fmt.Println("delete file:", request.Name)
+			c, err := models.File{
+				Name:      request.Name,
+				Namespace: namespace,
+			}.GetCount(handlerData.db, request.FileID)
+
+			if err != nil {
+				log.Error(err)
+				sendServerError(w)
+				return
+			}
+
+			if c > 1 && request.FileID == 0 {
+				sendResponse(w, models.ResponseError, "multiple files with same name", nil)
+				return
+			}
+
+			if c == 1 {
+				models.DeleteFile(handlerData.db, request.FileID, namespace, request.Name)
+				sendResponse(w, models.ResponseSuccess, "success", nil)
+			} else {
+				sendResponse(w, models.ResponseError, "File not found", nil)
+			}
+		}
+	}
 }

@@ -7,7 +7,7 @@ type PingRequest struct {
 
 // FileRequest contains file info (and a file)
 type FileRequest struct {
-	FileID     int            `json:"fid"`
+	FileID     uint           `json:"fid"`
 	Name       string         `json:"name"`
 	Attributes FileAttributes `json:"attributes"`
 }
@@ -24,4 +24,11 @@ type UploadRequest struct {
 type CredentialsRequest struct {
 	Username string `json:"username"`
 	Password string `json:"pass"`
+}
+
+// FileUpdateRequest contains data to update a file
+type FileUpdateRequest struct {
+	FileID     int            `json:"fid"`
+	Name       string         `json:"name,omitempty"`
+	Attributes FileAttributes `json:"attributes"`
 }

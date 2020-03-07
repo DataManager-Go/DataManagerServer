@@ -93,6 +93,13 @@ var (
 			HandlerFunc: ListFilesHandler,
 			HandlerType: sessionRequest,
 		},
+		Route{
+			Name:        "update file",
+			Pattern:     "/file/update/{action}",
+			Method:      POSTMethod,
+			HandlerFunc: UpdateFileHandler,
+			HandlerType: sessionRequest,
+		},
 	}
 )
 

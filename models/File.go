@@ -92,3 +92,34 @@ func (file File) IsInGroupList(groups []Group) bool {
 	}
 	return false
 }
+
+//DeleteFile deletes a file
+func DeleteFile(db *gorm.DB, fileID uint, namespace *Namespace, name string) error {
+	a := db.Model(&File{}).Where("name = ? AND namespace_id = ?", name, namespace.ID)
+	if fileID != 0 {
+		a = a.Where("id = ?", fileID)
+	}
+	return a.Delete(&File{}).Error
+}
+
+//GetCount get count if file
+func (file File) GetCount(db *gorm.DB, fileID uint) (uint, error) {
+	var c uint
+
+	//Create count statement
+	del := db.Model(&File{}).Where(&File{
+		Name:        file.Name,
+		NamespaceID: file.Namespace.ID,
+		Model:       file.Model,
+	}).Where("deleted_at is NULL")
+
+	//Also use fileID if set
+	if fileID != 0 {
+		del = del.Where("id = ?", fileID)
+	}
+
+	//Execute statement
+	err := del.Count(&c).Error
+
+	return c, err
+}
