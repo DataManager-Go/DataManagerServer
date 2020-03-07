@@ -7,8 +7,11 @@ import (
 //File a file uploaded to the db
 type File struct {
 	gorm.Model
+	User        *User
+	UserID      uint   `gorm:"column:uploader;index"`
 	Name        string `gorm:"not null"`
 	LocalName   string `sql:"not null"`
+	FileSize    int64
 	Namespace   *Namespace
 	NamespaceID uint    `sql:"index" gorm:"not null"`
 	Groups      []Group `gorm:"many2many:files_groups;association_autoupdate:false"`

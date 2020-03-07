@@ -62,3 +62,8 @@ type ListFileResponse struct {
 type UploadResponse struct {
 	FileID uint
 }
+
+//LoginResponse response for login
+type LoginResponse struct {
+	Token string `json:"token"`
+}

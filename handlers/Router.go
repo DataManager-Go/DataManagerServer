@@ -63,17 +63,17 @@ var (
 		},
 		//User
 		Route{
-			Name:    "login",
-			Pattern: "/user/login",
-			Method:  POSTMethod,
-			//HandlerFunc: Login,
+			Name:        "login",
+			Pattern:     "/user/login",
+			Method:      POSTMethod,
+			HandlerFunc: Login,
 			HandlerType: defaultRequest,
 		},
 		Route{
-			Name:    "register",
-			Pattern: "/user/create",
-			Method:  POSTMethod,
-			//HandlerFunc: Register,
+			Name:        "register",
+			Pattern:     "/user/register",
+			Method:      POSTMethod,
+			HandlerFunc: Register,
 			HandlerType: defaultRequest,
 		},
 

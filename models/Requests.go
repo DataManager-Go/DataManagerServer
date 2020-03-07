@@ -1,11 +1,5 @@
 package models
 
-//CredentialRequest request containing credentials
-type CredentialRequest struct {
-	Username string `json:"username"`
-	Password string `json:"pass"`
-}
-
 //PingRequest ping request
 type PingRequest struct {
 	Payload string
@@ -24,4 +18,10 @@ type UploadRequest struct {
 	Sum        string         `json:"sum"`
 	Name       string         `json:"name"`
 	Attributes FileAttributes `json:"attributes"`
+}
+
+//CredentialsRequest request containing credentials
+type CredentialsRequest struct {
+	Username string `json:"username"`
+	Password string `json:"pass"`
 }

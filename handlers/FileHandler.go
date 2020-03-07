@@ -3,6 +3,7 @@ package handlers
 import (
 	"io/ioutil"
 	"net/http"
+	"os"
 
 	"github.com/JojiiOfficial/DataManagerServer/models"
 	gaw "github.com/JojiiOfficial/GoAw"
@@ -64,6 +65,10 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 		log.Error(err)
 		return
 	}
+
+	//Get filesize
+	s, _ := os.Stat(handlerData.config.GetStorageFile(file.LocalName))
+	file.FileSize = s.Size()
 
 	err = file.Insert(handlerData.db)
 	if err != nil {

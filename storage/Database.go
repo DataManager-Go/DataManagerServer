@@ -19,6 +19,8 @@ func ConnectToDatabase(config *models.Config) (*gorm.DB, error) {
 		&models.Tag{},
 		&models.File{},
 		&models.Group{},
+		&models.User{},
+		&models.LoginSession{},
 	)
 
 	//Create default namespace
