@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -132,16 +131,17 @@ func ListFilesHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 
 			//Add if matching filter
 			retFiles = append(retFiles, models.FileResponseItem{
-				ID:   file.ID,
-				Name: file.Name,
+				ID:           file.ID,
+				Name:         file.Name,
+				CreationDate: file.CreatedAt,
+				Size:         file.FileSize,
 			})
 		}
 	}
 
-	response := models.ListFileResponse{
+	sendResponse(w, models.ResponseSuccess, "", models.ListFileResponse{
 		Files: retFiles,
-	}
-	sendResponse(w, models.ResponseSuccess, "", response)
+	})
 }
 
 //UpdateFileHandler handler for updating files
@@ -168,23 +168,26 @@ func UpdateFileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 	switch action {
 	case "delete":
 		{
-			fmt.Println("delete file:", request.Name)
+			//Get count of files with same name (ID only if provided)
 			c, err := models.File{
 				Name:      request.Name,
 				Namespace: namespace,
 			}.GetCount(handlerData.db, request.FileID)
 
+			//Handle errors
 			if err != nil {
 				log.Error(err)
 				sendServerError(w)
 				return
 			}
 
+			//Send error if multiple files are available and no ID was specified
 			if c > 1 && request.FileID == 0 {
 				sendResponse(w, models.ResponseError, "multiple files with same name", nil)
 				return
 			}
 
+			//Delete file if available
 			if c == 1 {
 				models.DeleteFile(handlerData.db, request.FileID, namespace, request.Name)
 				sendResponse(w, models.ResponseSuccess, "success", nil)
