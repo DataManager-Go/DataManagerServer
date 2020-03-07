@@ -1,7 +1,10 @@
 package models
 
 import (
+	"os"
+
 	"github.com/jinzhu/gorm"
+	log "github.com/sirupsen/logrus"
 )
 
 //File a file uploaded to the db
@@ -94,16 +97,30 @@ func (file File) IsInGroupList(groups []Group) bool {
 }
 
 //DeleteFile deletes a file
-func DeleteFile(db *gorm.DB, fileID uint, namespace *Namespace, name string) error {
-	a := db.Model(&File{}).Where("name = ? AND namespace_id = ?", name, namespace.ID)
+func DeleteFile(db *gorm.DB, fileID uint, namespace *Namespace, name string, user *User, config *Config) error {
+	a := db.Model(&File{}).Where("name = ? AND namespace_id = ? AND uploader = ?", name, namespace.ID, user.ID)
 	if fileID != 0 {
 		a = a.Where("id = ?", fileID)
 	}
-	return a.Delete(&File{}).Error
+
+	//Get file to delete
+	var file File
+	err := a.First(&file).Error
+	if err != nil {
+		return err
+	}
+
+	//Delete local file
+	err = os.Remove(config.GetStorageFile(file.LocalName))
+	if err != nil {
+		log.Warn(err)
+	}
+
+	return db.Delete(&file).Error
 }
 
 //GetCount get count if file
-func (file File) GetCount(db *gorm.DB, fileID uint) (uint, error) {
+func (file File) GetCount(db *gorm.DB, fileID uint, user *User) (uint, error) {
 	var c uint
 
 	//Create count statement

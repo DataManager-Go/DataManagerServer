@@ -172,7 +172,7 @@ func UpdateFileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 			c, err := models.File{
 				Name:      request.Name,
 				Namespace: namespace,
-			}.GetCount(handlerData.db, request.FileID)
+			}.GetCount(handlerData.db, request.FileID, handlerData.user)
 
 			//Handle errors
 			if err != nil {
@@ -189,7 +189,7 @@ func UpdateFileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 
 			//Delete file if available
 			if c == 1 {
-				models.DeleteFile(handlerData.db, request.FileID, namespace, request.Name)
+				models.DeleteFile(handlerData.db, request.FileID, namespace, request.Name, handlerData.user, handlerData.config)
 				sendResponse(w, models.ResponseSuccess, "success", nil)
 			} else {
 				sendResponse(w, models.ResponseError, "File not found", nil)
