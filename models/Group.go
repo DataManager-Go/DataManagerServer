@@ -7,15 +7,18 @@ import (
 //Group a group in DB
 type Group struct {
 	gorm.Model
-	Name        string `gorm:"not null"`
-	Namespace   *Namespace
-	NamespaceID int64 `sql:"index" gorm:"not null"`
+	Name        string     `gorm:"not null"`
+	NamespaceID uint       `sql:"index" gorm:"not null"`
+	Namespace   *Namespace `gorm:"association_autoupdate:false;association_autocreate:false"`
+	UserID      uint       `sql:"index" gorm:"not null"`
+	User        *User      `gorm:"association_autoupdate:false;association_autocreate:false"`
 }
 
 //Insert inserts group into DB
-func (group *Group) Insert(db *gorm.DB) error {
+func (group *Group) Insert(db *gorm.DB, user *User) error {
 	//Use default namespace if nil
 	group.Namespace = group.GetNamespace()
+	group.User = user
 	return db.Create(group).Error
 }
 

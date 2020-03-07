@@ -16,6 +16,7 @@ type File struct {
 	LocalName   string `sql:"not null"`
 	FileSize    int64
 	Namespace   *Namespace
+	IsPublic    bool    `gorm:"default:false"`
 	NamespaceID uint    `sql:"index" gorm:"not null"`
 	Groups      []Group `gorm:"many2many:files_groups;association_autoupdate:false"`
 	Tags        []Tag   `gorm:"many2many:files_tags;association_autoupdate:false"`
@@ -36,7 +37,7 @@ func (file *File) Insert(db *gorm.DB, user *User) error {
 			if err := db.Where(&Group{
 				Name: file.Groups[i].Name,
 			}).Find(&file.Groups[i]).Error; err != nil {
-				file.Groups[i].Insert(db)
+				file.Groups[i].Insert(db, user)
 			}
 		}
 	}
@@ -47,7 +48,7 @@ func (file *File) Insert(db *gorm.DB, user *User) error {
 			if err := db.Where(&Tag{
 				Name: file.Tags[i].Name,
 			}).Find(&file.Tags[i]).Error; err != nil {
-				file.Tags[i].Insert(db)
+				file.Tags[i].Insert(db, user)
 			}
 		}
 	}
@@ -115,7 +116,6 @@ func DeleteFile(db *gorm.DB, fileID uint, namespace *Namespace, name string, use
 	if err != nil {
 		log.Warn(err)
 	}
-
 	return db.Delete(&file).Error
 }
 

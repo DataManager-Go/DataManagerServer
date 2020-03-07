@@ -165,35 +165,45 @@ func UpdateFileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 		return
 	}
 
+	//Get count of files with same name (ID only if provided)
+	c, err := models.File{
+		Name:      request.Name,
+		Namespace: namespace,
+	}.GetCount(handlerData.db, request.FileID, handlerData.user)
+
+	//Handle errors
+	if err != nil {
+		log.Error(err)
+		sendServerError(w)
+		return
+	}
+
+	//Send error if multiple files are available and no ID was specified
+	if c > 1 && request.FileID == 0 {
+		sendResponse(w, models.ResponseError, "multiple files with same name", nil)
+		return
+	}
+
+	//Exit if file not found
+	if c == 0 {
+		sendResponse(w, models.ResponseError, "File not found", nil)
+		return
+	}
+
+	err = nil
+
+	//Execute action
 	switch action {
 	case "delete":
 		{
-			//Get count of files with same name (ID only if provided)
-			c, err := models.File{
-				Name:      request.Name,
-				Namespace: namespace,
-			}.GetCount(handlerData.db, request.FileID, handlerData.user)
-
-			//Handle errors
-			if err != nil {
-				log.Error(err)
-				sendServerError(w)
-				return
-			}
-
-			//Send error if multiple files are available and no ID was specified
-			if c > 1 && request.FileID == 0 {
-				sendResponse(w, models.ResponseError, "multiple files with same name", nil)
-				return
-			}
-
-			//Delete file if available
-			if c == 1 {
-				models.DeleteFile(handlerData.db, request.FileID, namespace, request.Name, handlerData.user, handlerData.config)
-				sendResponse(w, models.ResponseSuccess, "success", nil)
-			} else {
-				sendResponse(w, models.ResponseError, "File not found", nil)
-			}
+			err = models.DeleteFile(handlerData.db, request.FileID, namespace, request.Name, handlerData.user, handlerData.config)
 		}
 	}
+
+	if err != nil {
+		sendServerError(w)
+		return
+	}
+
+	sendResponse(w, models.ResponseSuccess, "success", nil)
 }

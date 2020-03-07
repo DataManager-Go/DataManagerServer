@@ -12,7 +12,9 @@ var DefaultNamespace Namespace
 //Namespace a namespace for files
 type Namespace struct {
 	gorm.Model
-	Name string
+	Name   string `gorm:"not null"`
+	UserID uint   `gorm:"column:uploader;index"`
+	User   *User  `gorm:"association_autoupdate:false;association_autocreate:false"`
 }
 
 //GetNamespaceFromString return namespace from string

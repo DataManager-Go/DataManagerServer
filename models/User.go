@@ -1,8 +1,6 @@
 package models
 
 import (
-	"fmt"
-
 	gaw "github.com/JojiiOfficial/GoAw"
 	"github.com/jinzhu/gorm"
 )
@@ -23,8 +21,6 @@ func (user User) Login(db *gorm.DB) (*LoginSession, error) {
 		return nil, err
 	}
 
-	fmt.Println(user.ID)
-
 	//Generate session
 	session := LoginSession{
 		Token:  token,
@@ -43,11 +39,7 @@ func (user User) Login(db *gorm.DB) (*LoginSession, error) {
 //Register register user
 func (user User) Register(db *gorm.DB) error {
 	//Return if user already exists
-	has, err := user.Has(db, false)
-	if err != nil {
-		return err
-	}
-
+	has, _ := user.Has(db, false)
 	if has {
 		return ErrorUserAlreadyExists
 	}
