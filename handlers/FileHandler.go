@@ -70,7 +70,9 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 		sendServerError(w)
 		log.Error(err)
 	} else {
-		sendResponse(w, models.ResponseSuccess, "success", nil)
+		sendResponse(w, models.ResponseSuccess, "", models.UploadResponse{
+			FileID: file.ID,
+		})
 	}
 }
 

@@ -57,3 +57,8 @@ type FileResponseItem struct {
 type ListFileResponse struct {
 	Files []FileResponseItem `json:"files"`
 }
+
+//UploadResponse response for uploading file
+type UploadResponse struct {
+	FileID uint
+}
