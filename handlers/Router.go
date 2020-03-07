@@ -85,6 +85,13 @@ var (
 			HandlerFunc: UploadfileHandler,
 			HandlerType: defaultRequest,
 		},
+		Route{
+			Name:        "list files",
+			Pattern:     "/file/list",
+			Method:      POSTMethod,
+			HandlerFunc: ListFilesHandler,
+			HandlerType: defaultRequest,
+		},
 	}
 )
 

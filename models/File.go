@@ -8,9 +8,9 @@ import (
 type File struct {
 	gorm.Model
 	Name        string `gorm:"not null"`
+	LocalName   string `sql:"not null"`
 	Namespace   *Namespace
-	NamespaceID int64   `sql:"index" gorm:"not null"`
-	LocalName   string  `sql:"not null"`
+	NamespaceID uint    `sql:"index" gorm:"not null"`
 	Groups      []Group `gorm:"many2many:files_groups;association_autoupdate:false"`
 	Tags        []Tag   `gorm:"many2many:files_tags;association_autoupdate:false"`
 }
@@ -27,7 +27,7 @@ func (file *File) Insert(db *gorm.DB) error {
 	//Create groups
 	for i := range file.Groups {
 		if file.Groups[i].ID == 0 {
-			if err := db.Find(&file.Groups[i]).Error; err != nil {
+			if err := db.Where(&file.Groups[i]).Find(&file.Groups[i]).Error; err != nil {
 				file.Groups[i].Insert(db)
 			}
 		}
@@ -36,7 +36,7 @@ func (file *File) Insert(db *gorm.DB) error {
 	//Create tags
 	for i := range file.Tags {
 		if file.Tags[i].ID == 0 {
-			if err := db.Find(&file.Tags[i]).Error; err != nil {
+			if err := db.Where(&file.Tags[i]).Find(&file.Tags[i]).Error; err != nil {
 				file.Tags[i].Insert(db)
 			}
 		}
@@ -59,4 +59,16 @@ func (file File) GetNamespace() *Namespace {
 		return &DefaultNamespace
 	}
 	return file.Namespace
+}
+
+//IsInTagList return true if file has one of the specified tags
+func (file File) IsInTagList(tags []Tag) bool {
+	for _, tag := range file.Tags {
+		for _, t1 := range tags {
+			if tag.ID == t1.ID {
+				return true
+			}
+		}
+	}
+	return false
 }

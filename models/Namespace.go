@@ -25,3 +25,15 @@ func GetNamespaceFromString(ns string) *Namespace {
 		Name: ns,
 	}
 }
+
+//FindNamespace find namespace in DB
+func FindNamespace(db *gorm.DB, ns string) *Namespace {
+	namespace := GetNamespaceFromString(ns)
+	if namespace.ID != 0 {
+		return namespace
+	}
+
+	db.Where(&namespace).Find(&namespace)
+
+	return namespace
+}

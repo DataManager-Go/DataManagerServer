@@ -13,7 +13,8 @@ type PingRequest struct {
 
 // FileRequest contains file info (and a file)
 type FileRequest struct {
-	FileID     int
+	FileID     int            `json:"fid"`
+	Name       string         `json:"name"`
 	Attributes FileAttributes `json:"attributes"`
 }
 

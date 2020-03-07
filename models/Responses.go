@@ -46,3 +46,14 @@ const (
 type StringResponse struct {
 	String string `json:"content"`
 }
+
+//FileResponseItem file item for file response
+type FileResponseItem struct {
+	ID   uint   `json:"id"`
+	Name string `json:"name"`
+}
+
+//ListFileResponse response for list files
+type ListFileResponse struct {
+	Files []FileResponseItem `json:"files"`
+}

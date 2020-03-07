@@ -1,6 +1,8 @@
 package models
 
-import "github.com/jinzhu/gorm"
+import (
+	"github.com/jinzhu/gorm"
+)
 
 //Tag a filetag
 type Tag struct {
@@ -35,5 +37,12 @@ func TagsFromStringArr(arr []string, namespace Namespace) []Tag {
 			Namespace: &namespace,
 		})
 	}
+	return tags
+}
+
+//FindTags find namespace in DB
+func FindTags(db *gorm.DB, sTags []string, namespace *Namespace) []Tag {
+	var tags []Tag
+	db.Model(&Tag{}).Where("name in (?) AND namespace_id = ?", sTags, namespace.ID).Find(&tags)
 	return tags
 }

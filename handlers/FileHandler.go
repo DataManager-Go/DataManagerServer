@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/JojiiOfficial/DataManagerServer/models"
 	gaw "github.com/JojiiOfficial/GoAw"
@@ -15,7 +14,6 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 	if !parseUserInput(handlerData.config, w, r, &request) {
 		return
 	}
-	request.Attributes.Namespace = strings.ToLower(request.Attributes.Namespace)
 
 	//Select namespace
 	namespace := models.GetNamespaceFromString(request.Attributes.Namespace)
@@ -41,4 +39,67 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 	} else {
 		sendResponse(w, models.ResponseSuccess, "success", nil)
 	}
+}
+
+//ListFilesHandler handler for uploading files
+func ListFilesHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
+	var request models.FileRequest
+	if !parseUserInput(handlerData.config, w, r, &request) {
+		return
+	}
+
+	//Select namespace
+	namespace := models.FindNamespace(handlerData.db, request.Attributes.Namespace)
+	if namespace == nil || namespace.ID == 0 {
+		sendResponse(w, models.ResponseError, "Namespace not found", 404)
+		return
+	}
+
+	//Gen Tags
+	tags := models.FindTags(handlerData.db, request.Attributes.Tags, namespace)
+	if len(tags) == 0 && len(request.Attributes.Tags) > 0 {
+		sendResponse(w, models.ResponseError, "No matching tag found", 404)
+		return
+	}
+
+	//Gen Groups
+	groups := models.GroupsFromStringArr(request.Attributes.Groups, *namespace)
+	_, _ = tags, groups
+
+	var foundFiles []models.File
+
+	//build search item to filter files
+	toSerach := models.File{
+		Tags:   tags,
+		Groups: groups,
+		Name:   request.Name,
+	}
+
+	_ = toSerach
+
+	loaded := handlerData.db.Debug().Preload("Tags").Preload("Groups").Where("namespace_id = ?", namespace.ID)
+
+	if len(request.Name) > 0 {
+		loaded = loaded.Where("name LIKE ?", "%"+request.Name+"%")
+	}
+
+	//search
+	loaded.Find(&foundFiles)
+
+	//Convert to ResponseFile
+	var retFiles []models.FileResponseItem
+	for _, file := range foundFiles {
+		//Filter tags
+		if len(tags) == 0 || (len(tags) > 0 && file.IsInTagList(tags)) {
+			retFiles = append(retFiles, models.FileResponseItem{
+				ID:   file.ID,
+				Name: file.Name,
+			})
+		}
+	}
+
+	response := models.ListFileResponse{
+		Files: retFiles,
+	}
+	sendResponse(w, models.ResponseSuccess, "", response)
 }
