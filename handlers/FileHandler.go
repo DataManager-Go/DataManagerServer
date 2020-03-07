@@ -70,7 +70,7 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 	s, _ := os.Stat(handlerData.config.GetStorageFile(file.LocalName))
 	file.FileSize = s.Size()
 
-	err = file.Insert(handlerData.db)
+	err = file.Insert(handlerData.db, handlerData.user)
 	if err != nil {
 		sendServerError(w)
 		log.Error(err)

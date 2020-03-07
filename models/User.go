@@ -65,7 +65,7 @@ func (user *User) Has(db *gorm.DB, checkPass bool) (bool, error) {
 		pass = user.Password
 	}
 	//Check if user exists
-	if err := db.Debug().Where(&User{
+	if err := db.Where(&User{
 		Username: user.Username,
 		Password: pass,
 	}).First(user).Error; err != nil {

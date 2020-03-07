@@ -15,6 +15,7 @@ import (
 type handlerData struct {
 	config *models.Config
 	db     *gorm.DB
+	user   *models.User
 }
 
 //Route for REST
@@ -83,14 +84,14 @@ var (
 			Pattern:     "/file/upload",
 			Method:      POSTMethod,
 			HandlerFunc: UploadfileHandler,
-			HandlerType: defaultRequest,
+			HandlerType: sessionRequest,
 		},
 		Route{
 			Name:        "list files",
 			Pattern:     "/file/list",
 			Method:      POSTMethod,
 			HandlerFunc: ListFilesHandler,
-			HandlerType: defaultRequest,
+			HandlerType: sessionRequest,
 		},
 	}
 )
@@ -123,9 +124,9 @@ func RouteHandler(requestType requestType, handlerData *handlerData, inner Route
 		}
 
 		//Validate request by requestType
-		//if !requestType.validate(db, handlerData, r, w) {
-		//return
-		//}
+		if !requestType.validate(handlerData, r, w) {
+			return
+		}
 
 		//Process request
 		inner(*handlerData, w, r)
@@ -141,9 +142,18 @@ func (requestType requestType) validate(handlerData *handlerData, r *http.Reques
 	case sessionRequest:
 		{
 			authHandler := NewAuthHandler(r)
-			_ = authHandler
-			//Do sth with the authhandler
+			if len(authHandler.GetBearer()) != 64 {
+				sendResponse(w, models.ResponseError, "Invalid token", http.StatusUnauthorized)
+				return false
+			}
 
+			user, err := models.GetUserFromSession(handlerData.db, authHandler.GetBearer())
+			if err != nil || user == nil {
+				sendResponse(w, models.ResponseError, "Invalid token", http.StatusUnauthorized)
+				return false
+			}
+
+			handlerData.user = user
 		}
 	}
 

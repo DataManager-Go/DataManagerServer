@@ -7,7 +7,7 @@ import (
 //File a file uploaded to the db
 type File struct {
 	gorm.Model
-	User        *User
+	User        *User  `gorm:"association_autoupdate:false;association_autocreate:false"`
 	UserID      uint   `gorm:"column:uploader;index"`
 	Name        string `gorm:"not null"`
 	LocalName   string `sql:"not null"`
@@ -26,7 +26,7 @@ type FileAttributes struct {
 }
 
 //Insert inserts file into DB
-func (file *File) Insert(db *gorm.DB) error {
+func (file *File) Insert(db *gorm.DB, user *User) error {
 	//Create groups
 	for i := range file.Groups {
 		if file.Groups[i].ID == 0 {
@@ -51,6 +51,7 @@ func (file *File) Insert(db *gorm.DB) error {
 
 	//Use default namespace if not specified
 	file.Namespace = file.GetNamespace()
+	file.User = user
 
 	//Create file
 	if err := db.Create(file).Error; err != nil {
