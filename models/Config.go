@@ -27,7 +27,12 @@ type Config struct {
 }
 type configServer struct {
 	Database          configDBstruct
+	PathConfig        pathConfig
 	AllowRegistration bool `default:"false"`
+}
+
+type pathConfig struct {
+	FileStore string `required:"true"`
 }
 
 type configDBstruct struct {
@@ -92,11 +97,14 @@ func InitConfig(confFile string, createMode bool) (*Config, bool) {
 
 		config = Config{
 			Server: configServer{
-				AllowRegistration: false,
 				Database: configDBstruct{
 					Host:         "localhost",
 					DatabasePort: 3306,
 				},
+				PathConfig: pathConfig{
+					FileStore: "./files",
+				},
+				AllowRegistration: false,
 			},
 			Webserver: struct {
 				MaxHeaderLength      uint  `default:"8000" required:"true"`
@@ -169,5 +177,31 @@ func (config *Config) Check() bool {
 		return false
 	}
 
+	if !DirExists(config.Server.PathConfig.FileStore) {
+		err := os.Mkdir(config.Server.PathConfig.FileStore, 0700)
+		if err != nil {
+			log.Fatal(err)
+			return false
+		}
+		log.Infof("Filestorage path '%s' created", config.Server.PathConfig.FileStore)
+	}
+
 	return true
+}
+
+//GetStorageFile return the path and file for an uploaded file
+func (config Config) GetStorageFile(fileName string) string {
+	return path.Join(config.Server.PathConfig.FileStore, fileName)
+}
+
+// DirExists return true if dir exists
+func DirExists(path string) bool {
+	s, err := os.Stat(path)
+	if err == nil {
+		return s.IsDir()
+	}
+	if os.IsNotExist(err) {
+		return false
+	}
+	return false
 }

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"io/ioutil"
 	"net/http"
 
 	"github.com/JojiiOfficial/DataManagerServer/models"
@@ -12,6 +13,12 @@ import (
 func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
 	var request models.UploadRequest
 	if !parseUserInput(handlerData.config, w, r, &request) {
+		return
+	}
+
+	//Data validation
+	if GetMD5Hash(request.Data) != request.Sum {
+		sendResponse(w, models.ResponseError, "Content wasn't delivered completely", nil, 422)
 		return
 	}
 
@@ -27,12 +34,38 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 	file := models.File{
 		Groups:    groups,
 		Tags:      tags,
-		LocalName: gaw.RandString(40),
 		Namespace: namespace,
 		Name:      request.Name,
 	}
 
-	err := file.Insert(handlerData.db)
+	//Ensure localname is not already in use
+	uniqueNameFound := false
+	for i := 0; i < 5; i++ {
+		file.LocalName = gaw.RandString(40)
+		var c int
+		handlerData.db.Model(&models.File{}).Where(&models.File{LocalName: file.LocalName}).Count(&c)
+		if c == 0 {
+			uniqueNameFound = true
+			break
+		}
+
+		log.Warn("Name collision found. Trying again (%d/%d)", i, 5)
+	}
+
+	if !uniqueNameFound {
+		sendServerError(w)
+		return
+	}
+
+	//Write file
+	err := ioutil.WriteFile(handlerData.config.GetStorageFile(file.LocalName), request.Data, 0700)
+	if err != nil {
+		sendServerError(w)
+		log.Error(err)
+		return
+	}
+
+	err = file.Insert(handlerData.db)
 	if err != nil {
 		sendServerError(w)
 		log.Error(err)
@@ -69,22 +102,13 @@ func ListFilesHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	var foundFiles []models.File
-
-	//build search item to filter files
-	toSerach := models.File{
-		Tags:   tags,
-		Groups: groups,
-		Name:   request.Name,
-	}
-
-	_ = toSerach
-
-	loaded := handlerData.db.Debug().Preload("Tags").Preload("Groups").Where("namespace_id = ?", namespace.ID)
+	loaded := handlerData.db.Preload("Tags").Preload("Groups").Where("namespace_id = ?", namespace.ID)
 
 	if len(request.Name) > 0 {
 		loaded = loaded.Where("name LIKE ?", "%"+request.Name+"%")
 	}
+
+	var foundFiles []models.File
 
 	//search
 	loaded.Find(&foundFiles)

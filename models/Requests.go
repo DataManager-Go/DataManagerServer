@@ -21,13 +21,7 @@ type FileRequest struct {
 // UploadRequest contains file info (and a file)
 type UploadRequest struct {
 	Data       []byte         `json:"data"`
+	Sum        string         `json:"sum"`
 	Name       string         `json:"name"`
 	Attributes FileAttributes `json:"attributes"`
-}
-
-//RestFile a file for rest responses
-type RestFile struct {
-	ID         int64 `json:"id"`
-	Name       string
-	Attributes FileAttributes
 }

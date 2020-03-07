@@ -27,7 +27,9 @@ func (file *File) Insert(db *gorm.DB) error {
 	//Create groups
 	for i := range file.Groups {
 		if file.Groups[i].ID == 0 {
-			if err := db.Where(&file.Groups[i]).Find(&file.Groups[i]).Error; err != nil {
+			if err := db.Where(&Group{
+				Name: file.Groups[i].Name,
+			}).Find(&file.Groups[i]).Error; err != nil {
 				file.Groups[i].Insert(db)
 			}
 		}
@@ -36,7 +38,9 @@ func (file *File) Insert(db *gorm.DB) error {
 	//Create tags
 	for i := range file.Tags {
 		if file.Tags[i].ID == 0 {
-			if err := db.Where(&file.Tags[i]).Find(&file.Tags[i]).Error; err != nil {
+			if err := db.Where(&Tag{
+				Name: file.Tags[i].Name,
+			}).Find(&file.Tags[i]).Error; err != nil {
 				file.Tags[i].Insert(db)
 			}
 		}
@@ -46,7 +50,7 @@ func (file *File) Insert(db *gorm.DB) error {
 	file.Namespace = file.GetNamespace()
 
 	//Create file
-	if err := db.Debug().Create(file).Error; err != nil {
+	if err := db.Create(file).Error; err != nil {
 		return err
 	}
 

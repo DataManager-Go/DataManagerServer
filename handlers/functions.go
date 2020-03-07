@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -187,4 +189,10 @@ func getHeaderSize(headers http.Header) uint32 {
 		}
 	}
 	return size
+}
+
+//GetMD5Hash return hash of input
+func GetMD5Hash(text []byte) string {
+	hash := md5.Sum(text)
+	return hex.EncodeToString(hash[:])
 }
