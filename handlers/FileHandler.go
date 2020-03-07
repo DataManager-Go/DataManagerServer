@@ -63,8 +63,11 @@ func ListFilesHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 	}
 
 	//Gen Groups
-	groups := models.GroupsFromStringArr(request.Attributes.Groups, *namespace)
-	_, _ = tags, groups
+	groups := models.FindGroups(handlerData.db, request.Attributes.Groups, namespace)
+	if len(groups) == 0 && len(request.Attributes.Groups) > 0 {
+		sendResponse(w, models.ResponseError, "No matching group found", 404)
+		return
+	}
 
 	var foundFiles []models.File
 
@@ -90,7 +93,11 @@ func ListFilesHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 	var retFiles []models.FileResponseItem
 	for _, file := range foundFiles {
 		//Filter tags
-		if len(tags) == 0 || (len(tags) > 0 && file.IsInTagList(tags)) {
+		if (len(tags) == 0 || (len(tags) > 0 && file.IsInTagList(tags))) &&
+			//Filter groups
+			(len(groups) == 0 || (len(groups) > 0 && file.IsInGroupList(groups))) {
+
+			//Add if matching filter
 			retFiles = append(retFiles, models.FileResponseItem{
 				ID:   file.ID,
 				Name: file.Name,

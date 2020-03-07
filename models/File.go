@@ -72,3 +72,15 @@ func (file File) IsInTagList(tags []Tag) bool {
 	}
 	return false
 }
+
+//IsInGroupList return true if file is in one of the specified groups
+func (file File) IsInGroupList(groups []Group) bool {
+	for _, group := range file.Groups {
+		for _, t1 := range groups {
+			if group.ID == t1.ID {
+				return true
+			}
+		}
+	}
+	return false
+}

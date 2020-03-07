@@ -39,3 +39,10 @@ func GroupsFromStringArr(arr []string, namespace Namespace) []Group {
 	}
 	return tags
 }
+
+//FindGroups find group in db
+func FindGroups(db *gorm.DB, sGroups []string, namespace *Namespace) []Group {
+	var groups []Group
+	db.Model(&Group{}).Where("name in (?) AND namespace_id = ?", sGroups, namespace.ID).Find(&groups)
+	return groups
+}
