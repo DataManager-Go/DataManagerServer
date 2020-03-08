@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/JojiiOfficial/DataManagerServer/models"
 	gaw "github.com/JojiiOfficial/GoAw"
@@ -18,34 +19,52 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 		return
 	}
 
-	//Data validation
-	if GetMD5Hash(request.Data) != request.Sum {
-		sendResponse(w, models.ResponseError, "Content wasn't delivered completely", nil, 422)
-		return
+	//Set random name if not specified
+	if len(request.Name) == 0 {
+		request.Name = gaw.RandString(20)
+	}
+
+	// Validating request, for desired upload Type
+	switch request.UploadType {
+	case models.FileUploadType:
+		{
+			//Data validation
+			if GetMD5Hash(request.Data) != request.Sum {
+				sendResponse(w, models.ResponseError, "Content wasn't delivered completely", nil, http.StatusUnprocessableEntity)
+				return
+			}
+		}
+	case models.URLUploadType:
+		{
+			//Check if url is set
+			if len(request.URL) == 0 || !isValidHTTPURL(request.URL) {
+				sendResponse(w, models.ResponseError, "missing or malformed url", nil, http.StatusUnprocessableEntity)
+				return
+			}
+		}
+	default:
+		{
+			sendResponse(w, models.ResponseError, "invalid upload type", nil, http.StatusUnprocessableEntity)
+			return
+		}
 	}
 
 	//Select namespace
 	namespace := models.GetNamespaceFromString(request.Attributes.Namespace)
 
-	//Gen Tags
+	//Get Tags
 	tags := models.TagsFromStringArr(request.Attributes.Tags, *namespace)
 
-	//Gen Groups
+	//Get Groups
 	groups := models.GroupsFromStringArr(request.Attributes.Groups, *namespace)
-
-	file := models.File{
-		Groups:    groups,
-		Tags:      tags,
-		Namespace: namespace,
-		Name:      request.Name,
-	}
 
 	//Ensure localname is not already in use
 	uniqueNameFound := false
+	var localName string
 	for i := 0; i < 5; i++ {
-		file.LocalName = gaw.RandString(40)
+		localName = gaw.RandString(40)
 		var c int
-		handlerData.db.Model(&models.File{}).Where(&models.File{LocalName: file.LocalName}).Count(&c)
+		handlerData.db.Model(&models.File{}).Where(&models.File{LocalName: localName}).Count(&c)
 		if c == 0 {
 			uniqueNameFound = true
 			break
@@ -59,8 +78,42 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 		return
 	}
 
+	//Generate file
+	file := models.File{
+		Groups:    groups,
+		Tags:      tags,
+		Namespace: namespace,
+		Name:      request.Name,
+	}
+
+	//set local name
+	file.LocalName = localName
+
+	var dataToSave *[]byte
+
+	switch request.UploadType {
+	case models.FileUploadType:
+		dataToSave = &request.Data
+	case models.URLUploadType:
+		//Do request
+		status, body, err := doHTTPGetRequest(handlerData.config, request.URL)
+		if err != nil {
+			sendResponse(w, models.ResponseError, err.Error(), nil, http.StatusBadRequest)
+			return
+		}
+
+		//Check statuscode
+		if status > 299 || status < 200 {
+			sendResponse(w, models.ResponseError, "Non ok response: "+strconv.Itoa(status), nil, http.StatusBadRequest)
+			return
+		}
+
+		//Set data to save on success
+		dataToSave = &body
+	}
+
 	//Write file
-	err := ioutil.WriteFile(handlerData.config.GetStorageFile(file.LocalName), request.Data, 0700)
+	err := ioutil.WriteFile(handlerData.config.GetStorageFile(file.LocalName), *dataToSave, 0700)
 	if err != nil {
 		sendServerError(w)
 		log.Error(err)

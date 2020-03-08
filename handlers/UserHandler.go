@@ -17,7 +17,7 @@ func Login(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
 	}
 
 	if isStructInvalid(request) {
-		sendError("input missing", w, models.WrongInputFormatError, http.StatusUnprocessableEntity)
+		sendResponse(w, models.ResponseError, "input missing", nil, http.StatusUnprocessableEntity)
 		return
 	}
 
@@ -56,7 +56,7 @@ func Register(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
 	}
 
 	if isStructInvalid(request) {
-		sendError("input missing", w, models.WrongInputFormatError, http.StatusUnprocessableEntity)
+		sendResponse(w, models.ResponseError, "input missing", nil, http.StatusUnprocessableEntity)
 		return
 	}
 

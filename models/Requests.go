@@ -5,14 +5,6 @@ type PingRequest struct {
 	Payload string
 }
 
-// UploadRequest contains file info (and a file)
-type UploadRequest struct {
-	Data       []byte         `json:"data"`
-	Sum        string         `json:"sum"`
-	Name       string         `json:"name"`
-	Attributes FileAttributes `json:"attributes"`
-}
-
 //CredentialsRequest request containing credentials
 type CredentialsRequest struct {
 	Username string `json:"username"`
@@ -38,3 +30,22 @@ type FileRequest struct {
 type OptionalRequetsParameter struct {
 	Verbose uint8 `json:"verb"`
 }
+
+// UploadRequest contains file info (and a file)
+type UploadRequest struct {
+	UploadType UploadType     `json:"type"`
+	Data       []byte         `json:"data"`
+	URL        string         `json:"url"`
+	Sum        string         `json:"sum"`
+	Name       string         `json:"name"`
+	Attributes FileAttributes `json:"attributes"`
+}
+
+//UploadType type of upload
+type UploadType uint8
+
+//Available upload types
+const (
+	FileUploadType UploadType = iota
+	URLUploadType
+)

@@ -7,12 +7,10 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"net"
 	"net/http"
 	"net/url"
 	"reflect"
 	"strings"
-	"time"
 
 	"github.com/JojiiOfficial/DataManagerServer/models"
 
@@ -61,16 +59,12 @@ func handleAndSendError(err error, w http.ResponseWriter, message string, status
 	if !LogError(err) {
 		return false
 	}
-	sendError(err.Error(), w, message, statusCode)
+	sendResponse(w, models.ResponseError, message, nil, statusCode)
 	return true
 }
 
-func sendError(erre string, w http.ResponseWriter, message string, statusCode int) {
-	sendResponse(w, models.ResponseError, message, nil, statusCode)
-}
-
 func sendServerError(w http.ResponseWriter) {
-	sendError("internal server error", w, models.ServerError, http.StatusInternalServerError)
+	sendResponse(w, models.ResponseError, "internal server error", nil, http.StatusInternalServerError)
 }
 
 //LogError returns true on error
@@ -85,10 +79,6 @@ func LogError(err error, context ...map[string]interface{}) bool {
 		log.Error(err.Error())
 	}
 	return true
-}
-
-func isIPv4(inp string) bool {
-	return net.ParseIP(inp).To4() != nil
 }
 
 //AllowedSchemes schemes that are allowed in urls
@@ -146,37 +136,30 @@ func hasEmptyValue(e reflect.Value) bool {
 	return false
 }
 
-func isHeaderBlocklistetd(headers http.Header, blocklist *map[string][]string) bool {
-	start := time.Now()
-
-	for k, headerValues := range headers {
-		blocklistValues, ok := (*blocklist)[strings.ToLower(k)]
-		if ok {
-			for _, headerValue := range headerValues {
-				for _, blocklistValue := range blocklistValues {
-					if strings.ToLower(blocklistValue) == strings.ToLower(headerValue) {
-						return true
-					}
-				}
-			}
-		}
-	}
-
-	dur := time.Now().Sub(start)
-	//Print only if 'critical'
-	if dur >= 1*time.Second {
-		log.Warnf("Header checking took %s\n", dur.String())
-	}
-
-	return false
+//GetMD5Hash return hash of input
+func GetMD5Hash(text []byte) string {
+	hash := md5.Sum(text)
+	return hex.EncodeToString(hash[:])
 }
 
-func headerToString(headers http.Header) string {
-	var sheaders string
-	for k, v := range headers {
-		sheaders += k + "=" + strings.Join(v, ";") + "\r\n"
+func doHTTPGetRequest(config *models.Config, url string) (int, []byte, error) {
+	res, err := http.Get(url)
+	if err != nil {
+		return 0, []byte{}, err
 	}
-	return sheaders
+
+	//Don't read content on http error
+	if res.StatusCode < 200 || res.StatusCode > 299 {
+		return res.StatusCode, []byte{}, nil
+	}
+
+	//read response
+	body, err := ioutil.ReadAll(io.LimitReader(res.Body, 1000000))
+	if LogError(err) || LogError(res.Body.Close()) {
+		return 0, []byte{}, err
+	}
+
+	return res.StatusCode, body, nil
 }
 
 //Returns the size in bytes of the header
@@ -189,10 +172,4 @@ func getHeaderSize(headers http.Header) uint32 {
 		}
 	}
 	return size
-}
-
-//GetMD5Hash return hash of input
-func GetMD5Hash(text []byte) string {
-	hash := md5.Sum(text)
-	return hex.EncodeToString(hash[:])
 }
