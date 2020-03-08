@@ -36,7 +36,7 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 		}
 	case models.URLUploadType:
 		{
-			//Check if url is set
+			//Check if url is set and valid
 			if len(request.URL) == 0 || !isValidHTTPURL(request.URL) {
 				sendResponse(w, models.ResponseError, "missing or malformed url", nil, http.StatusUnprocessableEntity)
 				return
@@ -44,6 +44,7 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 		}
 	default:
 		{
+			//Send error if UploadType was not found
 			sendResponse(w, models.ResponseError, "invalid upload type", nil, http.StatusUnprocessableEntity)
 			return
 		}

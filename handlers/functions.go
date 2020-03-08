@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -153,8 +154,13 @@ func doHTTPGetRequest(config *models.Config, url string) (int, []byte, error) {
 		return res.StatusCode, []byte{}, nil
 	}
 
+	//Check if file is too large
+	if res.ContentLength > config.Server.MaxHTTPDownloadSize {
+		return res.StatusCode, []byte{}, errors.New("File too large")
+	}
+
 	//read response
-	body, err := ioutil.ReadAll(io.LimitReader(res.Body, 1000000))
+	body, err := ioutil.ReadAll(io.LimitReader(res.Body, config.Server.MaxHTTPDownloadSize))
 	if LogError(err) || LogError(res.Body.Close()) {
 		return 0, []byte{}, err
 	}

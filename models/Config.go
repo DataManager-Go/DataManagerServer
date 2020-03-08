@@ -26,9 +26,10 @@ type Config struct {
 	}
 }
 type configServer struct {
-	Database          configDBstruct
-	PathConfig        pathConfig
-	AllowRegistration bool `default:"false"`
+	Database            configDBstruct
+	PathConfig          pathConfig
+	MaxHTTPDownloadSize int64 `default:"5000000" required:"true"`
+	AllowRegistration   bool  `default:"false"`
 }
 
 type pathConfig struct {
@@ -104,7 +105,8 @@ func InitConfig(confFile string, createMode bool) (*Config, bool) {
 				PathConfig: pathConfig{
 					FileStore: "./files",
 				},
-				AllowRegistration: false,
+				AllowRegistration:   false,
+				MaxHTTPDownloadSize: 5000000,
 			},
 			Webserver: struct {
 				MaxHeaderLength      uint  `default:"8000" required:"true"`
