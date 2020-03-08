@@ -146,7 +146,7 @@ func GetMD5Hash(text []byte) string {
 
 func downloadHTTP(user *models.User, url string, f *os.File, file *models.File) (int, error) {
 	res, err := http.Get(url)
-	if err != nil {
+	if LogError(err) {
 		return 0, err
 	}
 
@@ -163,8 +163,10 @@ func downloadHTTP(user *models.User, url string, f *os.File, file *models.File) 
 	//read response
 	var reader io.Reader
 	if user.HasUploadLimit() {
+		//Use limited reader if user has limited download content size
 		reader = io.LimitReader(res.Body, user.Role.MaxURLcontentSize)
 	} else {
+		//use body as reader to read everything
 		reader = res.Body
 	}
 
@@ -173,13 +175,13 @@ func downloadHTTP(user *models.User, url string, f *os.File, file *models.File) 
 	if LogError(err) {
 		return 0, err
 	}
-	if LogError(res.Body.Close()) {
+
+	if err = res.Body.Close(); LogError(err) {
 		return 0, err
 	}
 
 	//Set file size
 	file.FileSize = size
-
 	return res.StatusCode, nil
 }
 

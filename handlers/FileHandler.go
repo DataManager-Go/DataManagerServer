@@ -131,6 +131,7 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 		return
 	}
 
+	//Save file to DB
 	err = file.Insert(handlerData.db, handlerData.user)
 	if LogError(err) {
 		sendServerError(w)
