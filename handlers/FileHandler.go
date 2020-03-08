@@ -469,10 +469,7 @@ func FileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request
 		}
 	case "publish":
 		{
-			if file.IsPublic && file.PublicFilename.Valid && len(file.PublicFilename.String) > 0 {
-				sendResponse(w, models.ResponseError, "File already public", nil)
-				return
-			}
+
 			//Determine public name
 			publicName := request.PublicName
 			if len(publicName) == 0 {
