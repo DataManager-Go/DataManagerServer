@@ -182,19 +182,30 @@ func (file *File) AddTags(db *gorm.DB, tagsToAdd []string, user *User) error {
 	return file.Save(db)
 }
 
-//RemoveTags adds tags to file
+//RemoveTags remove tags to file
 func (file *File) RemoveTags(db *gorm.DB, tagsToRemove []string) error {
+	if len(file.Tags) == 0 {
+		return nil
+	}
+
 	var newTags []Tag
 	for i := range file.Tags {
 		if !gaw.IsInStringArray(file.Tags[i].Name, tagsToRemove) {
 			newTags = append(newTags, file.Tags[i])
 		}
 	}
-	file.Tags = newTags
-	return file.Save(db)
+
+	//Only save if at least one tag was removed
+	if len(newTags) < len(file.Tags) {
+		db.Model(&file).Association("Tags").Clear()
+		file.Tags = newTags
+		return file.Save(db)
+	}
+
+	return nil
 }
 
-//AddGroups adds tags to file
+//AddGroups adds groups to file
 func (file *File) AddGroups(db *gorm.DB, groupsToAdd []string, user *User) error {
 	for _, sGroup := range groupsToAdd {
 		if file.HasGroup(sGroup) {
@@ -207,15 +218,25 @@ func (file *File) AddGroups(db *gorm.DB, groupsToAdd []string, user *User) error
 	return file.Save(db)
 }
 
-//RemoveGroups adds tags to file
+//RemoveGroups remove groups from file
 func (file *File) RemoveGroups(db *gorm.DB, groupsToRemove []string) error {
+	if len(file.Groups) == 0 {
+		return nil
+	}
+
 	var newGroups []Group
 	for i := range file.Groups {
 		if !gaw.IsInStringArray(file.Groups[i].Name, groupsToRemove) {
 			newGroups = append(newGroups, file.Groups[i])
 		}
 	}
-	file.Groups = newGroups
+
+	//Only save if at least one group was removed
+	if len(newGroups) < len(file.Groups) {
+		db.Model(&file).Association("Groups").Clear()
+		file.Groups = newGroups
+		return file.Save(db)
+	}
 	return file.Save(db)
 }
 

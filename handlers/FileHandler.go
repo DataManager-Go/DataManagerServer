@@ -355,38 +355,42 @@ func UpdateFileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 
 			//Add tags
 			if len(update.AddTags) > 0 {
+				currLenTags := len(file.Tags)
 				if LogError(file.AddTags(handlerData.db, update.AddTags, handlerData.user)) {
 					sendServerError(w)
 					return
 				}
-				didUpdate = true
+				didUpdate = len(file.Tags) > currLenTags
 			}
 
 			//Remove tags
 			if len(update.RemoveTags) > 0 {
+				currLenTags := len(file.Tags)
 				if LogError(file.RemoveTags(handlerData.db, update.RemoveTags)) {
 					sendServerError(w)
 					return
 				}
-				didUpdate = true
+				didUpdate = len(file.Tags) < currLenTags
 			}
 
 			//Add Groups
 			if len(update.AddGroups) > 0 {
+				currLenGroups := len(file.Groups)
 				if LogError(file.AddGroups(handlerData.db, update.AddGroups, handlerData.user)) {
 					sendServerError(w)
 					return
 				}
-				didUpdate = true
+				didUpdate = len(file.Groups) > currLenGroups
 			}
 
 			//Remove Groups
 			if len(update.RemoveGroups) > 0 {
+				currLenGroups := len(file.Groups)
 				if LogError(file.RemoveGroups(handlerData.db, update.RemoveGroups)) {
 					sendServerError(w)
 					return
 				}
-				didUpdate = true
+				didUpdate = len(file.Groups) < currLenGroups
 			}
 		}
 	}
