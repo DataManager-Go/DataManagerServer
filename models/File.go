@@ -3,6 +3,7 @@ package models
 import (
 	"os"
 
+	gaw "github.com/JojiiOfficial/GoAw"
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
 )
@@ -107,26 +108,86 @@ func (file File) IsInGroupList(groups []Group) bool {
 	return false
 }
 
-//DeleteFile deletes a file
-func DeleteFile(db *gorm.DB, fileID uint, namespace *Namespace, name string, user *User, config *Config) error {
-	a := db.Model(&File{}).Where("name = ? AND namespace_id = ? AND uploader = ?", name, namespace.ID, user.ID)
+//FindFile finds file
+func FindFile(db *gorm.DB, fileName string, fileID uint, namespace Namespace, user *User) (*File, error) {
+	a := db.Model(&File{}).Where("name = ? AND namespace_id = ? AND uploader = ?", fileName, namespace.ID, user.ID)
 	if fileID != 0 {
 		a = a.Where("id = ?", fileID)
 	}
 
 	//Get file to delete
 	var file File
-	err := a.First(&file).Error
+	err := a.Preload("Namespace").Preload("Tags").Preload("Groups").First(&file).Error
 	if err != nil {
-		return err
+		return nil, err
 	}
 
+	return &file, nil
+}
+
+//Delete deletes a file
+func (file *File) Delete(db *gorm.DB, config *Config) error {
 	//Delete local file
-	err = os.Remove(config.GetStorageFile(file.LocalName))
+	err := os.Remove(config.GetStorageFile(file.LocalName))
 	if err != nil {
 		log.Warn(err)
 	}
+
+	//Delete from DB
 	return db.Delete(&file).Error
+}
+
+//Rename renames a file
+func (file *File) Rename(db *gorm.DB, newName string) error {
+	file.Name = newName
+	return file.Save(db)
+}
+
+//SetVilibility sets public/private
+func (file *File) SetVilibility(db *gorm.DB, newVisibility bool) error {
+	file.IsPublic = newVisibility
+	return file.Save(db)
+}
+
+//AddTags adds tags to file
+func (file *File) AddTags(db *gorm.DB, tagsToAdd []string) error {
+	file.Tags = append(file.Tags, TagsFromStringArr(tagsToAdd, *file.Namespace)...)
+	return file.Save(db)
+}
+
+//RemoveTags adds tags to file
+func (file *File) RemoveTags(db *gorm.DB, tagsToRemove []string) error {
+	var newTags []Tag
+	for i := range file.Tags {
+		if !gaw.IsInStringArray(file.Tags[i].Name, tagsToRemove) {
+			newTags = append(newTags, file.Tags[i])
+		}
+	}
+	file.Tags = newTags
+	return file.Save(db)
+}
+
+//AddGroups adds tags to file
+func (file *File) AddGroups(db *gorm.DB, groupsToAdd []string) error {
+	file.Groups = append(file.Groups, GroupsFromStringArr(groupsToAdd, *file.Namespace)...)
+	return file.Save(db)
+}
+
+//RemoveGroups adds tags to file
+func (file *File) RemoveGroups(db *gorm.DB, groupsToRemove []string) error {
+	var newGroups []Group
+	for i := range file.Groups {
+		if !gaw.IsInStringArray(file.Groups[i].Name, groupsToRemove) {
+			newGroups = append(newGroups, file.Groups[i])
+		}
+	}
+	file.Groups = newGroups
+	return file.Save(db)
+}
+
+//Save saves a file in DB
+func (file *File) Save(db *gorm.DB) error {
+	return db.Save(file).Error
 }
 
 //GetCount get count if file

@@ -247,7 +247,7 @@ func ListFilesHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 
 //UpdateFileHandler handler for updating files
 func UpdateFileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
-	var request models.FileRequest
+	var request models.FileUpdateRequest
 	if !parseUserInput(handlerData.config, w, r, &request) {
 		return
 	}
@@ -265,10 +265,17 @@ func UpdateFileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 		return
 	}
 
+	//Get action
 	vars := mux.Vars(r)
 	action, has := vars["action"]
 	if !has {
 		sendResponse(w, models.ResponseError, "missing action", nil)
+		return
+	}
+
+	//Check if action is valid
+	if !gaw.IsInStringArray(action, []string{"delete", "update"}) {
+		sendResponse(w, models.ResponseError, "invalid action", nil)
 		return
 	}
 
@@ -296,13 +303,91 @@ func UpdateFileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 		return
 	}
 
+	//Get target file
+	file, err := models.FindFile(handlerData.db, request.Name, request.FileID, *namespace, handlerData.user)
+	if LogError(err) {
+		sendServerError(w)
+		return
+	}
+
 	err = nil
+	var didUpdate bool
 
 	//Execute action
 	switch action {
 	case "delete":
 		{
-			err = models.DeleteFile(handlerData.db, request.FileID, namespace, request.Name, handlerData.user, handlerData.config)
+			err = file.Delete(handlerData.db, handlerData.config)
+			didUpdate = true
+		}
+	case "update":
+		{
+			update := request.Updates
+
+			//Rename file
+			if len(update.NewName) > 0 {
+				if LogError(file.Rename(handlerData.db, update.NewName)) {
+					sendServerError(w)
+					return
+				}
+				didUpdate = true
+			}
+
+			//Set public/private
+			if len(update.IsPublic) > 0 {
+				newVisibility, err := strconv.ParseBool(update.IsPublic)
+				if err != nil {
+					sendResponse(w, models.ResponseError, "isPublic must be a bool", nil, http.StatusUnprocessableEntity)
+					return
+				}
+
+				if LogError(file.SetVilibility(handlerData.db, newVisibility)) {
+					sendServerError(w)
+					return
+				}
+				didUpdate = true
+			}
+
+			//Update namespace
+			if len(update.NewNamespace) > 0 {
+				//TODO
+			}
+
+			//Add tags
+			if len(update.AddTags) > 0 {
+				if LogError(file.AddTags(handlerData.db, update.AddTags)) {
+					sendServerError(w)
+					return
+				}
+				didUpdate = true
+			}
+
+			//Remove tags
+			if len(update.RemoveTags) > 0 {
+				if LogError(file.RemoveTags(handlerData.db, update.RemoveTags)) {
+					sendServerError(w)
+					return
+				}
+				didUpdate = true
+			}
+
+			//Add Groups
+			if len(update.AddGroups) > 0 {
+				if LogError(file.AddGroups(handlerData.db, update.AddGroups)) {
+					sendServerError(w)
+					return
+				}
+				didUpdate = true
+			}
+
+			//Remove Groups
+			if len(update.RemoveGroups) > 0 {
+				if LogError(file.RemoveGroups(handlerData.db, update.RemoveGroups)) {
+					sendServerError(w)
+					return
+				}
+				didUpdate = true
+			}
 		}
 	}
 
@@ -311,5 +396,9 @@ func UpdateFileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 		return
 	}
 
-	sendResponse(w, models.ResponseSuccess, "success", nil)
+	if didUpdate {
+		sendResponse(w, models.ResponseSuccess, "success", nil)
+	} else {
+		sendResponse(w, models.ResponseError, "noting to do", nil)
+	}
 }

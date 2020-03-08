@@ -13,9 +13,21 @@ type CredentialsRequest struct {
 
 // FileUpdateRequest contains data to update a file
 type FileUpdateRequest struct {
-	FileID     int            `json:"fid"`
+	FileID     uint           `json:"fid"`
 	Name       string         `json:"name,omitempty"`
+	Updates    FileUpdateItem `json:"updates,omitempty"`
 	Attributes FileAttributes `json:"attributes"`
+}
+
+// FileUpdateItem lists changes to a file
+type FileUpdateItem struct {
+	IsPublic     string   `json:"ispublic,omitempty"`
+	NewName      string   `json:"name,omitempty"`
+	NewNamespace string   `json:"namespace,omitempty"`
+	RemoveTags   []string `json:"rem_tags,omitempty"`
+	RemoveGroups []string `json:"rem_groups,omitempty"`
+	AddTags      []string `json:"add_tags,omitempty"`
+	AddGroups    []string `json:"add_groups,omitempty"`
 }
 
 // FileRequest contains file info (and a file)
