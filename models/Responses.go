@@ -55,6 +55,8 @@ type FileResponseItem struct {
 	Size         int64          `json:"size"`
 	CreationDate time.Time      `json:"creation"`
 	Name         string         `json:"name"`
+	PublicName   string         `json:"pubname"`
+	IsPublic     bool           `json:"isPub"`
 	Attributes   FileAttributes `json:"attrib"`
 }
 

@@ -10,7 +10,6 @@ require (
 	github.com/gorilla/mux v1.7.4
 	github.com/h2non/filetype v1.0.12
 	github.com/jinzhu/gorm v1.9.12
-	github.com/sbani/go-humanizer v0.3.1 // indirect
 	github.com/sirupsen/logrus v1.4.2
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 )

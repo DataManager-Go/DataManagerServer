@@ -267,8 +267,15 @@ func ListFilesHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 				Name:         file.Name,
 				CreationDate: file.CreatedAt,
 				Size:         file.FileSize,
+				IsPublic:     file.IsPublic,
 			}
 
+			//Append public name if available
+			if file.PublicFilename.Valid && len(file.PublicFilename.String) > 0 {
+				respItem.PublicName = file.PublicFilename.String
+			}
+
+			//Return attributes on verbose
 			if request.OptionalParams.Verbose > 1 {
 				respItem.Attributes = file.GetAttributes()
 			}
