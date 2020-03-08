@@ -65,7 +65,7 @@ func Register(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
 		Password: request.Password,
 	}
 
-	err := user.Register(handlerData.db)
+	err := user.Register(handlerData.db, handlerData.config)
 	if err == models.ErrorUserAlreadyExists {
 		sendResponse(w, models.ResponseError, "User already exists", nil)
 	} else if err != nil {

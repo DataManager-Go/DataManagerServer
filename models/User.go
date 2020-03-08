@@ -10,6 +10,8 @@ type User struct {
 	gorm.Model
 	Username string
 	Password string
+	RoleID   uint  `sql:"index"`
+	Role     *Role `gorm:"association_autoupdate:false;association_autocreate:false"`
 }
 
 //Login login user
@@ -37,7 +39,7 @@ func (user User) Login(db *gorm.DB) (*LoginSession, error) {
 }
 
 //Register register user
-func (user User) Register(db *gorm.DB) error {
+func (user User) Register(db *gorm.DB, config *Config) error {
 	//Return if user already exists
 	has, _ := user.Has(db, false)
 	if has {
@@ -47,6 +49,8 @@ func (user User) Register(db *gorm.DB) error {
 	return db.Create(&User{
 		Password: gaw.SHA512(user.Username + user.Password),
 		Username: user.Username,
+		RoleID:   config.GetDefaultRole().ID,
+		Role:     config.GetDefaultRole(),
 	}).Error
 }
 
@@ -63,5 +67,6 @@ func (user *User) Has(db *gorm.DB, checkPass bool) (bool, error) {
 	}).First(user).Error; err != nil {
 		return false, err
 	}
+
 	return true, nil
 }

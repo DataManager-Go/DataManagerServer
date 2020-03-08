@@ -28,8 +28,14 @@ type Config struct {
 type configServer struct {
 	Database            configDBstruct
 	PathConfig          pathConfig
+	Roles               roleConfig
 	MaxHTTPDownloadSize int64 `default:"5000000" required:"true"`
 	AllowRegistration   bool  `default:"false"`
+}
+
+type roleConfig struct {
+	DefaultRole uint `required:"true"`
+	Roles       []Role
 }
 
 type pathConfig struct {
@@ -107,6 +113,33 @@ func InitConfig(confFile string, createMode bool) (*Config, bool) {
 				},
 				AllowRegistration:   false,
 				MaxHTTPDownloadSize: 5000000,
+				Roles: roleConfig{
+					DefaultRole: 1,
+					Roles: []Role{
+						Role{
+							ID:                            1,
+							RoleName:                      "user",
+							IsAdmin:                       false,
+							AccesForeignFiles:             NoPermission,
+							AccesForeignNamespaces:        NoPermission,
+							CanUploadFiles:                true,
+							CanUploadURLs:                 false,
+							CreateTagsInForeignNamespaces: false,
+							URLContentLengthRestriction:   true,
+						},
+						Role{
+							ID:                            2,
+							RoleName:                      "admin",
+							IsAdmin:                       true,
+							AccesForeignFiles:             3,
+							AccesForeignNamespaces:        3,
+							CanUploadFiles:                true,
+							CanUploadURLs:                 true,
+							CreateTagsInForeignNamespaces: true,
+							URLContentLengthRestriction:   false,
+						},
+					},
+				},
 			},
 			Webserver: struct {
 				MaxHeaderLength      uint  `default:"8000" required:"true"`
@@ -188,12 +221,28 @@ func (config *Config) Check() bool {
 		log.Infof("Filestorage path '%s' created", config.Server.PathConfig.FileStore)
 	}
 
+	if config.GetDefaultRole() == nil {
+		log.Fatalln("Can't find default role. You need to specify the ID of the role to use as default")
+		return false
+	}
+
 	return true
 }
 
 //GetStorageFile return the path and file for an uploaded file
 func (config Config) GetStorageFile(fileName string) string {
 	return path.Join(config.Server.PathConfig.FileStore, fileName)
+}
+
+//GetDefaultRole return the path and file for an uploaded file
+func (config Config) GetDefaultRole() *Role {
+	for rI, role := range config.Server.Roles.Roles {
+		if role.ID == config.Server.Roles.DefaultRole {
+			return &config.Server.Roles.Roles[rI]
+		}
+	}
+
+	return nil
 }
 
 // DirExists return true if dir exists

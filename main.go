@@ -137,6 +137,7 @@ func main() {
 
 	}
 
+	//Init gaw random seed
 	gaw.Init()
 
 	switch parsed {
