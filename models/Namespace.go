@@ -13,7 +13,7 @@ var DefaultNamespace Namespace
 type Namespace struct {
 	gorm.Model
 	Name   string `gorm:"not null"`
-	UserID uint   `gorm:"column:uploader;index"`
+	UserID uint   `gorm:"column:creator;index"`
 	User   *User  `gorm:"association_autoupdate:false;association_autocreate:false"`
 }
 
