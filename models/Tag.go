@@ -49,3 +49,12 @@ func FindTags(db *gorm.DB, sTags []string, namespace *Namespace) []Tag {
 	db.Model(&Tag{}).Where("name in (?) AND namespace_id = ?", sTags, namespace.ID).Find(&tags)
 	return tags
 }
+
+//TagArrToStringArr return string arr from tags
+func TagArrToStringArr(tags []Tag) []string {
+	var str []string
+	for _, tag := range tags {
+		str = append(str, tag.Name)
+	}
+	return str
+}

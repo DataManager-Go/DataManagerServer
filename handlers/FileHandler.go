@@ -110,7 +110,7 @@ func ListFilesHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	loaded := handlerData.db.Preload("Tags").Preload("Groups").Where("namespace_id = ?", namespace.ID)
+	loaded := handlerData.db.Preload("Tags").Preload("Groups").Preload("Namespace").Where("namespace_id = ?", namespace.ID)
 
 	if len(request.Name) > 0 {
 		loaded = loaded.Where("name LIKE ?", "%"+request.Name+"%")
@@ -128,14 +128,19 @@ func ListFilesHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 		if (len(tags) == 0 || (len(tags) > 0 && file.IsInTagList(tags))) &&
 			//Filter groups
 			(len(groups) == 0 || (len(groups) > 0 && file.IsInGroupList(groups))) {
-
-			//Add if matching filter
-			retFiles = append(retFiles, models.FileResponseItem{
+			respItem := models.FileResponseItem{
 				ID:           file.ID,
 				Name:         file.Name,
 				CreationDate: file.CreatedAt,
 				Size:         file.FileSize,
-			})
+			}
+
+			if request.OptionalParams.Verbose > 1 {
+				respItem.Attributes = file.GetAttributes()
+			}
+
+			//Add if matching filter
+			retFiles = append(retFiles, respItem)
 		}
 	}
 

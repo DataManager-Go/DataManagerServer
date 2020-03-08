@@ -43,6 +43,15 @@ func GroupsFromStringArr(arr []string, namespace Namespace) []Group {
 	return tags
 }
 
+//GroupArrToStringArr return string arr from group
+func GroupArrToStringArr(groups []Group) []string {
+	var str []string
+	for _, group := range groups {
+		str = append(str, group.Name)
+	}
+	return str
+}
+
 //FindGroups find group in db
 func FindGroups(db *gorm.DB, sGroups []string, namespace *Namespace) []Group {
 	var groups []Group

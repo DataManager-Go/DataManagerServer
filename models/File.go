@@ -29,6 +29,15 @@ type FileAttributes struct {
 	Namespace string   `json:"ns"`
 }
 
+//GetAttributes get file attributes
+func (file File) GetAttributes() FileAttributes {
+	return FileAttributes{
+		Groups:    GroupArrToStringArr(file.Groups),
+		Tags:      TagArrToStringArr(file.Tags),
+		Namespace: file.GetNamespace().Name,
+	}
+}
+
 //Insert inserts file into DB
 func (file *File) Insert(db *gorm.DB, user *User) error {
 	//Create groups
