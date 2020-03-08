@@ -18,15 +18,16 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 		return
 	}
 
-	//Set random name if not specified
-	if len(request.Name) == 0 {
-		request.Name = gaw.RandString(20)
-	}
-
 	// Validating request, for desired upload Type
 	switch request.UploadType {
 	case models.FileUploadType:
 		{
+			//Check if user is allowed to upload files
+			if !handlerData.user.CanUploadFiles() {
+				sendResponse(w, models.ResponseError, "not allowed to upload files", nil, http.StatusForbidden)
+				return
+			}
+
 			//Data validation
 			if GetMD5Hash(request.Data) != request.Sum {
 				sendResponse(w, models.ResponseError, "Content wasn't delivered completely", nil, http.StatusUnprocessableEntity)
@@ -35,6 +36,7 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 		}
 	case models.URLUploadType:
 		{
+			//Check if user is allowed to upload URLs
 			if !handlerData.user.AllowedToUploadURLs() {
 				sendResponse(w, models.ResponseError, "not allowed to upload urls", nil, http.StatusForbidden)
 				return
@@ -52,6 +54,11 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 			sendResponse(w, models.ResponseError, "invalid upload type", nil, http.StatusUnprocessableEntity)
 			return
 		}
+	}
+
+	//Set random name if not specified
+	if len(request.Name) == 0 {
+		request.Name = gaw.RandString(20)
 	}
 
 	//Select namespace

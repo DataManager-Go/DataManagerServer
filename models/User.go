@@ -80,3 +80,8 @@ func (user User) HasUploadLimit() bool {
 func (user User) AllowedToUploadURLs() bool {
 	return user.Role.MaxURLcontentSize != 0
 }
+
+//CanUploadFiles return true if user can upload files
+func (user User) CanUploadFiles() bool {
+	return user.Role.CanUploadFiles
+}
