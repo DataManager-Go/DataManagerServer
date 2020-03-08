@@ -35,7 +35,15 @@ func FindNamespace(db *gorm.DB, ns string) *Namespace {
 		return namespace
 	}
 
-	db.Where(&namespace).Find(&namespace)
+	db.Where(&namespace).Preload("User").Find(&namespace)
 
 	return namespace
+}
+
+//IsOwnedBy returns true if namespace is users
+func (namespace Namespace) IsOwnedBy(user *User) bool {
+	if user == nil || namespace.User == nil {
+		return false
+	}
+	return namespace.User.ID == user.ID
 }

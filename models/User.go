@@ -46,12 +46,21 @@ func (user User) Register(db *gorm.DB, config *Config) error {
 		return ErrorUserAlreadyExists
 	}
 
-	return db.Create(&User{
+	user = User{
 		Password: gaw.SHA512(user.Username + user.Password),
 		Username: user.Username,
 		RoleID:   config.GetDefaultRole().ID,
 		Role:     config.GetDefaultRole(),
-	}).Error
+	}
+
+	err := db.Create(&user).Error
+	if err != nil {
+		return err
+	}
+
+	//Create namespace for user
+	_, err = user.CreateDefaultNamespace(db)
+	return err
 }
 
 //Has return true if user exists
@@ -71,17 +80,23 @@ func (user *User) Has(db *gorm.DB, checkPass bool) (bool, error) {
 	return true, nil
 }
 
-//HasUploadLimit gets upload limit
-func (user User) HasUploadLimit() bool {
-	return user.Role.MaxURLcontentSize > -1
+//GetDefaultNamespaceName return the name of the default namespace for a user
+func (user *User) GetDefaultNamespaceName() string {
+	return user.Username + "_default"
 }
 
-//AllowedToUploadURLs gets upload limit
-func (user User) AllowedToUploadURLs() bool {
-	return user.Role.MaxURLcontentSize != 0
-}
+//CreateDefaultNamespace creates user namespace
+func (user *User) CreateDefaultNamespace(db *gorm.DB) (*Namespace, error) {
+	namespace := Namespace{
+		Name: user.GetDefaultNamespaceName(),
+		User: user,
+	}
 
-//CanUploadFiles return true if user can upload files
-func (user User) CanUploadFiles() bool {
-	return user.Role.CanUploadFiles
+	//Crreate
+	err := db.Create(&namespace).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &namespace, nil
 }

@@ -70,5 +70,6 @@ type UploadResponse struct {
 
 //LoginResponse response for login
 type LoginResponse struct {
-	Token string `json:"token"`
+	Token     string `json:"token"`
+	Namespace string `json:"ns"`
 }

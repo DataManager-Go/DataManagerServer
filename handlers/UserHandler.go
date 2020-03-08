@@ -34,7 +34,8 @@ func Login(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
 
 	if session != nil {
 		sendResponse(w, models.ResponseSuccess, "", models.LoginResponse{
-			Token: session.Token,
+			Token:     session.Token,
+			Namespace: user.GetDefaultNamespaceName(),
 		})
 	} else {
 		sendResponse(w, models.ResponseError, "Error logging in", nil, http.StatusUnauthorized)

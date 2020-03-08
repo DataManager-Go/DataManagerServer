@@ -15,10 +15,10 @@ type File struct {
 	Name           string `gorm:"not null"`
 	LocalName      string `sql:"not null"`
 	FileSize       int64
-	Namespace      *Namespace
-	IsPublic       bool `gorm:"default:false"`
+	Namespace      *Namespace `gorm:"association_autoupdate:false;association_autocreate:false"`
+	NamespaceID    uint       `sql:"index" gorm:"not null"`
+	IsPublic       bool       `gorm:"default:false"`
 	PublicFilename string
-	NamespaceID    uint    `sql:"index" gorm:"not null"`
 	Groups         []Group `gorm:"many2many:files_groups;association_autoupdate:false"`
 	Tags           []Tag   `gorm:"many2many:files_tags;association_autoupdate:false"`
 }

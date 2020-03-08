@@ -62,7 +62,17 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 	}
 
 	//Select namespace
-	namespace := models.GetNamespaceFromString(request.Attributes.Namespace)
+	namespace := models.FindNamespace(handlerData.db, request.Attributes.Namespace)
+	if namespace == nil {
+		sendResponse(w, models.ResponseError, "namespace not found", nil, http.StatusNotFound)
+		return
+	}
+
+	//Check if user can access this namespace
+	if !namespace.IsOwnedBy(handlerData.user) && !handlerData.user.CanWriteForeignNamespace() {
+		sendResponse(w, models.ResponseError, "Write permission denied for foreign namespaces", nil, http.StatusForbidden)
+		return
+	}
 
 	//Get Tags
 	tags := models.TagsFromStringArr(request.Attributes.Tags, *namespace)
@@ -163,6 +173,12 @@ func ListFilesHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	//Check if user can read from this namespace
+	if !namespace.IsOwnedBy(handlerData.user) && !handlerData.user.CanReadForeignNamespace() {
+		sendResponse(w, models.ResponseError, "Read permission denied for foreign namespaces", nil, http.StatusForbidden)
+		return
+	}
+
 	//Gen Tags
 	tags := models.FindTags(handlerData.db, request.Attributes.Tags, namespace)
 	if len(tags) == 0 && len(request.Attributes.Tags) > 0 {
@@ -239,7 +255,13 @@ func UpdateFileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 	//Select namespace
 	namespace := models.FindNamespace(handlerData.db, request.Attributes.Namespace)
 	if namespace == nil || namespace.ID == 0 {
-		sendResponse(w, models.ResponseError, "Namespace not found", 404)
+		sendResponse(w, models.ResponseError, "Namespace not found", http.NotFound)
+		return
+	}
+
+	//Check if user can access this namespace
+	if !namespace.IsOwnedBy(handlerData.user) && !handlerData.user.CanWriteForeignNamespace() {
+		sendResponse(w, models.ResponseError, "Write permission denied for foreign namespaces", nil, http.StatusForbidden)
 		return
 	}
 
