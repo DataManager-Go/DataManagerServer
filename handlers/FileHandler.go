@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
@@ -95,16 +94,25 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 	//set local name
 	file.LocalName = localName
 
-	var dataToSave *[]byte
+	//Create local file
+	f, err := os.Create(handlerData.config.GetStorageFile(localName))
+	if LogError(err) {
+		sendServerError(w)
+		return
+	}
 
 	switch request.UploadType {
 	case models.FileUploadType:
-		dataToSave = &request.Data
-	case models.URLUploadType:
-		//TODO write http request body directly to disk
+		size, err := f.Write(request.Data)
+		if LogError(err) {
+			sendServerError(w)
+			return
+		}
 
+		file.FileSize = int64(size)
+	case models.URLUploadType:
 		//Do request
-		status, body, err := doHTTPGetRequest(handlerData.user, request.URL)
+		status, err := downloadHTTP(handlerData.user, request.URL, f, &file)
 		if err != nil {
 			sendResponse(w, models.ResponseError, err.Error(), nil, http.StatusBadRequest)
 			return
@@ -115,27 +123,17 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 			sendResponse(w, models.ResponseError, "Non ok response: "+strconv.Itoa(status), nil, http.StatusBadRequest)
 			return
 		}
-
-		//Set data to save on success
-		dataToSave = &body
 	}
 
-	//Write file
-	err := ioutil.WriteFile(handlerData.config.GetStorageFile(file.LocalName), *dataToSave, 0700)
-	if err != nil {
+	//Close file
+	if LogError(f.Close()) {
 		sendServerError(w)
-		log.Error(err)
 		return
 	}
 
-	//Get filesize
-	s, _ := os.Stat(handlerData.config.GetStorageFile(file.LocalName))
-	file.FileSize = s.Size()
-
 	err = file.Insert(handlerData.db, handlerData.user)
-	if err != nil {
+	if LogError(err) {
 		sendServerError(w)
-		log.Error(err)
 	} else {
 		sendResponse(w, models.ResponseSuccess, "", models.UploadResponse{
 			FileID: file.ID,
@@ -251,8 +249,7 @@ func UpdateFileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 	}.GetCount(handlerData.db, request.FileID, handlerData.user)
 
 	//Handle errors
-	if err != nil {
-		log.Error(err)
+	if LogError(err) {
 		sendServerError(w)
 		return
 	}
@@ -279,7 +276,7 @@ func UpdateFileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 		}
 	}
 
-	if err != nil {
+	if LogError(err) {
 		sendServerError(w)
 		return
 	}

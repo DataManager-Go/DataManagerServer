@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"reflect"
 	"strings"
 
@@ -143,20 +144,20 @@ func GetMD5Hash(text []byte) string {
 	return hex.EncodeToString(hash[:])
 }
 
-func doHTTPGetRequest(user *models.User, url string) (int, []byte, error) {
+func downloadHTTP(user *models.User, url string, f *os.File, file *models.File) (int, error) {
 	res, err := http.Get(url)
 	if err != nil {
-		return 0, []byte{}, err
+		return 0, err
 	}
 
 	//Don't read content on http error
 	if res.StatusCode < 200 || res.StatusCode > 299 {
-		return res.StatusCode, []byte{}, nil
+		return res.StatusCode, nil
 	}
 
 	//Check if file is too large
 	if user.HasUploadLimit() && res.ContentLength > user.Role.MaxURLcontentSize {
-		return res.StatusCode, []byte{}, errors.New("File too large")
+		return res.StatusCode, errors.New("File too large")
 	}
 
 	//read response
@@ -166,13 +167,20 @@ func doHTTPGetRequest(user *models.User, url string) (int, []byte, error) {
 	} else {
 		reader = res.Body
 	}
-	body, err := ioutil.ReadAll(reader)
 
-	if LogError(err) || LogError(res.Body.Close()) {
-		return 0, []byte{}, err
+	//Save body in file
+	size, err := io.Copy(f, reader)
+	if LogError(err) {
+		return 0, err
+	}
+	if LogError(res.Body.Close()) {
+		return 0, err
 	}
 
-	return res.StatusCode, body, nil
+	//Set file size
+	file.FileSize = size
+
+	return res.StatusCode, nil
 }
 
 //Returns the size in bytes of the header
