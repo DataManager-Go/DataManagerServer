@@ -32,11 +32,13 @@ func (tag Tag) GetNamespace() *Namespace {
 }
 
 //TagsFromStringArr return tag array from string array
-func TagsFromStringArr(arr []string, namespace Namespace) []Tag {
+func TagsFromStringArr(arr []string, namespace Namespace, user *User) []Tag {
 	var tags []Tag
 	for _, tag := range arr {
 		tags = append(tags, Tag{
 			Name:      tag,
+			User:      user,
+			UserID:    user.ID,
 			Namespace: &namespace,
 		})
 	}
@@ -57,4 +59,16 @@ func TagArrToStringArr(tags []Tag) []string {
 		str = append(str, tag.Name)
 	}
 	return str
+}
+
+//GetTag returns or creates a tag
+func GetTag(db *gorm.DB, name string, namespace *Namespace, user *User) *Tag {
+	var tag Tag
+	db.Where(&Tag{
+		Name:        name,
+		NamespaceID: namespace.ID,
+		UserID:      user.ID,
+	}).FirstOrCreate(&tag)
+
+	return &tag
 }

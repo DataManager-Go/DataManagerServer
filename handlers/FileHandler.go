@@ -75,10 +75,10 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 	}
 
 	//Get Tags
-	tags := models.TagsFromStringArr(request.Attributes.Tags, *namespace)
+	tags := models.TagsFromStringArr(request.Attributes.Tags, *namespace, handlerData.user)
 
 	//Get Groups
-	groups := models.GroupsFromStringArr(request.Attributes.Groups, *namespace)
+	groups := models.GroupsFromStringArr(request.Attributes.Groups, *namespace, handlerData.user)
 
 	//Ensure localname is not already in use
 	uniqueNameFound := false
@@ -355,7 +355,7 @@ func UpdateFileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 
 			//Add tags
 			if len(update.AddTags) > 0 {
-				if LogError(file.AddTags(handlerData.db, update.AddTags)) {
+				if LogError(file.AddTags(handlerData.db, update.AddTags, handlerData.user)) {
 					sendServerError(w)
 					return
 				}
@@ -373,7 +373,7 @@ func UpdateFileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 
 			//Add Groups
 			if len(update.AddGroups) > 0 {
-				if LogError(file.AddGroups(handlerData.db, update.AddGroups)) {
+				if LogError(file.AddGroups(handlerData.db, update.AddGroups, handlerData.user)) {
 					sendServerError(w)
 					return
 				}

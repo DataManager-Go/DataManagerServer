@@ -125,6 +125,26 @@ func FindFile(db *gorm.DB, fileName string, fileID uint, namespace Namespace, us
 	return &file, nil
 }
 
+//HasTag return true if file is in group
+func (file File) HasTag(sTag string) bool {
+	for _, tag := range file.Tags {
+		if tag.Name == sTag {
+			return true
+		}
+	}
+	return false
+}
+
+//HasGroup return true if file is in group
+func (file File) HasGroup(sGroup string) bool {
+	for _, group := range file.Groups {
+		if group.Name == sGroup {
+			return true
+		}
+	}
+	return false
+}
+
 //Delete deletes a file
 func (file *File) Delete(db *gorm.DB, config *Config) error {
 	//Delete local file
@@ -150,8 +170,15 @@ func (file *File) SetVilibility(db *gorm.DB, newVisibility bool) error {
 }
 
 //AddTags adds tags to file
-func (file *File) AddTags(db *gorm.DB, tagsToAdd []string) error {
-	file.Tags = append(file.Tags, TagsFromStringArr(tagsToAdd, *file.Namespace)...)
+func (file *File) AddTags(db *gorm.DB, tagsToAdd []string, user *User) error {
+	for _, sTag := range tagsToAdd {
+		if file.HasTag(sTag) {
+			continue
+		}
+
+		tag := GetTag(db, sTag, file.Namespace, user)
+		file.Tags = append(file.Tags, *tag)
+	}
 	return file.Save(db)
 }
 
@@ -168,8 +195,15 @@ func (file *File) RemoveTags(db *gorm.DB, tagsToRemove []string) error {
 }
 
 //AddGroups adds tags to file
-func (file *File) AddGroups(db *gorm.DB, groupsToAdd []string) error {
-	file.Groups = append(file.Groups, GroupsFromStringArr(groupsToAdd, *file.Namespace)...)
+func (file *File) AddGroups(db *gorm.DB, groupsToAdd []string, user *User) error {
+	for _, sGroup := range groupsToAdd {
+		if file.HasGroup(sGroup) {
+			continue
+		}
+
+		group := GetGroup(db, sGroup, file.Namespace, user)
+		file.Groups = append(file.Groups, *group)
+	}
 	return file.Save(db)
 }
 

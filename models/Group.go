@@ -32,11 +32,13 @@ func (group Group) GetNamespace() *Namespace {
 }
 
 //GroupsFromStringArr return tag array from string array
-func GroupsFromStringArr(arr []string, namespace Namespace) []Group {
+func GroupsFromStringArr(arr []string, namespace Namespace, user *User) []Group {
 	var tags []Group
 	for _, tag := range arr {
 		tags = append(tags, Group{
 			Name:      tag,
+			User:      user,
+			UserID:    user.ID,
 			Namespace: &namespace,
 		})
 	}
@@ -57,4 +59,16 @@ func FindGroups(db *gorm.DB, sGroups []string, namespace *Namespace) []Group {
 	var groups []Group
 	db.Model(&Group{}).Where("name in (?) AND namespace_id = ?", sGroups, namespace.ID).Find(&groups)
 	return groups
+}
+
+//GetGroup returns or creates a tag
+func GetGroup(db *gorm.DB, name string, namespace *Namespace, user *User) *Group {
+	var group Group
+	db.Where(&Group{
+		Name:        name,
+		NamespaceID: namespace.ID,
+		UserID:      user.ID,
+	}).FirstOrCreate(&group)
+
+	return &group
 }
