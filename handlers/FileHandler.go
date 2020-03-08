@@ -127,6 +127,7 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 		}
 		file.IsPublic = true
 
+		//Check if public name already exists
 		_, found, _ := models.GetPublicFile(handlerData.db, publicName)
 		if found {
 			sendResponse(w, models.ResponseError, "public name already exists", nil)
@@ -319,7 +320,7 @@ func FileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request
 	}
 
 	//Check if action is valid
-	if !gaw.IsInStringArray(action, []string{"delete", "update", "get"}) {
+	if !gaw.IsInStringArray(action, []string{"delete", "update", "get", "publish"}) {
 		sendResponse(w, models.ResponseError, "invalid action", nil)
 		return
 	}
@@ -464,6 +465,45 @@ func FileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request
 			LogError(f.Close())
 
 			//Return to prevent sending success response
+			return
+		}
+	case "publish":
+		{
+			if file.IsPublic && file.PublicFilename.Valid && len(file.PublicFilename.String) > 0 {
+				sendResponse(w, models.ResponseError, "File already public", nil)
+				return
+			}
+			//Determine public name
+			publicName := request.PublicName
+			if len(publicName) == 0 {
+				publicName = gaw.RandString(25)
+			}
+
+			//Set file public name
+			file.PublicFilename = sql.NullString{
+				String: publicName,
+				Valid:  true,
+			}
+			file.IsPublic = true
+
+			//Check if public name already exists
+			_, found, _ := models.GetPublicFile(handlerData.db, publicName)
+			if found {
+				sendResponse(w, models.ResponseError, "public name already exists", nil)
+				return
+			}
+
+			//Save new file
+			err := file.Save(handlerData.db)
+			if LogError(err) {
+				sendServerError(w)
+				return
+			}
+
+			//Send success
+			sendResponse(w, models.ResponseSuccess, "", models.PublishResponse{
+				PublicFilename: publicName,
+			})
 			return
 		}
 	}

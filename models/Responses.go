@@ -60,6 +60,11 @@ type FileResponseItem struct {
 	Attributes   FileAttributes `json:"attrib"`
 }
 
+//PublishResponse response for publishing a file
+type PublishResponse struct {
+	PublicFilename string `json:"pubName"`
+}
+
 //ListFileResponse response for list files
 type ListFileResponse struct {
 	Files []FileResponseItem `json:"files"`

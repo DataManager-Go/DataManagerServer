@@ -15,6 +15,7 @@ type CredentialsRequest struct {
 type FileRequest struct {
 	FileID     uint           `json:"fid"`
 	Name       string         `json:"name,omitempty"`
+	PublicName string         `json:"pubname,omitempty"`
 	Updates    FileUpdateItem `json:"updates,omitempty"`
 	Attributes FileAttributes `json:"attributes"`
 }
