@@ -8,6 +8,7 @@ require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/gorilla/mux v1.7.4
+	github.com/h2non/filetype v1.0.12
 	github.com/jinzhu/gorm v1.9.12
 	github.com/sbani/go-humanizer v0.3.1 // indirect
 	github.com/sirupsen/logrus v1.4.2

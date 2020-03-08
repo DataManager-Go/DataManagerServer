@@ -12,6 +12,7 @@ import (
 	"github.com/JojiiOfficial/DataManagerServer/models"
 	gaw "github.com/JojiiOfficial/GoAw"
 	"github.com/gorilla/mux"
+	"github.com/h2non/filetype"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -143,8 +144,10 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 		return
 	}
 
+	//Read from the desired source (file/url)
 	switch request.UploadType {
 	case models.FileUploadType:
+		//Read from uploaded file
 		str, err := base64.StdEncoding.DecodeString(request.Data)
 		if LogError(err) {
 			sendServerError(w)
@@ -158,8 +161,12 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 		}
 
 		file.FileSize = int64(size)
+
+		if len(request.FileType) > 0 && filetype.IsMIMESupported(request.FileType) {
+			file.FileType = request.FileType
+		}
 	case models.URLUploadType:
-		//Do request
+		//Read from HTTP request
 		status, err := downloadHTTP(handlerData.user, request.URL, f, &file)
 		if err != nil {
 			sendResponse(w, models.ResponseError, err.Error(), nil, http.StatusBadRequest)
