@@ -70,3 +70,13 @@ func (user *User) Has(db *gorm.DB, checkPass bool) (bool, error) {
 
 	return true, nil
 }
+
+//HasUploadLimit gets upload limit
+func (user User) HasUploadLimit() bool {
+	return user.Role.MaxURLcontentSize > -1
+}
+
+//AllowedToUploadURLs gets upload limit
+func (user User) AllowedToUploadURLs() bool {
+	return user.Role.MaxURLcontentSize != 0
+}

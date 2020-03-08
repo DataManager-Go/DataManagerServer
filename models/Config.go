@@ -26,11 +26,10 @@ type Config struct {
 	}
 }
 type configServer struct {
-	Database            configDBstruct
-	PathConfig          pathConfig
-	Roles               roleConfig
-	MaxHTTPDownloadSize int64 `default:"5000000" required:"true"`
-	AllowRegistration   bool  `default:"false"`
+	Database          configDBstruct
+	PathConfig        pathConfig
+	Roles             roleConfig
+	AllowRegistration bool `default:"false"`
 }
 
 type roleConfig struct {
@@ -111,8 +110,7 @@ func InitConfig(confFile string, createMode bool) (*Config, bool) {
 				PathConfig: pathConfig{
 					FileStore: "./files",
 				},
-				AllowRegistration:   false,
-				MaxHTTPDownloadSize: 5000000,
+				AllowRegistration: false,
 				Roles: roleConfig{
 					DefaultRole: 1,
 					Roles: []Role{
@@ -123,9 +121,8 @@ func InitConfig(confFile string, createMode bool) (*Config, bool) {
 							AccesForeignFiles:             NoPermission,
 							AccesForeignNamespaces:        NoPermission,
 							CanUploadFiles:                true,
-							CanUploadURLs:                 false,
 							CreateTagsInForeignNamespaces: false,
-							URLContentLengthRestriction:   true,
+							MaxURLcontentSize:             5000000,
 						},
 						Role{
 							ID:                            2,
@@ -134,9 +131,8 @@ func InitConfig(confFile string, createMode bool) (*Config, bool) {
 							AccesForeignFiles:             3,
 							AccesForeignNamespaces:        3,
 							CanUploadFiles:                true,
-							CanUploadURLs:                 true,
 							CreateTagsInForeignNamespaces: true,
-							URLContentLengthRestriction:   false,
+							MaxURLcontentSize:             -1,
 						},
 					},
 				},

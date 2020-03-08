@@ -36,6 +36,11 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 		}
 	case models.URLUploadType:
 		{
+			if !handlerData.user.AllowedToUploadURLs() {
+				sendResponse(w, models.ResponseError, "not allowed to upload urls", nil, http.StatusForbidden)
+				return
+			}
+
 			//Check if url is set and valid
 			if len(request.URL) == 0 || !isValidHTTPURL(request.URL) {
 				sendResponse(w, models.ResponseError, "missing or malformed url", nil, http.StatusUnprocessableEntity)
@@ -96,8 +101,10 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 	case models.FileUploadType:
 		dataToSave = &request.Data
 	case models.URLUploadType:
+		//TODO write http request body directly to disk
+
 		//Do request
-		status, body, err := doHTTPGetRequest(handlerData.config, request.URL)
+		status, body, err := doHTTPGetRequest(handlerData.user, request.URL)
 		if err != nil {
 			sendResponse(w, models.ResponseError, err.Error(), nil, http.StatusBadRequest)
 			return

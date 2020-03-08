@@ -9,8 +9,7 @@ type Role struct {
 	AccesForeignNamespaces        Permission `gorm:"type:smallint"`
 	CreateTagsInForeignNamespaces bool       `gorm:"default:false"`
 	CanUploadFiles                bool       `gorm:"default:true"`
-	CanUploadURLs                 bool       `gorm:"default:false"`
-	URLContentLengthRestriction   bool       `gorm:"default:true"`
+	MaxURLcontentSize             int64
 }
 
 //Permission permission for roles

@@ -143,7 +143,7 @@ func GetMD5Hash(text []byte) string {
 	return hex.EncodeToString(hash[:])
 }
 
-func doHTTPGetRequest(config *models.Config, url string) (int, []byte, error) {
+func doHTTPGetRequest(user *models.User, url string) (int, []byte, error) {
 	res, err := http.Get(url)
 	if err != nil {
 		return 0, []byte{}, err
@@ -155,12 +155,19 @@ func doHTTPGetRequest(config *models.Config, url string) (int, []byte, error) {
 	}
 
 	//Check if file is too large
-	if res.ContentLength > config.Server.MaxHTTPDownloadSize {
+	if user.HasUploadLimit() && res.ContentLength > user.Role.MaxURLcontentSize {
 		return res.StatusCode, []byte{}, errors.New("File too large")
 	}
 
 	//read response
-	body, err := ioutil.ReadAll(io.LimitReader(res.Body, config.Server.MaxHTTPDownloadSize))
+	var reader io.Reader
+	if user.HasUploadLimit() {
+		reader = io.LimitReader(res.Body, user.Role.MaxURLcontentSize)
+	} else {
+		reader = res.Body
+	}
+	body, err := ioutil.ReadAll(reader)
+
 	if LogError(err) || LogError(res.Body.Close()) {
 		return 0, []byte{}, err
 	}
