@@ -110,7 +110,20 @@ func ListFilesHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	loaded := handlerData.db.Preload("Tags").Preload("Groups").Preload("Namespace").Where("namespace_id = ?", namespace.ID)
+	loaded := handlerData.db
+	if len(tags) > 0 || request.OptionalParams.Verbose > 1 {
+		loaded = loaded.Preload("Tags")
+	}
+
+	if len(groups) > 0 || request.OptionalParams.Verbose > 1 {
+		loaded = loaded.Preload("Groups")
+	}
+
+	if request.OptionalParams.Verbose > 2 {
+		loaded = loaded.Preload("Namespace")
+	}
+
+	loaded = loaded.Where("namespace_id = ?", namespace.ID)
 
 	if len(request.Name) > 0 {
 		loaded = loaded.Where("name LIKE ?", "%"+request.Name+"%")
