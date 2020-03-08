@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql"
 	"os"
 
 	gaw "github.com/JojiiOfficial/GoAw"
@@ -11,17 +12,18 @@ import (
 //File a file uploaded to the db
 type File struct {
 	gorm.Model
+	Name           string `gorm:"not null"`
+	LocalName      string `gorm:"not null"`
 	User           *User  `gorm:"association_autoupdate:false;association_autocreate:false"`
 	UserID         uint   `gorm:"column:uploader;index"`
-	Name           string `gorm:"not null"`
-	LocalName      string `sql:"not null"`
 	FileSize       int64
-	Namespace      *Namespace `gorm:"association_autoupdate:false;association_autocreate:false"`
-	NamespaceID    uint       `sql:"index" gorm:"not null"`
-	IsPublic       bool       `gorm:"default:false"`
-	PublicFilename string
-	Groups         []Group `gorm:"many2many:files_groups;association_autoupdate:false"`
-	Tags           []Tag   `gorm:"many2many:files_tags;association_autoupdate:false"`
+	FileType       string
+	IsPublic       bool           `gorm:"default:false"`
+	PublicFilename sql.NullString `gorm:"unique"`
+	Groups         []Group        `gorm:"many2many:files_groups;association_autoupdate:false"`
+	Tags           []Tag          `gorm:"many2many:files_tags;association_autoupdate:false"`
+	Namespace      *Namespace     `gorm:"association_autoupdate:false;association_autocreate:false"`
+	NamespaceID    uint           `sql:"index" gorm:"not null"`
 }
 
 //FileAttributes attributes for a file
@@ -147,8 +149,20 @@ func (file File) HasGroup(sGroup string) bool {
 
 //Delete deletes a file
 func (file *File) Delete(db *gorm.DB, config *Config) error {
+	//Remove public filename to free this keyword
+	file.IsPublic = false
+	file.PublicFilename = sql.NullString{
+		Valid: false,
+	}
+
+	//Save new state
+	err := file.Save(db)
+	if err != nil {
+		return err
+	}
+
 	//Delete local file
-	err := os.Remove(config.GetStorageFile(file.LocalName))
+	err = os.Remove(config.GetStorageFile(file.LocalName))
 	if err != nil {
 		log.Warn(err)
 	}
@@ -265,4 +279,19 @@ func (file File) GetCount(db *gorm.DB, fileID uint, user *User) (uint, error) {
 	err := del.Count(&c).Error
 
 	return c, err
+}
+
+//GetPublicFile returns a file which is public
+func GetPublicFile(db *gorm.DB, publicFilename string) (*File, bool, error) {
+	var file File
+	err := db.Model(&File{}).Where("public_filename = ?", publicFilename).First(&file).Error
+	if err != nil {
+		//Check error. Send server error if error is not "not found"
+		if gorm.IsRecordNotFoundError(err) {
+			return nil, false, nil
+		}
+		return nil, false, err
+	}
+
+	return &file, true, nil
 }

@@ -100,6 +100,14 @@ var (
 			HandlerFunc: FileHandler,
 			HandlerType: sessionRequest,
 		},
+
+		Route{
+			Name:        "preview",
+			Pattern:     "/preview/{fileID}",
+			HandlerFunc: PrevievHandler,
+			HandlerType: defaultRequest,
+			Method:      GetMethod,
+		},
 	}
 )
 

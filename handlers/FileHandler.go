@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"database/sql"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"net/http"
@@ -110,6 +112,27 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 		Name:      request.Name,
 	}
 
+	if request.Public {
+		//Determine public name
+		publicName := request.PublicName
+		if len(publicName) == 0 {
+			publicName = gaw.RandString(25)
+		}
+
+		//Set file public name
+		file.PublicFilename = sql.NullString{
+			String: publicName,
+			Valid:  true,
+		}
+		file.IsPublic = true
+
+		_, found, _ := models.GetPublicFile(handlerData.db, publicName)
+		if found {
+			sendResponse(w, models.ResponseError, "public name already exists", nil)
+			return
+		}
+	}
+
 	//set local name
 	file.LocalName = localName
 
@@ -122,7 +145,13 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 
 	switch request.UploadType {
 	case models.FileUploadType:
-		size, err := f.Write(request.Data)
+		str, err := base64.StdEncoding.DecodeString(request.Data)
+		if LogError(err) {
+			sendServerError(w)
+			return
+		}
+
+		size, err := f.Write(str)
 		if LogError(err) {
 			sendServerError(w)
 			return
@@ -338,7 +367,7 @@ func FileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request
 
 			//Set public/private
 			if len(update.IsPublic) > 0 {
-				if len(file.PublicFilename) == 0 {
+				if !file.PublicFilename.Valid {
 					sendResponse(w, models.ResponseError, "You need to share this file first", nil)
 					return
 				}

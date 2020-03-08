@@ -139,8 +139,8 @@ func hasEmptyValue(e reflect.Value) bool {
 }
 
 //GetMD5Hash return hash of input
-func GetMD5Hash(text []byte) string {
-	hash := md5.Sum(text)
+func GetMD5Hash(text string) string {
+	hash := md5.Sum([]byte(text))
 	return hex.EncodeToString(hash[:])
 }
 
