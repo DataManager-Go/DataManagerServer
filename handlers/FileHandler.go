@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"strconv"
@@ -161,7 +163,7 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 
 //ListFilesHandler handler for listing files
 func ListFilesHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
-	var request models.FileRequest
+	var request models.FileListRequest
 	if !parseUserInput(handlerData.config, w, r, &request) {
 		return
 	}
@@ -245,9 +247,9 @@ func ListFilesHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 	})
 }
 
-//UpdateFileHandler handler for updating files
-func UpdateFileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
-	var request models.FileUpdateRequest
+//FileHandler handler for updating files
+func FileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
+	var request models.FileRequest
 	if !parseUserInput(handlerData.config, w, r, &request) {
 		return
 	}
@@ -274,7 +276,7 @@ func UpdateFileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 	}
 
 	//Check if action is valid
-	if !gaw.IsInStringArray(action, []string{"delete", "update"}) {
+	if !gaw.IsInStringArray(action, []string{"delete", "update", "get"}) {
 		sendResponse(w, models.ResponseError, "invalid action", nil)
 		return
 	}
@@ -293,6 +295,7 @@ func UpdateFileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 
 	//Send error if multiple files are available and no ID was specified
 	if c > 1 && request.FileID == 0 {
+		fmt.Println(request)
 		sendResponse(w, models.ResponseError, "multiple files with same name", nil)
 		return
 	}
@@ -335,6 +338,11 @@ func UpdateFileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 
 			//Set public/private
 			if len(update.IsPublic) > 0 {
+				if len(file.PublicFilename) == 0 {
+					sendResponse(w, models.ResponseError, "You need to share this file first", nil)
+					return
+				}
+
 				newVisibility, err := strconv.ParseBool(update.IsPublic)
 				if err != nil {
 					sendResponse(w, models.ResponseError, "isPublic must be a bool", nil, http.StatusUnprocessableEntity)
@@ -392,6 +400,28 @@ func UpdateFileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 				}
 				didUpdate = len(file.Groups) < currLenGroups
 			}
+		}
+	case "get":
+		{
+			//Open local file
+			f, err := os.Open(handlerData.config.GetStorageFile(file.LocalName))
+			if LogError(err) {
+				sendServerError(w)
+				return
+			}
+
+			//Write contents to responsewriter
+			_, err = io.Copy(w, f)
+			if LogError(err) {
+				sendServerError(w)
+				return
+			}
+
+			//Close file
+			LogError(f.Close())
+
+			//Return to prevent sending success response
+			return
 		}
 	}
 

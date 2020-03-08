@@ -81,23 +81,23 @@ var (
 		//Files
 		Route{
 			Name:        "upload",
-			Pattern:     "/file/upload",
+			Pattern:     "/upload/file",
 			Method:      POSTMethod,
 			HandlerFunc: UploadfileHandler,
 			HandlerType: sessionRequest,
 		},
 		Route{
 			Name:        "list files",
-			Pattern:     "/file/list",
+			Pattern:     "/files",
 			Method:      POSTMethod,
 			HandlerFunc: ListFilesHandler,
 			HandlerType: sessionRequest,
 		},
 		Route{
 			Name:        "update file",
-			Pattern:     "/file/update/{action}",
+			Pattern:     "/file/{action}",
 			Method:      POSTMethod,
-			HandlerFunc: UpdateFileHandler,
+			HandlerFunc: FileHandler,
 			HandlerType: sessionRequest,
 		},
 	}

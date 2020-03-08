@@ -11,8 +11,8 @@ type CredentialsRequest struct {
 	Password string `json:"pass"`
 }
 
-// FileUpdateRequest contains data to update a file
-type FileUpdateRequest struct {
+// FileRequest contains data to update a file
+type FileRequest struct {
 	FileID     uint           `json:"fid"`
 	Name       string         `json:"name,omitempty"`
 	Updates    FileUpdateItem `json:"updates,omitempty"`
@@ -30,8 +30,8 @@ type FileUpdateItem struct {
 	AddGroups    []string `json:"add_groups,omitempty"`
 }
 
-// FileRequest contains file info (and a file)
-type FileRequest struct {
+// FileListRequest contains file info (and a file)
+type FileListRequest struct {
 	FileID         uint                     `json:"fid"`
 	Name           string                   `json:"name"`
 	OptionalParams OptionalRequetsParameter `json:"opt"`
