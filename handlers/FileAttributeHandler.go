@@ -47,15 +47,21 @@ func AttributeHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	if action == "delete" {
-		//Delete
-		if attributeKind == "tag" {
-			tag, err := models.FindTag(handlerData.db, request.Name, namespace, handlerData.user)
-			if tag == nil || err != nil {
-				sendResponse(w, models.ResponseError, "Tag not found", nil, 404)
-				return
-			}
+	if action == "update" && len(request.NewName) == 0 {
+		sendResponse(w, models.ResponseError, "Bad request", nil, http.StatusBadRequest)
+		return
+	}
 
+	if attributeKind == "tag" {
+		//Find instance
+		tag, err := models.FindTag(handlerData.db, request.Name, namespace, handlerData.user)
+		if tag == nil || err != nil {
+			sendResponse(w, models.ResponseError, "Tag not found", nil, 404)
+			return
+		}
+
+		//Do action for tag
+		if action == "delete" {
 			//Delete relations
 			err = handlerData.db.Unscoped().Table("files_tags").Where("tag_id=?", tag.ID).Delete(models.Tag{}).Error
 			if LogError(err) {
@@ -69,13 +75,26 @@ func AttributeHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 				sendServerError(w)
 				return
 			}
-		} else {
-			group, err := models.FindGroup(handlerData.db, request.Name, namespace, handlerData.user)
-			if group == nil || err != nil {
-				sendResponse(w, models.ResponseError, "Group not found", nil, 404)
+		} else if action == "update" {
+			//Update tags name
+			tag.Name = request.NewName
+			err := handlerData.db.Save(tag).Error
+
+			if LogError(err) {
+				sendServerError(w)
 				return
 			}
+		}
+	} else if attributeKind == "group" {
+		//Find instance
+		group, err := models.FindGroup(handlerData.db, request.Name, namespace, handlerData.user)
+		if group == nil || err != nil {
+			sendResponse(w, models.ResponseError, "Group not found", nil, 404)
+			return
+		}
 
+		//Do action for group
+		if action == "delete" {
 			//Delete relations
 			err = handlerData.db.Unscoped().Table("files_groups").Where("group_id=?", group.ID).Delete(models.Group{}).Error
 			if LogError(err) {
@@ -89,16 +108,16 @@ func AttributeHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 				sendServerError(w)
 				return
 			}
-		}
-	} else {
-		//Update
+		} else if action == "update" {
+			//Update groups name
+			group.Name = request.NewName
+			err := handlerData.db.Save(group).Error
 
-		//Ensure newName is not empty
-		if len(request.NewName) == 0 {
-			sendResponse(w, models.ResponseError, "Bad request", nil, http.StatusBadRequest)
-			return
+			if LogError(err) {
+				sendServerError(w)
+				return
+			}
 		}
-
 	}
 
 	sendResponse(w, models.ResponseSuccess, "", nil)
