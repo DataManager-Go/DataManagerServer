@@ -3,7 +3,6 @@ package handlers
 import (
 	"database/sql"
 	"encoding/base64"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -339,7 +338,6 @@ func FileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request
 
 	//Send error if multiple files are available and no ID was specified
 	if c > 1 && request.FileID == 0 {
-		fmt.Println(request)
 		sendResponse(w, models.ResponseError, "multiple files with same name", nil)
 		return
 	}
@@ -451,13 +449,22 @@ func FileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request
 			//Open local file
 			f, err := os.Open(handlerData.config.GetStorageFile(file.LocalName))
 			if LogError(err) {
+				if os.IsNotExist(err) {
+					sendResponse(w, models.ResponseError, "File not found on server", nil, 404)
+					return
+				}
+
 				sendServerError(w)
 				return
 			}
 
+			//Set ContentType header
 			if len(file.FileType) > 0 && filetype.IsMIMESupported(file.FileType) {
-				w.Header().Set("Content-Type", file.FileType)
+				w.Header().Set(models.HeaderContentType, file.FileType)
 			}
+
+			//Set filename header
+			w.Header().Set(models.HeaderFileName, file.Name)
 
 			//Write contents to responsewriter
 			_, err = io.Copy(w, f)

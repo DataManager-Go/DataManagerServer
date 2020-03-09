@@ -42,6 +42,10 @@ const (
 	HeaderStatus string = "X-Response-Status"
 	//HeaderStatusMessage headername for status in response
 	HeaderStatusMessage string = "X-Response-Message"
+	//HeaderContentType contenttype of response
+	HeaderContentType string = "Content-Type"
+	//HeaderFileName filename header
+	HeaderFileName string = "X-Filename"
 )
 
 //StringResponse response containing only one string
