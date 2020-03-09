@@ -445,6 +445,7 @@ func FileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request
 				didUpdate = len(file.Groups) < currLenGroups
 			}
 		}
+	//Get file
 	case "get":
 		{
 			//Open local file
@@ -452,6 +453,10 @@ func FileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request
 			if LogError(err) {
 				sendServerError(w)
 				return
+			}
+
+			if len(file.FileType) > 0 && filetype.IsMIMESupported(file.FileType) {
+				w.Header().Set("Content-Type", file.FileType)
 			}
 
 			//Write contents to responsewriter
@@ -467,9 +472,9 @@ func FileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request
 			//Return to prevent sending success response
 			return
 		}
+	//Publish a file
 	case "publish":
 		{
-
 			//Determine public name
 			publicName := request.PublicName
 			if len(publicName) == 0 {
