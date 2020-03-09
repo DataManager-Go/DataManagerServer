@@ -9,7 +9,7 @@ import (
 	"strconv"
 
 	"github.com/JojiiOfficial/DataManagerServer/models"
-	gaw "github.com/JojiiOfficial/GoAw"
+	"github.com/JojiiOfficial/gaw"
 	"github.com/gorilla/mux"
 	"github.com/h2non/filetype"
 	log "github.com/sirupsen/logrus"
@@ -18,7 +18,7 @@ import (
 //UploadfileHandler handler for uploading files
 func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
 	var request models.UploadRequest
-	if !parseUserInput(handlerData.config, w, r, &request) {
+	if !readRequestLimited(w, r, &request, handlerData.config.Webserver.MaxUploadFileLength) {
 		return
 	}
 
@@ -33,7 +33,7 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 			}
 
 			//Data validation
-			if GetMD5Hash(request.Data) != request.Sum {
+			if gaw.GetMD5Hash(request.Data) != request.Sum {
 				sendResponse(w, models.ResponseError, "Content wasn't delivered completely", nil, http.StatusUnprocessableEntity)
 				return
 			}
@@ -192,7 +192,9 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 		sendServerError(w)
 	} else {
 		sendResponse(w, models.ResponseSuccess, "", models.UploadResponse{
-			FileID: file.ID,
+			FileID:         file.ID,
+			Filename:       file.Name,
+			PublicFilename: file.PublicFilename.String,
 		})
 	}
 }
@@ -200,7 +202,7 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 //ListFilesHandler handler for listing files
 func ListFilesHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
 	var request models.FileListRequest
-	if !parseUserInput(handlerData.config, w, r, &request) {
+	if !readRequestLimited(w, r, &request, handlerData.config.Webserver.MaxRequestBodyLength) {
 		return
 	}
 
@@ -293,7 +295,7 @@ func ListFilesHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 //FileHandler handler for updating files
 func FileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
 	var request models.FileRequest
-	if !parseUserInput(handlerData.config, w, r, &request) {
+	if !readRequestLimited(w, r, &request, handlerData.config.Webserver.MaxRequestBodyLength) {
 		return
 	}
 

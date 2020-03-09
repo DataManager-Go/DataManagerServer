@@ -8,23 +8,26 @@ import (
 
 	"github.com/JojiiOfficial/DataManagerServer/constants"
 
-	gaw "github.com/JojiiOfficial/GoAw"
 	"github.com/JojiiOfficial/configService"
+	"github.com/JojiiOfficial/gaw"
 	log "github.com/sirupsen/logrus"
 )
 
 //Config config for the server
 type Config struct {
-	Server configServer
-
-	Webserver struct {
-		MaxHeaderLength      uint  `default:"8000" required:"true"`
-		MaxBodyLength        int64 `default:"10000" required:"true"`
-		MaxPayloadBodyLength int64 `default:"10000" required:"true"`
-		HTTP                 configHTTPstruct
-		HTTPS                configTLSStruct
-	}
+	Server    configServer
+	Webserver webserverConf
 }
+
+type webserverConf struct {
+	MaxHeaderLength      uint  `default:"8000" required:"true"`
+	MaxRequestBodyLength int64 `default:"10000" required:"true"`
+	MaxUploadFileLength  int64 `default:"1000000000" required:"true"`
+	DownloadFileBuffer   int   `default:"100000" required:"true"`
+	HTTP                 configHTTPstruct
+	HTTPS                configTLSStruct
+}
+
 type configServer struct {
 	Database          configDBstruct
 	PathConfig        pathConfig
@@ -119,30 +122,25 @@ func InitConfig(confFile string, createMode bool) (*Config, bool) {
 							RoleName:               "user",
 							IsAdmin:                false,
 							AccesForeignNamespaces: NoPermission,
-							CanUploadFiles:         true,
 							MaxURLcontentSize:      5000000,
+							MaxUploadFileSize:      10000000000,
 						},
 						Role{
 							ID:                     2,
 							RoleName:               "admin",
 							IsAdmin:                true,
 							AccesForeignNamespaces: 3,
-							CanUploadFiles:         true,
 							MaxURLcontentSize:      -1,
+							MaxUploadFileSize:      10000000,
 						},
 					},
 				},
 			},
-			Webserver: struct {
-				MaxHeaderLength      uint  `default:"8000" required:"true"`
-				MaxBodyLength        int64 `default:"10000" required:"true"`
-				MaxPayloadBodyLength int64 `default:"10000" required:"true"`
-				HTTP                 configHTTPstruct
-				HTTPS                configTLSStruct
-			}{
+			Webserver: webserverConf{
+				MaxRequestBodyLength: 100000,
+				MaxUploadFileLength:  10000000000,
 				MaxHeaderLength:      8000,
-				MaxBodyLength:        10000,
-				MaxPayloadBodyLength: 10000,
+				DownloadFileBuffer:   100000,
 				HTTP: configHTTPstruct{
 					Enabled:       true,
 					ListenAddress: ":80",
@@ -199,11 +197,13 @@ func (config *Config) Check() bool {
 		}
 	}
 
+	//Check DB port
 	if config.Server.Database.DatabasePort < 1 || config.Server.Database.DatabasePort > 65535 {
 		log.Errorf("Invalid port for database %d\n", config.Server.Database.DatabasePort)
 		return false
 	}
 
+	//Check file exists file storage dir
 	if !DirExists(config.Server.PathConfig.FileStore) {
 		err := os.Mkdir(config.Server.PathConfig.FileStore, 0700)
 		if err != nil {
@@ -213,9 +213,18 @@ func (config *Config) Check() bool {
 		log.Infof("Filestorage path '%s' created", config.Server.PathConfig.FileStore)
 	}
 
+	//Check default role
 	if config.GetDefaultRole() == nil {
 		log.Fatalln("Can't find default role. You need to specify the ID of the role to use as default")
 		return false
+	}
+
+	// Check if role can upload more than servers max filesize
+	for _, role := range config.Server.Roles.Roles {
+		if role.MaxUploadFileSize > config.Webserver.MaxUploadFileLength {
+			log.Fatalln("Role has bigger uploadfilesize than server will allow")
+			return false
+		}
 	}
 
 	return true

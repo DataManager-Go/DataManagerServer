@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"crypto/md5"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,7 +14,7 @@ import (
 
 	"github.com/JojiiOfficial/DataManagerServer/models"
 
-	gaw "github.com/JojiiOfficial/GoAw"
+	"github.com/JojiiOfficial/gaw"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -46,11 +44,15 @@ func sendResponse(w http.ResponseWriter, status models.ResponseStatus, message s
 	LogError(err)
 }
 
-//parseUserInput tries to read the body and parse it into p. Returns true on success
-func parseUserInput(config *models.Config, w http.ResponseWriter, r *http.Request, p interface{}) bool {
-	body, err := ioutil.ReadAll(io.LimitReader(r.Body, config.Webserver.MaxBodyLength))
+func readRequestLimited(w http.ResponseWriter, r *http.Request, p interface{}, limit int64) bool {
+	return readRequestBody(w, io.LimitReader(r.Body, limit), p)
+}
 
-	if LogError(err) || LogError(r.Body.Close()) {
+//parseUserInput tries to read the body and parse it into p. Returns true on success
+func readRequestBody(w http.ResponseWriter, r io.Reader, p interface{}) bool {
+	body, err := ioutil.ReadAll(r)
+
+	if LogError(err) {
 		return false
 	}
 
@@ -138,12 +140,6 @@ func hasEmptyValue(e reflect.Value) bool {
 	return false
 }
 
-//GetMD5Hash return hash of input
-func GetMD5Hash(text string) string {
-	hash := md5.Sum([]byte(text))
-	return hex.EncodeToString(hash[:])
-}
-
 func downloadHTTP(user *models.User, url string, f *os.File, file *models.File) (int, error) {
 	res, err := http.Get(url)
 	if LogError(err) {
@@ -183,16 +179,4 @@ func downloadHTTP(user *models.User, url string, f *os.File, file *models.File) 
 	//Set file size
 	file.FileSize = size
 	return res.StatusCode, nil
-}
-
-//Returns the size in bytes of the header
-func getHeaderSize(headers http.Header) uint32 {
-	var size uint32
-	for k, v := range headers {
-		size += uint32(len(k))
-		for _, val := range v {
-			size += uint32(len(val))
-		}
-	}
-	return size
 }

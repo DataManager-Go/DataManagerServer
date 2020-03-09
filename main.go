@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	gaw "github.com/JojiiOfficial/GoAw"
+	"github.com/JojiiOfficial/gaw"
 
 	"github.com/JojiiOfficial/DataManagerServer/constants"
 	"github.com/JojiiOfficial/DataManagerServer/models"

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/JojiiOfficial/DataManagerServer/models"
+	"github.com/JojiiOfficial/gaw"
 	"github.com/jinzhu/gorm"
 
 	"github.com/gorilla/mux"
@@ -187,7 +188,7 @@ func printProcessingDuration(startTime time.Time) {
 
 //Return true on error
 func validateHeader(config *models.Config, w http.ResponseWriter, r *http.Request) bool {
-	headerSize := getHeaderSize(r.Header)
+	headerSize := gaw.GetHeaderSize(r.Header)
 
 	//Send error if header are too big. MaxHeaderLength is stored in b
 	if headerSize > uint32(config.Webserver.MaxHeaderLength) {

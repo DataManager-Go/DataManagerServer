@@ -1,11 +1,11 @@
 package handlers
 
 import (
-	"io"
 	"net/http"
 	"os"
 
 	"github.com/JojiiOfficial/DataManagerServer/models"
+	"github.com/JojiiOfficial/gaw"
 	"github.com/gorilla/mux"
 )
 
@@ -53,8 +53,9 @@ func PrevievHandler(handlerData handlerData, w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	//Forward filestream
-	_, err = io.Copy(w, f)
+	//Copy stream
+	gaw.BufferedCopy(handlerData.config.Webserver.DownloadFileBuffer, w, f)
+
 	if LogError(err) {
 		http.Error(w, "Server error", http.StatusInternalServerError)
 		return

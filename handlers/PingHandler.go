@@ -9,7 +9,7 @@ import (
 //Ping handles ping request
 func Ping(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
 	var request models.PingRequest
-	if !parseUserInput(handlerData.config, w, r, &request) {
+	if !readRequestLimited(w, r, &request, handlerData.config.Webserver.MaxRequestBodyLength) {
 		return
 	}
 

@@ -1,7 +1,7 @@
 package models
 
 import (
-	gaw "github.com/JojiiOfficial/GoAw"
+	"github.com/JojiiOfficial/gaw"
 	"github.com/jinzhu/gorm"
 )
 

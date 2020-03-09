@@ -6,8 +6,8 @@ type Role struct {
 	RoleName               string     `gorm:"not null"`
 	IsAdmin                bool       `gorm:"default:false"`
 	AccesForeignNamespaces Permission `gorm:"type:smallint"`
-	CanUploadFiles         bool       `gorm:"default:true"`
 	MaxURLcontentSize      int64
+	MaxUploadFileSize      int64
 }
 
 //Permission permission for roles
@@ -32,7 +32,7 @@ func (user User) AllowedToUploadURLs() bool {
 
 //CanUploadFiles return true if user can upload files
 func (user User) CanUploadFiles() bool {
-	return user.Role.CanUploadFiles
+	return user.Role.MaxUploadFileSize != 0
 }
 
 //CanWriteForeignNamespace return true if user is allowed to write in foreign namespaces

@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/JojiiOfficial/DataManagerServer/models"
-	gaw "github.com/JojiiOfficial/GoAw"
+	"github.com/JojiiOfficial/gaw"
 )
 
 //Login login handler
@@ -12,7 +12,7 @@ import (
 func Login(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
 	var request models.CredentialsRequest
 
-	if !parseUserInput(handlerData.config, w, r, &request) {
+	if !readRequestLimited(w, r, &request, handlerData.config.Webserver.MaxRequestBodyLength) {
 		return
 	}
 
@@ -52,7 +52,7 @@ func Register(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
 
 	var request models.CredentialsRequest
 
-	if !parseUserInput(handlerData.config, w, r, &request) {
+	if !readRequestLimited(w, r, &request, handlerData.config.Webserver.MaxRequestBodyLength) {
 		return
 	}
 
