@@ -31,6 +31,13 @@ type FileUpdateItem struct {
 	AddGroups    []string `json:"add_groups,omitempty"`
 }
 
+// UpdateAttributeRequest contains data to update a tag
+type UpdateAttributeRequest struct {
+	Name      string `json:"name"`
+	NewName   string `json:"newname"`
+	Namespace string `json:"namespace"`
+}
+
 // FileListRequest contains file info (and a file)
 type FileListRequest struct {
 	FileID         uint                     `json:"fid"`

@@ -72,3 +72,20 @@ func GetTag(db *gorm.DB, name string, namespace *Namespace, user *User) *Tag {
 
 	return &tag
 }
+
+//FindTag finds a tag
+func FindTag(db *gorm.DB, name string, namespace *Namespace, user *User) (*Tag, error) {
+	var tag Tag
+
+	err := db.Where(&Tag{
+		Name:        name,
+		NamespaceID: namespace.ID,
+		UserID:      user.ID,
+	}).Find(&tag).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &tag, nil
+}

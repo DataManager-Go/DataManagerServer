@@ -72,3 +72,20 @@ func GetGroup(db *gorm.DB, name string, namespace *Namespace, user *User) *Group
 
 	return &group
 }
+
+//FindGroup finds a tag
+func FindGroup(db *gorm.DB, name string, namespace *Namespace, user *User) (*Group, error) {
+	var group Group
+
+	err := db.Where(&Group{
+		Name:        name,
+		NamespaceID: namespace.ID,
+		UserID:      user.ID,
+	}).Find(&group).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &group, nil
+}

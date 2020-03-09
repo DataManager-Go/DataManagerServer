@@ -79,7 +79,7 @@ var (
 			HandlerType: defaultRequest,
 		},
 
-		//Files
+		// Files
 		Route{
 			Name:        "upload",
 			Pattern:     "/upload/file",
@@ -107,6 +107,15 @@ var (
 			HandlerFunc: PrevievHandler,
 			HandlerType: defaultRequest,
 			Method:      GetMethod,
+		},
+
+		// Attribute
+		Route{
+			Name:        "Attribute",
+			Pattern:     "/attribute/{attribute}/{action}",
+			Method:      POSTMethod,
+			HandlerFunc: AttributeHandler,
+			HandlerType: sessionRequest,
 		},
 	}
 )
