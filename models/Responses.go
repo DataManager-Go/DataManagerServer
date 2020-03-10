@@ -53,6 +53,11 @@ type StringResponse struct {
 	String string `json:"content"`
 }
 
+//StringSliceResponse response containing only one string slice
+type StringSliceResponse struct {
+	Slice []string `json:"slice"`
+}
+
 //FileResponseItem file item for file response
 type FileResponseItem struct {
 	ID           uint           `json:"id"`

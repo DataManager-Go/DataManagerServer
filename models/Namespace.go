@@ -56,3 +56,15 @@ func (namespace Namespace) IsOwnedBy(user *User) bool {
 	}
 	return namespace.User.ID == user.ID
 }
+
+//FindUserNamespaces get all namespaces for user
+func FindUserNamespaces(db *gorm.DB, user *User) ([]Namespace, error) {
+	var namespaces []Namespace
+
+	err := db.Model(&Namespace{}).Where("creator = ?", user.ID).Find(&namespaces).Error
+	if err != nil {
+		return []Namespace{}, err
+	}
+
+	return namespaces, nil
+}

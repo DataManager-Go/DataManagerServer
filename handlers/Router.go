@@ -136,10 +136,10 @@ var (
 			HandlerType: sessionRequest,
 		},
 		Route{
-			Name:    "Namespace list",
-			Pattern: "/namespaces",
-			Method:  POSTMethod,
-			//HandlerFunc: NamespaceActionHandler,
+			Name:        "Namespace list",
+			Pattern:     "/namespaces",
+			Method:      POSTMethod,
+			HandlerFunc: NamespaceListHandler,
 			HandlerType: sessionRequest,
 		},
 	}

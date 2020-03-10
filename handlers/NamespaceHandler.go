@@ -115,3 +115,21 @@ func NamespaceActionHandler(handlerData handlerData, w http.ResponseWriter, r *h
 		String: namespaceName,
 	})
 }
+
+//NamespaceListHandler lists namespaces
+func NamespaceListHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
+	namespaces, err := models.FindUserNamespaces(handlerData.db, handlerData.user)
+	if LogError(err) {
+		sendServerError(w)
+		return
+	}
+
+	var snamespaces []string
+	for _, namespace := range namespaces {
+		snamespaces = append(snamespaces, namespace.Name)
+	}
+
+	sendResponse(w, models.ResponseSuccess, "", models.StringSliceResponse{
+		Slice: snamespaces,
+	})
+}
