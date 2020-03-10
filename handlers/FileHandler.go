@@ -530,9 +530,15 @@ func FileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request
 	//Publish a file
 	case "publish":
 		{
-			var response interface{}
+			publishResponse := models.PublishResponse{}
+			bulkPublishResponse := models.BulkPublishResponse{}
 
-			for i, file := range files {
+			for _, file := range files {
+				//Ignore if already public
+				if len(file.PublicFilename.String) > 0 {
+					continue
+				}
+
 				//Determine public name
 				publicName := request.PublicName
 				if len(publicName) == 0 {
@@ -562,36 +568,26 @@ func FileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request
 
 				//use buik response if requested "all"
 				if request.All {
-					if i == 0 {
-						response = models.BulkPublishResponse{
-							Files: []models.UploadResponse{
-								models.UploadResponse{
-									FileID:         file.ID,
-									Filename:       file.Name,
-									PublicFilename: publicName,
-								},
-							},
-						}
-					} else {
-						//Typecast
-						res, _ := (response).(models.BulkPublishResponse)
-						//Append file
-						res.Files = append(res.Files, models.UploadResponse{
-							FileID:         file.ID,
-							Filename:       file.Name,
-							PublicFilename: publicName,
-						})
-					}
+					bulkPublishResponse.Files = append(bulkPublishResponse.Files, models.UploadResponse{
+						FileID:         file.ID,
+						Filename:       file.Name,
+						PublicFilename: publicName,
+					})
 				} else {
 					//Otherwise respond with a single item
-					response = models.PublishResponse{
+					publishResponse = models.PublishResponse{
 						PublicFilename: publicName,
 					}
 				}
 			}
 
 			//Send success
-			sendResponse(w, models.ResponseSuccess, "", response)
+			if request.All {
+				sendResponse(w, models.ResponseSuccess, "", bulkPublishResponse)
+			} else {
+				sendResponse(w, models.ResponseSuccess, "", publishResponse)
+			}
+
 		}
 	}
 }
