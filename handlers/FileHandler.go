@@ -464,6 +464,40 @@ func FileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request
 				//Update namespace
 				if len(update.NewNamespace) > 0 {
 					//TODO
+					newNamespace := models.FindNamespace(handlerData.db, update.NewNamespace)
+					if newNamespace == nil || namespace.ID == 0 {
+						sendResponse(w, models.ResponseError, "New namespace not found", nil, http.StatusNotFound)
+						return
+					}
+
+					//Check if user can access this new namespace
+					if !newNamespace.IsOwnedBy(handlerData.user) && !handlerData.user.CanWriteForeignNamespace() {
+						sendResponse(w, models.ResponseError, "Write permission denied for foreign namespaces", nil, http.StatusForbidden)
+						return
+					}
+
+					//Update files
+					err := handlerData.db.Model(&models.File{}).Where("namespace_id=?", namespace.ID).Update(models.File{NamespaceID: newNamespace.ID}).Error
+					if LogError(err) {
+						sendServerError(w)
+						return
+					}
+
+					//Update groups
+					err = handlerData.db.Model(&models.Group{}).Where("namespace_id=?", namespace.ID).Update(models.Group{NamespaceID: newNamespace.ID}).Error
+					if LogError(err) {
+						sendServerError(w)
+						return
+					}
+
+					//Update tags
+					err = handlerData.db.Model(&models.Tag{}).Where("namespace_id=?", namespace.ID).Update(models.Tag{NamespaceID: newNamespace.ID}).Error
+					if LogError(err) {
+						sendServerError(w)
+						return
+					}
+
+					didUpdate = true
 				}
 
 				//Add tags
