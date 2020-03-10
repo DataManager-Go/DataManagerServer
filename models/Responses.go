@@ -69,6 +69,11 @@ type PublishResponse struct {
 	PublicFilename string `json:"pubName"`
 }
 
+//BulkPublishResponse response for publishing a file
+type BulkPublishResponse struct {
+	Files []UploadResponse `json:"files"`
+}
+
 //ListFileResponse response for list files
 type ListFileResponse struct {
 	Files []FileResponseItem `json:"files"`
@@ -85,4 +90,9 @@ type UploadResponse struct {
 type LoginResponse struct {
 	Token     string `json:"token"`
 	Namespace string `json:"ns"`
+}
+
+//CountResponse response containing a count of changed items
+type CountResponse struct {
+	Count uint32 `json:"count"`
 }

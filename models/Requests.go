@@ -17,6 +17,7 @@ type FileRequest struct {
 	Name       string         `json:"name,omitempty"`
 	PublicName string         `json:"pubname,omitempty"`
 	Updates    FileUpdateItem `json:"updates,omitempty"`
+	All        bool           `json:"all"`
 	Attributes FileAttributes `json:"attributes"`
 }
 

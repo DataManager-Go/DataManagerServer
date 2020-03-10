@@ -9,18 +9,10 @@ import (
 	"github.com/gorilla/mux"
 )
 
-//PrevievHandler handler for previews
-func PrevievHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
+//PrevievFileHandler handler for previews
+func PrevievFileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	fileID, has := vars["fileID"]
-	if !has {
-		return
-	}
-
-	if len(fileID) > 200 {
-		http.NotFound(w, r)
-		return
-	}
+	fileID, _ := vars["fileID"]
 
 	//search file
 	file, found, err := models.GetPublicFile(handlerData.db, fileID)
@@ -63,4 +55,10 @@ func PrevievHandler(handlerData handlerData, w http.ResponseWriter, r *http.Requ
 
 	//Close file
 	LogError(f.Close())
+}
+
+//IndexPageHandler show index/main page
+func IndexPageHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
+	// Print main page
+	// TODO
 }

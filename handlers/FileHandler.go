@@ -338,23 +338,45 @@ func FileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	//Send error if multiple files are available and no ID was specified
-	if c > 1 && request.FileID == 0 {
-		sendResponse(w, models.ResponseError, "multiple files with same name", nil)
+	// Get all files not allowed
+	if request.All && action == "get" {
+		sendResponse(w, models.ResponseError, "Illegal request", nil)
 		return
+	}
+
+	var files []models.File
+
+	// Only verify count if all is false
+	if !request.All {
+		//Send error if multiple files are available and no ID was specified
+		if c > 1 && request.FileID == 0 {
+			sendResponse(w, models.ResponseError, "multiple files with same name", nil)
+			return
+		}
 	}
 
 	//Exit if file not found
 	if c == 0 {
-		sendResponse(w, models.ResponseError, "File not found", nil)
+		sendResponse(w, models.ResponseError, "Nothing found", nil)
 		return
 	}
 
-	//Get target file
-	file, err := models.FindFile(handlerData.db, request.Name, request.FileID, *namespace, handlerData.user)
-	if LogError(err) {
-		sendServerError(w)
-		return
+	//Fill array with either one ore more instances
+	if request.All {
+		var err error
+		files, err = models.FindFiles(handlerData.db, request.Name, *namespace, handlerData.user)
+		if LogError(err) {
+			sendServerError(w)
+			return
+		}
+	} else {
+		//Get target file
+		file, err := models.FindFile(handlerData.db, request.Name, request.FileID, *namespace, handlerData.user)
+		if LogError(err) {
+			sendServerError(w)
+			return
+		}
+		files = append(files, *file)
 	}
 
 	err = nil
@@ -364,90 +386,117 @@ func FileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request
 	switch action {
 	case "delete":
 		{
-			err = file.Delete(handlerData.db, handlerData.config)
-			didUpdate = true
+			for _, file := range files {
+				err = file.Delete(handlerData.db, handlerData.config)
+				if LogError(err) {
+					break
+				}
+			}
+
+			// Send response
+			sendResponse(w, models.ResponseSuccess, "", models.CountResponse{
+				Count: uint32(len(files)),
+			})
 		}
 	case "update":
 		{
-			update := request.Updates
+			var count uint32
 
-			//Rename file
-			if len(update.NewName) > 0 {
-				if LogError(file.Rename(handlerData.db, update.NewName)) {
-					sendServerError(w)
-					return
+			//Do for every file
+			for _, file := range files {
+				update := request.Updates
+
+				//Rename file
+				if len(update.NewName) > 0 {
+					if LogError(file.Rename(handlerData.db, update.NewName)) {
+						sendServerError(w)
+						return
+					}
+					didUpdate = true
 				}
-				didUpdate = true
+
+				//Set public/private
+				if len(update.IsPublic) > 0 {
+					if !file.PublicFilename.Valid {
+						sendResponse(w, models.ResponseError, "You need to share this file first", nil)
+						return
+					}
+
+					newVisibility, err := strconv.ParseBool(update.IsPublic)
+					if err != nil {
+						sendResponse(w, models.ResponseError, "isPublic must be a bool", nil, http.StatusUnprocessableEntity)
+						return
+					}
+
+					if LogError(file.SetVilibility(handlerData.db, newVisibility)) {
+						sendServerError(w)
+						return
+					}
+					didUpdate = true
+				}
+
+				//Update namespace
+				if len(update.NewNamespace) > 0 {
+					//TODO
+				}
+
+				//Add tags
+				if len(update.AddTags) > 0 {
+					currLenTags := len(file.Tags)
+					if LogError(file.AddTags(handlerData.db, update.AddTags, handlerData.user)) {
+						sendServerError(w)
+						return
+					}
+					didUpdate = len(file.Tags) > currLenTags
+				}
+
+				//Remove tags
+				if len(update.RemoveTags) > 0 {
+					currLenTags := len(file.Tags)
+					if LogError(file.RemoveTags(handlerData.db, update.RemoveTags)) {
+						sendServerError(w)
+						return
+					}
+					didUpdate = len(file.Tags) < currLenTags
+				}
+
+				//Add Groups
+				if len(update.AddGroups) > 0 {
+					currLenGroups := len(file.Groups)
+					if LogError(file.AddGroups(handlerData.db, update.AddGroups, handlerData.user)) {
+						sendServerError(w)
+						return
+					}
+					didUpdate = len(file.Groups) > currLenGroups
+				}
+
+				//Remove Groups
+				if len(update.RemoveGroups) > 0 {
+					currLenGroups := len(file.Groups)
+					if LogError(file.RemoveGroups(handlerData.db, update.RemoveGroups)) {
+						sendServerError(w)
+						return
+					}
+					didUpdate = len(file.Groups) < currLenGroups
+				}
+
+				//Only count if updated
+				if didUpdate {
+					count++
+				}
 			}
 
-			//Set public/private
-			if len(update.IsPublic) > 0 {
-				if !file.PublicFilename.Valid {
-					sendResponse(w, models.ResponseError, "You need to share this file first", nil)
-					return
-				}
-
-				newVisibility, err := strconv.ParseBool(update.IsPublic)
-				if err != nil {
-					sendResponse(w, models.ResponseError, "isPublic must be a bool", nil, http.StatusUnprocessableEntity)
-					return
-				}
-
-				if LogError(file.SetVilibility(handlerData.db, newVisibility)) {
-					sendServerError(w)
-					return
-				}
-				didUpdate = true
-			}
-
-			//Update namespace
-			if len(update.NewNamespace) > 0 {
-				//TODO
-			}
-
-			//Add tags
-			if len(update.AddTags) > 0 {
-				currLenTags := len(file.Tags)
-				if LogError(file.AddTags(handlerData.db, update.AddTags, handlerData.user)) {
-					sendServerError(w)
-					return
-				}
-				didUpdate = len(file.Tags) > currLenTags
-			}
-
-			//Remove tags
-			if len(update.RemoveTags) > 0 {
-				currLenTags := len(file.Tags)
-				if LogError(file.RemoveTags(handlerData.db, update.RemoveTags)) {
-					sendServerError(w)
-					return
-				}
-				didUpdate = len(file.Tags) < currLenTags
-			}
-
-			//Add Groups
-			if len(update.AddGroups) > 0 {
-				currLenGroups := len(file.Groups)
-				if LogError(file.AddGroups(handlerData.db, update.AddGroups, handlerData.user)) {
-					sendServerError(w)
-					return
-				}
-				didUpdate = len(file.Groups) > currLenGroups
-			}
-
-			//Remove Groups
-			if len(update.RemoveGroups) > 0 {
-				currLenGroups := len(file.Groups)
-				if LogError(file.RemoveGroups(handlerData.db, update.RemoveGroups)) {
-					sendServerError(w)
-					return
-				}
-				didUpdate = len(file.Groups) < currLenGroups
-			}
+			// Send response
+			sendResponse(w, models.ResponseSuccess, "", models.CountResponse{
+				Count: count,
+			})
 		}
 	//Get file
 	case "get":
 		{
+			//use first file
+			file := files[0]
+
 			//Open local file
 			f, err := os.Open(handlerData.config.GetStorageFile(file.LocalName))
 			if LogError(err) {
@@ -477,56 +526,72 @@ func FileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request
 
 			//Close file
 			LogError(f.Close())
-
-			//Return to prevent sending success response
-			return
 		}
 	//Publish a file
 	case "publish":
 		{
-			//Determine public name
-			publicName := request.PublicName
-			if len(publicName) == 0 {
-				publicName = gaw.RandString(25)
-			}
+			var response interface{}
 
-			//Set file public name
-			file.PublicFilename = sql.NullString{
-				String: publicName,
-				Valid:  true,
-			}
-			file.IsPublic = true
+			for i, file := range files {
+				//Determine public name
+				publicName := request.PublicName
+				if len(publicName) == 0 {
+					publicName = gaw.RandString(25)
+				}
 
-			//Check if public name already exists
-			_, found, _ := models.GetPublicFile(handlerData.db, publicName)
-			if found {
-				sendResponse(w, models.ResponseError, "public name already exists", nil)
-				return
-			}
+				//Set file public name
+				file.PublicFilename = sql.NullString{
+					String: publicName,
+					Valid:  true,
+				}
+				file.IsPublic = true
 
-			//Save new file
-			err := file.Save(handlerData.db)
-			if LogError(err) {
-				sendServerError(w)
-				return
+				//Check if public name already exists
+				_, found, _ := models.GetPublicFile(handlerData.db, publicName)
+				if found {
+					sendResponse(w, models.ResponseError, "public name already exists", nil)
+					return
+				}
+
+				//Save new file
+				err := file.Save(handlerData.db)
+				if LogError(err) {
+					sendServerError(w)
+					return
+				}
+
+				//use buik response if requested "all"
+				if request.All {
+					if i == 0 {
+						response = models.BulkPublishResponse{
+							Files: []models.UploadResponse{
+								models.UploadResponse{
+									FileID:         file.ID,
+									Filename:       file.Name,
+									PublicFilename: publicName,
+								},
+							},
+						}
+					} else {
+						//Typecast
+						res, _ := (response).(models.BulkPublishResponse)
+						//Append file
+						res.Files = append(res.Files, models.UploadResponse{
+							FileID:         file.ID,
+							Filename:       file.Name,
+							PublicFilename: publicName,
+						})
+					}
+				} else {
+					//Otherwise respond with a single item
+					response = models.PublishResponse{
+						PublicFilename: publicName,
+					}
+				}
 			}
 
 			//Send success
-			sendResponse(w, models.ResponseSuccess, "", models.PublishResponse{
-				PublicFilename: publicName,
-			})
-			return
+			sendResponse(w, models.ResponseSuccess, "", response)
 		}
-	}
-
-	if LogError(err) {
-		sendServerError(w)
-		return
-	}
-
-	if didUpdate {
-		sendResponse(w, models.ResponseSuccess, "success", nil)
-	} else {
-		sendResponse(w, models.ResponseError, "noting to do", nil)
 	}
 }

@@ -55,7 +55,7 @@ type RouteFunction func(handlerData, http.ResponseWriter, *http.Request)
 //Routes
 var (
 	routes = Routes{
-		//Ping
+		// Ping
 		Route{
 			Name:        "ping",
 			Pattern:     "/ping",
@@ -63,7 +63,7 @@ var (
 			HandlerFunc: Ping,
 			HandlerType: defaultRequest,
 		},
-		//User
+		// User
 		Route{
 			Name:        "login",
 			Pattern:     "/user/login",
@@ -101,10 +101,19 @@ var (
 			HandlerFunc: FileHandler,
 			HandlerType: sessionRequest,
 		},
+
+		// Preview
 		Route{
 			Name:        "preview",
 			Pattern:     "/preview/{fileID}",
-			HandlerFunc: PrevievHandler,
+			HandlerFunc: PrevievFileHandler,
+			HandlerType: defaultRequest,
+			Method:      GetMethod,
+		},
+		Route{
+			Name:        "index page",
+			Pattern:     "/preview",
+			HandlerFunc: IndexPageHandler,
 			HandlerType: defaultRequest,
 			Method:      GetMethod,
 		},

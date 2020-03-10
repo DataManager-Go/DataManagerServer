@@ -110,6 +110,20 @@ func (file File) IsInGroupList(groups []Group) bool {
 	return false
 }
 
+//FindFiles finds file
+func FindFiles(db *gorm.DB, fileName string, namespace Namespace, user *User) ([]File, error) {
+	var files []File
+	a := db.Model(&File{}).Where("name = ? AND namespace_id = ? AND uploader = ?", fileName, namespace.ID, user.ID)
+
+	//Get file to delete
+	err := a.Preload("Namespace").Preload("Tags").Preload("Groups").Find(&files).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return files, nil
+}
+
 //FindFile finds file
 func FindFile(db *gorm.DB, fileName string, fileID uint, namespace Namespace, user *User) (*File, error) {
 	a := db.Model(&File{}).Where("name = ? AND namespace_id = ? AND uploader = ?", fileName, namespace.ID, user.ID)
