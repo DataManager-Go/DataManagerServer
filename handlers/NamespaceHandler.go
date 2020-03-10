@@ -64,7 +64,7 @@ func NamespaceActionHandler(handlerData handlerData, w http.ResponseWriter, r *h
 	}
 
 	//Find namespace
-	namespace := models.FindNamespace(handlerData.db, namespaceName)
+	namespace := models.FindNamespace(handlerData.db, namespaceName, handlerData.user)
 
 	if action == "create" {
 		//Check if namespace already exists
@@ -102,6 +102,9 @@ func NamespaceActionHandler(handlerData handlerData, w http.ResponseWriter, r *h
 		{
 			// Delete namespace
 			handlerData.db.Delete(namespace)
+			handlerData.db.Delete(&models.Tag{}, "namespace_id=?", namespace.ID)
+			handlerData.db.Delete(&models.Group{}, "namespace_id=?", namespace.ID)
+			handlerData.db.Delete(&models.File{}, "namespace_id=?", namespace.ID)
 		}
 	}
 

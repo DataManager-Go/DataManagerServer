@@ -35,7 +35,7 @@ func AttributeHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 	}
 
 	//Find namespace
-	namespace := models.FindNamespace(handlerData.db, request.Namespace)
+	namespace := models.FindNamespace(handlerData.db, request.Namespace, handlerData.user)
 	if namespace == nil {
 		sendResponse(w, models.ResponseError, "namespace not found", nil, http.StatusNotFound)
 		return

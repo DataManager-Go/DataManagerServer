@@ -38,13 +38,18 @@ func GetNamespaceFromString(ns string) *Namespace {
 }
 
 //FindNamespace find namespace in DB
-func FindNamespace(db *gorm.DB, ns string) *Namespace {
+func FindNamespace(db *gorm.DB, ns string, user *User) *Namespace {
 	namespace := GetNamespaceFromString(ns)
 	if namespace.ID != 0 {
 		return namespace
 	}
 
 	db.Where(&namespace).Preload("User").Find(&namespace)
+
+	if (namespace == nil || namespace.ID == 0) && !strings.HasPrefix(ns, user.Username+"_") {
+		namespace.Name = UserNamespaceName(namespace.Name, user)
+		db.Where(&namespace).Preload("User").Find(&namespace)
+	}
 
 	return namespace
 }
@@ -67,4 +72,12 @@ func FindUserNamespaces(db *gorm.DB, user *User) ([]Namespace, error) {
 	}
 
 	return namespaces, nil
+}
+
+//UserNamespaceName get name of usernamespace
+func UserNamespaceName(namespaceName string, user *User) string {
+	if strings.HasPrefix(namespaceName, user.Username+"_") {
+		return namespaceName
+	}
+	return user.Username + "_" + namespaceName
 }

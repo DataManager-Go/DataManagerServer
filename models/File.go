@@ -309,3 +309,63 @@ func GetPublicFile(db *gorm.DB, publicFilename string) (*File, bool, error) {
 
 	return &file, true, nil
 }
+
+//UpdateNamespace updates namespace for file
+func (file *File) UpdateNamespace(db *gorm.DB, newNamespace *Namespace, user *User) error {
+	//Set new namespace
+	file.Namespace = newNamespace
+	file.NamespaceID = newNamespace.ID
+
+	//Update/move tags if available
+	if len(file.Tags) > 0 {
+		var newTags []Tag
+		for _, tag := range file.Tags {
+			newTag := GetTag(db, tag.Name, newNamespace, user)
+			newTags = append(newTags, *newTag)
+		}
+		//remove old tags
+		db.Model(&file).Association("Tags").Clear()
+		//Set new tags
+		file.Tags = newTags
+	}
+
+	//Update/move groups if available
+	if len(file.Groups) > 0 {
+		var newGroups []Group
+		for _, group := range file.Groups {
+			newGroup := GetGroup(db, group.Name, newNamespace, user)
+			newGroups = append(newGroups, *newGroup)
+		}
+		//remove old groups
+		db.Model(&file).Association("Groups").Clear()
+		//Set new groups
+		file.Groups = newGroups
+	}
+
+	//Save file
+	return db.Save(&file).Error
+}
+
+//Publish publis a file
+func (file *File) Publish(db *gorm.DB, publicName string) (bool, error) {
+	//Determine public name
+	if len(publicName) == 0 {
+		publicName = gaw.RandString(25)
+	}
+
+	//Set file public name
+	file.PublicFilename = sql.NullString{
+		String: publicName,
+		Valid:  true,
+	}
+	file.IsPublic = true
+
+	//Check if public name already exists
+	_, found, _ := GetPublicFile(db, publicName)
+	if found {
+		return true, nil
+	}
+
+	//Save new file
+	return false, file.Save(db)
+}
