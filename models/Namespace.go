@@ -9,6 +9,15 @@ import (
 //DefaultNamespace defalut namespace
 var DefaultNamespace Namespace
 
+//NamespaceType type of namespace
+type NamespaceType uint8
+
+//Namespace types
+const (
+	UserNamespaceType NamespaceType = iota
+	CustomNamespaceType
+)
+
 //Namespace a namespace for files
 type Namespace struct {
 	gorm.Model

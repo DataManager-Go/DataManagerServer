@@ -21,6 +21,13 @@ type FileRequest struct {
 	Attributes FileAttributes `json:"attributes"`
 }
 
+//NamespaceRequest namespace action request
+type NamespaceRequest struct {
+	Namespace string        `json:"ns"`
+	NewName   string        `json:"newName,omitempty"`
+	Type      NamespaceType `json:"nstype"`
+}
+
 // FileUpdateItem lists changes to a file
 type FileUpdateItem struct {
 	IsPublic     string   `json:"ispublic,omitempty"`

@@ -144,59 +144,85 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 		return
 	}
 
-	//Read from the desired source (file/url)
-	switch request.UploadType {
-	case models.FileUploadType:
-		//Read from uploaded file
-		str, err := base64.StdEncoding.DecodeString(request.Data)
-		if LogError(err) {
-			sendServerError(w)
-			return
+	//Channel to await file writing
+	c := make(chan int, 1)
+
+	//Do filewriting in go routine
+	go (func() {
+		//Read from the desired source (file/url)
+		switch request.UploadType {
+		case models.FileUploadType:
+			//Read from uploaded file
+			str, err := base64.StdEncoding.DecodeString(request.Data)
+			if LogError(err) {
+				c <- 0
+				break
+			}
+
+			size, err := f.Write(str)
+			if LogError(err) {
+				c <- 0
+				break
+			}
+
+			file.FileSize = int64(size)
+
+			if len(request.FileType) > 0 && filetype.IsMIMESupported(request.FileType) {
+				file.FileType = request.FileType
+			}
+		case models.URLUploadType:
+			//Read from HTTP request
+			status, err := downloadHTTP(handlerData.user, request.URL, f, &file)
+			if err != nil {
+				sendResponse(w, models.ResponseError, err.Error(), nil, http.StatusBadRequest)
+				c <- 2
+				break
+			}
+
+			//Check statuscode
+			if status > 299 || status < 200 {
+				sendResponse(w, models.ResponseError, "Non ok response: "+strconv.Itoa(status), nil, http.StatusBadRequest)
+				c <- 2
+				break
+			}
 		}
 
-		size, err := f.Write(str)
-		if LogError(err) {
-			sendServerError(w)
-			return
+		//Close file
+		if LogError(f.Close()) {
+			c <- 0
+		} else {
+			c <- 1
 		}
-
-		file.FileSize = int64(size)
-
-		if len(request.FileType) > 0 && filetype.IsMIMESupported(request.FileType) {
-			file.FileType = request.FileType
-		}
-	case models.URLUploadType:
-		//Read from HTTP request
-		status, err := downloadHTTP(handlerData.user, request.URL, f, &file)
-		if err != nil {
-			sendResponse(w, models.ResponseError, err.Error(), nil, http.StatusBadRequest)
-			return
-		}
-
-		//Check statuscode
-		if status > 299 || status < 200 {
-			sendResponse(w, models.ResponseError, "Non ok response: "+strconv.Itoa(status), nil, http.StatusBadRequest)
-			return
-		}
-	}
-
-	//Close file
-	if LogError(f.Close()) {
-		sendServerError(w)
-		return
-	}
+	})()
 
 	//Save file to DB
 	err = file.Insert(handlerData.db, handlerData.user)
-	if LogError(err) {
-		sendServerError(w)
-	} else {
+
+	//Await file write
+	cVal := <-c
+
+	// 2 is "message already send"
+	if cVal == 2 {
+		return
+	}
+
+	// 1 is success
+	if cVal == 1 && !LogError(err) {
 		sendResponse(w, models.ResponseSuccess, "", models.UploadResponse{
 			FileID:         file.ID,
 			Filename:       file.Name,
 			PublicFilename: file.PublicFilename.String,
 		})
+
+		return
 	}
+
+	// TODO handle db/file-error (delete file on db error and vice versa)
+	if cVal == 0 || err != nil {
+		sendServerError(w)
+		return
+	}
+
 }
 
 //ListFilesHandler handler for listing files
