@@ -260,13 +260,14 @@ func ListFilesHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 	}
 
 	if len(request.Name) > 0 {
-		loaded = loaded.Where("name LIKE ?", "%"+request.Name+"%")
+		loaded = loaded.Where("files.name LIKE ?", "%"+request.Name+"%")
 	}
 
 	if request.AllNamespaces {
 		//Join to filter by namespace creator
-		loaded = loaded.Joins("INNER JOIN namespaces ON namespaces.id = files.namespace_id")
-		loaded = loaded.Where("namespaces.creator = ?", handlerData.user.ID)
+		loaded = loaded.
+			Joins("INNER JOIN namespaces ON namespaces.id = files.namespace_id").
+			Where("namespaces.creator = ?", handlerData.user.ID)
 	} else {
 		//Just select the specified namespace
 		loaded = loaded.Where("namespace_id = ?", namespace.ID)
