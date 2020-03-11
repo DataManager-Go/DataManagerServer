@@ -240,26 +240,12 @@ func ListFilesHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	//Gen Tags
-	tags := models.FindTags(handlerData.db, request.Attributes.Tags, namespace)
-	if len(tags) == 0 && len(request.Attributes.Tags) > 0 {
-		sendResponse(w, models.ResponseError, "No matching tag found", 404)
-		return
-	}
-
-	//Gen Groups
-	groups := models.FindGroups(handlerData.db, request.Attributes.Groups, namespace)
-	if len(groups) == 0 && len(request.Attributes.Groups) > 0 {
-		sendResponse(w, models.ResponseError, "No matching group found", 404)
-		return
-	}
-
 	loaded := handlerData.db
-	if len(tags) > 0 || request.OptionalParams.Verbose > 1 {
+	if len(request.Attributes.Tags) > 0 || request.OptionalParams.Verbose > 1 {
 		loaded = loaded.Preload("Tags")
 	}
 
-	if len(groups) > 0 || request.OptionalParams.Verbose > 1 {
+	if len(request.Attributes.Groups) > 0 || request.OptionalParams.Verbose > 1 {
 		loaded = loaded.Preload("Groups")
 	}
 
@@ -282,9 +268,9 @@ func ListFilesHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 	var retFiles []models.FileResponseItem
 	for _, file := range foundFiles {
 		//Filter tags
-		if (len(tags) == 0 || (len(tags) > 0 && file.IsInTagList(tags))) &&
+		if (len(request.Attributes.Tags) == 0 || (len(request.Attributes.Tags) > 0 && file.IsInTagList(request.Attributes.Tags))) &&
 			//Filter groups
-			(len(groups) == 0 || (len(groups) > 0 && file.IsInGroupList(groups))) {
+			(len(request.Attributes.Groups) == 0 || (len(request.Attributes.Groups) > 0 && file.IsInGroupList(request.Attributes.Groups))) {
 			respItem := models.FileResponseItem{
 				ID:           file.ID,
 				Name:         file.Name,

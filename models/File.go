@@ -87,10 +87,10 @@ func (file File) GetNamespace() *Namespace {
 }
 
 //IsInTagList return true if file has one of the specified tags
-func (file File) IsInTagList(tags []Tag) bool {
+func (file File) IsInTagList(tags []string) bool {
 	for _, tag := range file.Tags {
 		for _, t1 := range tags {
-			if tag.ID == t1.ID {
+			if tag.Name == t1 {
 				return true
 			}
 		}
@@ -99,10 +99,10 @@ func (file File) IsInTagList(tags []Tag) bool {
 }
 
 //IsInGroupList return true if file is in one of the specified groups
-func (file File) IsInGroupList(groups []Group) bool {
+func (file File) IsInGroupList(groups []string) bool {
 	for _, group := range file.Groups {
 		for _, t1 := range groups {
-			if group.ID == t1.ID {
+			if group.Name == t1 {
 				return true
 			}
 		}
