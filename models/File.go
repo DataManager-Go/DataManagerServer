@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql"
 	"os"
+	"strings"
 
 	"github.com/JojiiOfficial/gaw"
 	"github.com/jinzhu/gorm"
@@ -113,7 +114,7 @@ func (file File) IsInGroupList(groups []string) bool {
 //FindFiles finds file
 func FindFiles(db *gorm.DB, fileName string, namespace Namespace, user *User) ([]File, error) {
 	var files []File
-	a := db.Model(&File{}).Where("name = ? AND namespace_id = ? AND uploader = ?", fileName, namespace.ID, user.ID)
+	a := db.Model(&File{}).Where("name like ? AND namespace_id = ? AND uploader = ?", fileName, namespace.ID, user.ID)
 
 	//Get file to delete
 	err := a.Preload("Namespace").Preload("Tags").Preload("Groups").Find(&files).Error
@@ -126,7 +127,7 @@ func FindFiles(db *gorm.DB, fileName string, namespace Namespace, user *User) ([
 
 //FindFile finds file
 func FindFile(db *gorm.DB, fileName string, fileID uint, namespace Namespace, user *User) (*File, error) {
-	a := db.Model(&File{}).Where("name = ? AND namespace_id = ? AND uploader = ?", fileName, namespace.ID, user.ID)
+	a := db.Model(&File{}).Where("name like ? AND namespace_id = ? AND uploader = ?", fileName, namespace.ID, user.ID)
 	if fileID != 0 {
 		a = a.Where("id = ?", fileID)
 	}
@@ -279,10 +280,17 @@ func (file File) GetCount(db *gorm.DB, fileID uint, user *User) (uint, error) {
 
 	//Create count statement
 	del := db.Model(&File{}).Where(&File{
-		Name:        file.Name,
 		NamespaceID: file.Namespace.ID,
 		Model:       file.Model,
 	}).Where("deleted_at is NULL")
+
+	//Allow searching for wildcards
+	if strings.HasSuffix(file.Name, "%") || strings.HasPrefix(file.Name, "%") {
+		//Apply wildcard
+		del = del.Where("name like ?", file.Name)
+	} else {
+		del = del.Where("name = ?", file.Name)
+	}
 
 	//Also use fileID if set
 	if fileID != 0 {

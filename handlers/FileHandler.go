@@ -348,7 +348,6 @@ func FileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request
 		sendResponse(w, models.ResponseError, "invalid action", nil)
 		return
 	}
-
 	//Get count of files with same name (ID only if provided)
 	c, err := models.File{
 		Name:      request.Name,
