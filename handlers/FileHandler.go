@@ -227,20 +227,26 @@ func ListFilesHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	//Select namespace
-	namespace := models.FindNamespace(handlerData.db, request.Attributes.Namespace, handlerData.user)
-	if namespace == nil || namespace.ID == 0 {
-		sendResponse(w, models.ResponseError, "Namespace not found", 404)
-		return
+	var namespace *models.Namespace
+
+	if !request.AllNamespaces {
+		//Select namespace
+		namespace = models.FindNamespace(handlerData.db, request.Attributes.Namespace, handlerData.user)
+		if namespace == nil || namespace.ID == 0 {
+			sendResponse(w, models.ResponseError, "Namespace not found", 404)
+			return
+		}
+
+		//Check if user can read from this namespace
+		if !namespace.IsOwnedBy(handlerData.user) && !handlerData.user.CanReadForeignNamespace() {
+			sendResponse(w, models.ResponseError, "Read permission denied for foreign namespaces", nil, http.StatusForbidden)
+			return
+		}
 	}
 
-	//Check if user can read from this namespace
-	if !namespace.IsOwnedBy(handlerData.user) && !handlerData.user.CanReadForeignNamespace() {
-		sendResponse(w, models.ResponseError, "Read permission denied for foreign namespaces", nil, http.StatusForbidden)
-		return
-	}
+	var foundFiles []models.File
 
-	loaded := handlerData.db
+	loaded := handlerData.db.Model(&foundFiles)
 	if len(request.Attributes.Tags) > 0 || request.OptionalParams.Verbose > 1 {
 		loaded = loaded.Preload("Tags")
 	}
@@ -253,16 +259,25 @@ func ListFilesHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 		loaded = loaded.Preload("Namespace")
 	}
 
-	loaded = loaded.Where("namespace_id = ?", namespace.ID)
-
 	if len(request.Name) > 0 {
 		loaded = loaded.Where("name LIKE ?", "%"+request.Name+"%")
 	}
 
-	var foundFiles []models.File
+	if request.AllNamespaces {
+		//Join to filter by namespace creator
+		loaded = loaded.Joins("INNER JOIN namespaces ON namespaces.id = files.namespace_id")
+		loaded = loaded.Where("namespaces.creator = ?", handlerData.user.ID)
+	} else {
+		//Just select the specified namespace
+		loaded = loaded.Where("namespace_id = ?", namespace.ID)
+	}
 
 	//search
-	loaded.Find(&foundFiles)
+	err := loaded.Find(&foundFiles).Error
+	if LogError(err) {
+		sendServerError(w)
+		return
+	}
 
 	//Convert to ResponseFile
 	var retFiles []models.FileResponseItem

@@ -50,6 +50,7 @@ type UpdateAttributeRequest struct {
 type FileListRequest struct {
 	FileID         uint                     `json:"fid"`
 	Name           string                   `json:"name"`
+	AllNamespaces  bool                     `json:"allns"`
 	OptionalParams OptionalRequetsParameter `json:"opt"`
 	Attributes     FileAttributes           `json:"attributes"`
 }
