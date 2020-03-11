@@ -6,8 +6,6 @@ import (
 	"mime"
 	"net/http"
 	"os"
-	"path"
-	"strings"
 
 	"github.com/JojiiOfficial/DataManagerServer/models"
 	"github.com/JojiiOfficial/gaw"
@@ -74,18 +72,6 @@ func IndexPageHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 	handleBrowserServeError(
 		//Try to serve index file
 		serveSingleFile(handlerData.config.GetHTMLFile(IndexFile), w),
-		handlerData, w, r)
-}
-
-//StaticHandler handle static files
-func StaticHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	//Remove invalid chars
-	toServeFile := strings.ReplaceAll(strings.ReplaceAll(vars["file"], "/", ""), "..", "")
-
-	handleBrowserServeError(
-		//Try to serve static file
-		serveSingleFile(handlerData.config.GetHTMLFile(path.Join("static", toServeFile)), w),
 		handlerData, w, r)
 }
 

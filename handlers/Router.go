@@ -170,7 +170,7 @@ func addCustomRoutes(router *mux.Router, handlerData *handlerData) {
 	router.Handle("/preview/", handler)
 
 	// Serve static files
-	router.Handle("/static/{file}", RouteHandler(defaultRequest, handlerData, StaticHandler, "static"))
+	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./html/static"))))
 }
 
 //RouteHandler logs stuff
