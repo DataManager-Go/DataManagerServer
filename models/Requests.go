@@ -62,9 +62,7 @@ type OptionalRequetsParameter struct {
 // UploadRequest contains file info (and a file)
 type UploadRequest struct {
 	UploadType UploadType     `json:"type"`
-	Data       string         `json:"data"`
 	URL        string         `json:"url"`
-	Sum        string         `json:"sum"`
 	Name       string         `json:"name"`
 	Public     bool           `json:"public"`
 	PublicName string         `json:"pbname"`

@@ -3,6 +3,7 @@ package handlers
 import (
 	"database/sql"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -19,7 +20,26 @@ import (
 //UploadfileHandler handler for uploading files
 func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
 	var request models.UploadRequest
-	if !readRequestLimited(w, r, &request, handlerData.config.Webserver.MaxUploadFileLength) {
+
+	//Get data from header
+	requestData := r.Header.Get(models.HeaderRequest)
+	if len(requestData) == 0 {
+		sendResponse(w, models.ResponseError, "Bad request", nil, http.StatusBadRequest)
+		return
+	}
+
+	//Decode header base64
+	rBaseBytes, err := base64.StdEncoding.DecodeString(requestData)
+	if err != nil {
+		sendResponse(w, models.ResponseError, "Bad request", nil, http.StatusBadRequest)
+		return
+	}
+
+	//Parse json from request header
+	err = json.Unmarshal(rBaseBytes, &request)
+	if LogError(err) {
+		fmt.Println("Invalid Json:", err)
+		sendResponse(w, models.ResponseError, "Bad request", nil, http.StatusBadRequest)
 		return
 	}
 
@@ -30,12 +50,6 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 			//Check if user is allowed to upload files
 			if !handlerData.user.CanUploadFiles() {
 				sendResponse(w, models.ResponseError, "not allowed to upload files", nil, http.StatusForbidden)
-				return
-			}
-
-			//Data validation
-			if gaw.GetMD5Hash(request.Data) != request.Sum {
-				sendResponse(w, models.ResponseError, "Content wasn't delivered completely", nil, http.StatusUnprocessableEntity)
 				return
 			}
 		}
@@ -149,17 +163,23 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 	switch request.UploadType {
 	case models.FileUploadType:
 		//Read from uploaded file
-		str, err := base64.StdEncoding.DecodeString(request.Data)
-		if LogError(err) {
-			break
-		}
+		r.ParseMultipartForm(handlerData.user.Role.MaxUploadFileSize)
 
-		size, err := f.Write(str)
+		uploadfile, _, err := r.FormFile("uploadfile")
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		defer uploadfile.Close()
+
+		//Copy stream to file
+		size, err := io.Copy(f, uploadfile)
 		if LogError(err) {
 			sendServerError(w)
 			return
 		}
 
+		//Set filesize to written bytes
 		file.FileSize = int64(size)
 
 		if len(request.FileType) > 0 && filetype.IsMIMESupported(request.FileType) {
