@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: dmanager
+  name: dmanager
+  namespace: default
+spec:
+  replicas: 4
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: dmanager
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: dmanager
+    spec:
+      containers:
+      - image: jojii/dmanager:v3.5.1
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: DM_LOG_LEVEL
+          value: debug
+        - name: DM_CONFIG
+          value: /app/data/config.yml
+        name: dmanager
+        volumeMounts:
+        - mountPath: /app/data/
+          name: config
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - configMap:
+          name: dmanager
+        name: config
+--- 
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: dmanager
+  name: dmanager
+spec:
+  externalIPs:
+  - <IP>
+  ports:
+  - name: 80-80
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: dmanager
+  type: LoadBalancer

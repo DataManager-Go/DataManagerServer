@@ -15,7 +15,6 @@
 # vendor/
 main
 data
-*.yaml
 *.json
 DataShareServer
 data/
