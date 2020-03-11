@@ -158,6 +158,10 @@ func NewRouter(config *models.Config, db *gorm.DB) *mux.Router {
 				db:     db,
 			}, route.HandlerFunc, route.Name))
 	}
+
+	//Setup 404 not found handler
+	router.NotFoundHandler = http.HandlerFunc(NotFoundHandler)
+
 	return router
 }
 

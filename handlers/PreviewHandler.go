@@ -62,3 +62,10 @@ func IndexPageHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 	// Print main page
 	// TODO
 }
+
+//NotFoundHandler show index/main page
+func NotFoundHandler(w http.ResponseWriter, r *http.Request) {
+	// Print 404 error
+	// TODO
+	w.Write([]byte("ur mom gay 404"))
+}
