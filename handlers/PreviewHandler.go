@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"io/ioutil"
 	"net/http"
 	"os"
 
@@ -66,6 +67,8 @@ func IndexPageHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 //NotFoundHandler show index/main page
 func NotFoundHandler(w http.ResponseWriter, r *http.Request) {
 	// Print 404 error
-	// TODO
-	w.Write([]byte("ur mom gay 404"))
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	page, _ := ioutil.ReadFile("../html/404.html")
+	w.Write(page)
 }

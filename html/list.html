@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+</head>
+
+<!-- Body here -->
+
+<body style="background-color: #252526">
+<div class="container">
+  <h1 align="center" id="title">Learn Golang</h1>
+  <br>
+  <h3 align="center">Easy levels</h3>
+  <br>
+  <p id="easyCollection"></p>
+  <br>
+  <h3 align="center">Medium levels</h3>
+  <br>
+  <p id="mediumCollection"></p>
+  <br>
+  <h3 align="center">Hard levels</h3>
+  <br>
+  <p id="hardCollection"></p>
+</div>
+</body>
+
+<!-- CSS here -->
+
+<style>
+    h1 {
+  		color: white;
+	}
+    h3 {
+  		color: white;
+	}
+    p {
+       	color: white;
+    }
+        
+    #editor {
+    	width: 720px;
+    	height: 800px;
+    	padding: 10px;
+       	background-color: #444;
+    	color: white;
+    	font-size: 15px;
+    	font-family: arial;
+        display: inline-block;
+        line-height: 12px;
+	}
+    div.textarea {
+    	max-height: 800px;
+    	overflow: auto;
+    }
+
+</style>
+ 
+<!-- Javascript here -->
+
+<script>
+
+/* Create buttons dynamically */
+  function setLevels(difficulty, count, completed) {
+  	
+    for (i = 0; i < count; i++) {
+      var btn = document.createElement("BUTTON");
+      btn.setAttribute("type", "button");
+      if (i > completed)
+        btn.setAttribute("class", "btn btn-primary btn-lg disabled");
+      else {
+        btn.setAttribute("class", "btn btn-primary btn-lg");
+      	btn.setAttribute("onclick", "onLevelClick(this.id)")  
+      }
+      btn.setAttribute("style", "width:50px");
+      btn.innerHTML = ""+(i+1);
+      
+      if (difficulty == "easy") {
+        document.getElementById("easyCollection").appendChild(btn);
+      	btn.setAttribute("id", "easy_"+(i+1));
+      }
+      else if (difficulty == "medium") {
+        document.getElementById("mediumCollection").appendChild(btn);
+       	btn.setAttribute("id", "medium_"+(i+1));
+      }
+      else {
+        document.getElementById("hardCollection").appendChild(btn);
+      	btn.setAttribute("id", "hard_"+(i+1));
+      }
+    }
+  }
+
+  function onLevelClick(id) {
+    window.external.invoke(JSON.stringify({cmd: "loadLevel", desiredLevel: id}))
+  }
+
+  /* Used to swap pages */
+  function openTemplate(templateData) {
+        document.open();
+        document.write(templateData);
+        document.close();
+  }
+  
+  /* setLevels("easy", 50, 5); */
+  /* setLevels("medium", 40); */
+  /* setLevels("hard", 10); */
+
+</script>
+  
+</html>

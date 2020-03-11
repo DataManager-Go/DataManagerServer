@@ -111,7 +111,7 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 			break
 		}
 
-		log.Warn("Name collision found. Trying again (%d/%d)", i, 5)
+		log.Warningf("Name collision found. Trying again (%d/%d)", i, 5)
 	}
 
 	if !uniqueNameFound {
