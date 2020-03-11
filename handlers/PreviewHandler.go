@@ -24,7 +24,7 @@ func PrevievFileHandler(handlerData handlerData, w http.ResponseWriter, r *http.
 	//search file
 	file, found, err := models.GetPublicFile(handlerData.db, fileID)
 	if !found {
-		http.NotFound(w, r)
+		NotFoundHandler(handlerData, w, r)
 		return
 	}
 
@@ -36,7 +36,7 @@ func PrevievFileHandler(handlerData handlerData, w http.ResponseWriter, r *http.
 
 	//Send not found if not public
 	if !file.IsPublic {
-		http.NotFound(w, r)
+		NotFoundHandler(handlerData, w, r)
 		return
 	}
 

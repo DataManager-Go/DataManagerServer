@@ -20,7 +20,6 @@ COPY ./constants/*.go ./constants/
 COPY ./services/*.go ./services/
 COPY ./handlers/*.go ./handlers/
 COPY ./storage/*.go ./storage/
-COPY ./html ./html
 
 # Compile
 RUN go build -o main
@@ -36,6 +35,7 @@ WORKDIR /app
 RUN mkdir /app/data/
 
 COPY --from=builder1 /app/whshare/main .
+COPY ./html ./html
 
 # Set Debuglevel and start the server
 ENV DM_LOG_LEVEL debug
