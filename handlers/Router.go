@@ -161,13 +161,16 @@ func NewRouter(config *models.Config, db *gorm.DB) *mux.Router {
 }
 
 func addCustomRoutes(router *mux.Router, handlerData *handlerData) {
-	// 404
+	// 404 Handler
 	router.NotFoundHandler = RouteHandler(defaultRequest, handlerData, NotFoundHandler, "not found")
 
 	// Index routes
 	handler := RouteHandler(defaultRequest, handlerData, IndexPageHandler, "index")
 	router.Handle("/", handler)
 	router.Handle("/preview/", handler)
+
+	// Serve static files
+	router.Handle("/static/{file}", RouteHandler(defaultRequest, handlerData, StaticHandler, "static"))
 }
 
 //RouteHandler logs stuff

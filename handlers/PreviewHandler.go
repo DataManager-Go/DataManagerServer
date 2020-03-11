@@ -1,13 +1,18 @@
 package handlers
 
 import (
+	"fmt"
 	"io/ioutil"
+	"mime"
 	"net/http"
 	"os"
+	"path"
+	"strings"
 
 	"github.com/JojiiOfficial/DataManagerServer/models"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/gorilla/mux"
+	"github.com/sirupsen/logrus"
 )
 
 //Static files
@@ -66,22 +71,55 @@ func PrevievFileHandler(handlerData handlerData, w http.ResponseWriter, r *http.
 
 //IndexPageHandler show index/main page
 func IndexPageHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
-	serveSingleFile(handlerData.config.GetHTMLFile(IndexFile), w)
+	handleBrowserServeError(
+		//Try to serve index file
+		serveSingleFile(handlerData.config.GetHTMLFile(IndexFile), w),
+		handlerData, w, r)
+}
+
+//StaticHandler handle static files
+func StaticHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	//Remove invalid chars
+	toServeFile := strings.ReplaceAll(strings.ReplaceAll(vars["file"], "/", ""), "..", "")
+
+	handleBrowserServeError(
+		//Try to serve static file
+		serveSingleFile(handlerData.config.GetHTMLFile(path.Join("static", toServeFile)), w),
+		handlerData, w, r)
 }
 
 //NotFoundHandler 404 not found handler
 func NotFoundHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
-	serveSingleFile(handlerData.config.GetHTMLFile(NotFoundFile), w)
+	err := serveSingleFile(handlerData.config.GetHTMLFile(NotFoundFile), w)
+	if err != nil {
+		if os.IsNotExist(err) {
+			logrus.Error("Can't find 404.html!")
+			return
+		}
+		http.Error(w, "Server error", http.StatusInternalServerError)
+	}
+}
+
+//Handles errors and respond with 404 if this caused the error
+func handleBrowserServeError(err error, handerData handlerData, w http.ResponseWriter, r *http.Request) {
+	if err != nil {
+		if os.IsNotExist(err) {
+			NotFoundHandler(handerData, w, r)
+			return
+		}
+		http.Error(w, "Server error", http.StatusInternalServerError)
+	}
 }
 
 //Serve static file
-func serveSingleFile(file string, w http.ResponseWriter) {
+func serveSingleFile(file string, w http.ResponseWriter) error {
 	page, err := ioutil.ReadFile(file)
-	if LogError(err) {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
+	if err != nil {
+		return err
 	}
 
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write(page)
+	w.Header().Set("Content-Type", fmt.Sprintf("%s; charset=utf-8", mime.TypeByExtension(file)))
+	_, err = w.Write(page)
+	return err
 }
