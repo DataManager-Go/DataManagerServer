@@ -255,7 +255,7 @@ func ListFilesHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 		loaded = loaded.Preload("Groups")
 	}
 
-	if request.OptionalParams.Verbose > 2 {
+	if request.OptionalParams.Verbose > 2 || request.AllNamespaces {
 		loaded = loaded.Preload("Namespace")
 	}
 
@@ -300,7 +300,7 @@ func ListFilesHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 			}
 
 			//Return attributes on verbose
-			if request.OptionalParams.Verbose > 1 {
+			if request.OptionalParams.Verbose > 1 || request.AllNamespaces {
 				respItem.Attributes = file.GetAttributes()
 			}
 
