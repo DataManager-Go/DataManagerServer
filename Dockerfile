@@ -20,6 +20,7 @@ COPY ./constants/*.go ./constants/
 COPY ./services/*.go ./services/
 COPY ./handlers/*.go ./handlers/
 COPY ./storage/*.go ./storage/
+COPY ./html ./html
 
 # Compile
 RUN go build -o main

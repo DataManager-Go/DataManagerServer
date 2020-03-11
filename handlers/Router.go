@@ -110,13 +110,6 @@ var (
 			HandlerType: defaultRequest,
 			Method:      GetMethod,
 		},
-		Route{
-			Name:        "index page",
-			Pattern:     "/preview",
-			HandlerFunc: IndexPageHandler,
-			HandlerType: defaultRequest,
-			Method:      GetMethod,
-		},
 
 		// Attribute
 		Route{
@@ -147,22 +140,34 @@ var (
 
 //NewRouter create new router
 func NewRouter(config *models.Config, db *gorm.DB) *mux.Router {
+	handlerData := handlerData{
+		config: config,
+		db:     db,
+	}
+
 	router := mux.NewRouter().StrictSlash(true)
 	for _, route := range routes {
 		router.
 			Methods(string(route.Method)).
 			Path(route.Pattern).
 			Name(route.Name).
-			Handler(RouteHandler(route.HandlerType, &handlerData{
-				config: config,
-				db:     db,
-			}, route.HandlerFunc, route.Name))
+			Handler(RouteHandler(route.HandlerType, &handlerData, route.HandlerFunc, route.Name))
 	}
 
-	//Setup 404 not found handler
-	router.NotFoundHandler = http.HandlerFunc(NotFoundHandler)
+	//Adding custom routes
+	addCustomRoutes(router, &handlerData)
 
 	return router
+}
+
+func addCustomRoutes(router *mux.Router, handlerData *handlerData) {
+	// 404
+	router.NotFoundHandler = RouteHandler(defaultRequest, handlerData, NotFoundHandler, "not found")
+
+	// Index routes
+	handler := RouteHandler(defaultRequest, handlerData, IndexPageHandler, "index")
+	router.Handle("/", handler)
+	router.Handle("/preview/", handler)
 }
 
 //RouteHandler logs stuff

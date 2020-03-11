@@ -20,10 +20,11 @@ type Config struct {
 }
 
 type webserverConf struct {
-	MaxHeaderLength      uint  `default:"8000" required:"true"`
-	MaxRequestBodyLength int64 `default:"10000" required:"true"`
-	MaxUploadFileLength  int64 `default:"1000000000" required:"true"`
-	DownloadFileBuffer   int   `default:"100000" required:"true"`
+	MaxHeaderLength      uint   `default:"8000" required:"true"`
+	MaxRequestBodyLength int64  `default:"10000" required:"true"`
+	MaxUploadFileLength  int64  `default:"1000000000" required:"true"`
+	DownloadFileBuffer   int    `default:"100000" required:"true"`
+	HTMLFiles            string `default:"./html/" required:"true"`
 	HTTP                 configHTTPstruct
 	HTTPS                configTLSStruct
 }
@@ -143,6 +144,7 @@ func InitConfig(confFile string, createMode bool) (*Config, bool) {
 				},
 			},
 			Webserver: webserverConf{
+				HTMLFiles:            "./html",
 				MaxRequestBodyLength: 100000,
 				MaxUploadFileLength:  10000000000,
 				MaxHeaderLength:      8000,
@@ -239,6 +241,11 @@ func (config *Config) Check() bool {
 //GetStorageFile return the path and file for an uploaded file
 func (config Config) GetStorageFile(fileName string) string {
 	return path.Join(config.Server.PathConfig.FileStore, fileName)
+}
+
+//GetHTMLFile return path of html file
+func (config Config) GetHTMLFile(fileName string) string {
+	return path.Join(config.Webserver.HTMLFiles, fileName)
 }
 
 //GetDefaultRole return the path and file for an uploaded file
