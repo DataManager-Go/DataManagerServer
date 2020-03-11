@@ -50,6 +50,7 @@ type configDBstruct struct {
 	Database     string
 	Pass         string
 	DatabasePort int
+	SSLMode      string
 }
 
 //Config for HTTPS
@@ -109,6 +110,7 @@ func InitConfig(confFile string, createMode bool) (*Config, bool) {
 				Database: configDBstruct{
 					Host:         "localhost",
 					DatabasePort: 3306,
+					SSLMode:      "require",
 				},
 				PathConfig: pathConfig{
 					FileStore: "./files",

@@ -10,7 +10,12 @@ import (
 
 //ConnectToDatabase connects to database
 func ConnectToDatabase(config *models.Config) (*gorm.DB, error) {
-	db, err := gorm.Open("postgres", fmt.Sprintf("host='%s' port='%d' user='%s' dbname='%s' password='%s'", config.Server.Database.Host, config.Server.Database.DatabasePort, config.Server.Database.Username, config.Server.Database.Database, config.Server.Database.Pass))
+	sslMode := ""
+	if len(config.Server.Database.SSLMode) > 0 {
+		sslMode = "sslmode='" + config.Server.Database.SSLMode + "'"
+	}
+
+	db, err := gorm.Open("postgres", fmt.Sprintf("host='%s' port='%d' user='%s' dbname='%s' password='%s' %s", config.Server.Database.Host, config.Server.Database.DatabasePort, config.Server.Database.Username, config.Server.Database.Database, config.Server.Database.Pass, sslMode))
 	if err != nil {
 		return nil, err
 	}
