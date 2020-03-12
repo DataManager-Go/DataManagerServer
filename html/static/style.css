@@ -216,7 +216,7 @@ main {
 
 .light {
   padding-left: 1;
-  --text-primary: #1f1f1f;
+  --text-primary: #000000;
   --text-secondary: #000000;
   --bg-primary: #ffffff;
   --bg-secondary: #e4e4e4;
@@ -224,11 +224,11 @@ main {
 }
 
 .solar {
-  --text-primary: #576e75;
-  --text-secondary: #35535c;
-  --bg-primary: #fdf6e3;
-  --bg-secondary: #f5e5b8;
-  --emptyCircle: #3d3d3d;
+  --text-primary: #b6b6b6;
+  --text-secondary: #020202;
+  --bg-primary: #FEE715FF;
+  --bg-secondary: #101820FF;
+  -emptyCircle: #e1e1e1;
 }
 
 
@@ -260,7 +260,7 @@ main {
 
 .header1 {
   text-align: center;
-  color: var(--text-primary)
+  color: var(--text-secondary)
 }
 
 /* Small screens */
@@ -274,6 +274,7 @@ main {
   .header1 {
     font-size: 2.5em;
     line-height: 1em;
+    color: var(--text-secondary);
   }
 }
 
@@ -288,6 +289,7 @@ main {
   .header1 {
     font-size: 4em;
     line-height: 1em;
+    color: var(--text-secondary);
   }
 }
 
