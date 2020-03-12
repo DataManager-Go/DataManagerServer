@@ -21,17 +21,19 @@ p {
   color: var(--text-primary)
 }
 
-body::-webkit-scrollbar {
+::-webkit-scrollbar {
   width: 0.25rem;
 }
 
-body::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
   background: #1e1e24;
 }
 
-body::-webkit-scrollbar-thumb {
+::-webkit-scrollbar-thumb {
   background: #6649b8;
 }
+
+
 
 
 main {
@@ -144,6 +146,11 @@ main {
     height: 5rem;
   }
 
+
+.navbar-nav {
+  width: auto;
+}
+
   .logo {
     display: none;
   }
@@ -169,6 +176,16 @@ main {
     height: 100vh;
   }
 
+  .navbar .logo svg
+  {
+    margin-left: 1.5rem;
+  }
+
+
+  .navbar-nav {
+    width: 100%;
+  }
+
   .navbar:hover {
     width: 16rem;
   }
@@ -179,12 +196,12 @@ main {
 
   .navbar:hover .logo svg
   {
-    margin-left: 11rem;
+    margin-left: 13rem;
   }
 
   .navbar:hover .logo-text
   {
-    left: 0px;
+    left: 1rem;
   }
 }
 
@@ -198,7 +215,8 @@ main {
 }
 
 .light {
-  --text-primary: #1f1f1f;
+  padding-left: 1;
+  --text-primary: #000000;
   --text-secondary: #000000;
   --bg-primary: #ffffff;
   --bg-secondary: #e4e4e4;
@@ -206,11 +224,11 @@ main {
 }
 
 .solar {
-  --text-primary: #576e75;
-  --text-secondary: #35535c;
-  --bg-primary: #fdf6e3;
-  --bg-secondary: #f5e5b8;
-  --emptyCircle: #3d3d3d;
+  --text-primary: #b6b6b6;
+  --text-secondary: #020202;
+  --bg-primary: #FEE715FF;
+  --bg-secondary: #101820FF;
+  -emptyCircle: #e1e1e1;
 }
 
 
@@ -238,6 +256,41 @@ main {
 .header {
   text-align: center;
   color: var(--text-primary)
+}
+
+.header1 {
+  text-align: center;
+  color: var(--text-secondary)
+}
+
+/* Small screens */
+@media only screen and (max-width: 600px) {
+  .header {
+    text-align: center;
+    color: var(--text-primary);
+    font-size: 1.2em;
+  }
+  
+  .header1 {
+    font-size: 2.5em;
+    line-height: 1em;
+    color: var(--text-secondary);
+  }
+}
+
+/* Large screens */
+@media only screen and (min-width: 600px) {
+  .header {
+    text-align: center;
+    color: var(--text-primary);
+    font-size: 1.5em;
+  }
+  
+  .header1 {
+    font-size: 4em;
+    line-height: 1em;
+    color: var(--text-secondary);
+  }
 }
 
 .mainHead {
@@ -362,7 +415,6 @@ main {
   padding-top: 5%;
   padding-bottom: 5%;
 }
-
 
 .circle {
   border-radius: 50%;
