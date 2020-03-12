@@ -113,7 +113,7 @@ var (
 		Route{
 			Name:        "raw file",
 			Pattern:     "/preview/raw/{fileID}",
-			HandlerFunc: PrevievRawFileHandler,
+			HandlerFunc: RawFileHandler,
 			HandlerType: defaultRequest,
 			Method:      GetMethod,
 		},
@@ -177,7 +177,7 @@ func addCustomRoutes(router *mux.Router, handlerData *handlerData) {
 	router.Handle("/preview/", handler)
 
 	//Favicon
-	router.Handle("/favicon.ico", RouteHandler(defaultRequest, handlerData, FavIconHandler, "favicon"))
+	router.Handle("/favicon.ico", RouteHandler(defaultRequest, handlerData, FavIconHandler, ""))
 
 	// Serve static files
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./html/static"))))
@@ -186,7 +186,11 @@ func addCustomRoutes(router *mux.Router, handlerData *handlerData) {
 //RouteHandler logs stuff
 func RouteHandler(requestType requestType, handlerData *handlerData, inner RouteFunction, name string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Infof("[%s] %s\n", r.Method, name)
+		needDebug := len(name) > 0
+
+		if needDebug {
+			log.Infof("[%s] %s\n", r.Method, name)
+		}
 
 		start := time.Now()
 
@@ -203,7 +207,9 @@ func RouteHandler(requestType requestType, handlerData *handlerData, inner Route
 		inner(*handlerData, w, r)
 
 		//Print duration of processing
-		printProcessingDuration(start)
+		if needDebug {
+			printProcessingDuration(start)
+		}
 	})
 }
 
