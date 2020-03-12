@@ -3,13 +3,14 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/JojiiOfficial/DataManagerServer/handlers/web"
 	"github.com/JojiiOfficial/DataManagerServer/models"
 )
 
 //Ping handles ping request
-func Ping(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
+func Ping(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) {
 	var request models.PingRequest
-	if !readRequestLimited(w, r, &request, handlerData.config.Webserver.MaxRequestBodyLength) {
+	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
 		return
 	}
 

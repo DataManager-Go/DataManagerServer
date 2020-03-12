@@ -4,13 +4,14 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/JojiiOfficial/DataManagerServer/handlers/web"
 	"github.com/JojiiOfficial/DataManagerServer/models"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/gorilla/mux"
 )
 
 //NamespaceActionHandler handler for namespace actions (create/update/delete)
-func NamespaceActionHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
+func NamespaceActionHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) {
 	//Get vars
 	vars := mux.Vars(r)
 	action, hasAction := vars["action"]
@@ -22,7 +23,7 @@ func NamespaceActionHandler(handlerData handlerData, w http.ResponseWriter, r *h
 	}
 
 	var request models.NamespaceRequest
-	if !readRequestLimited(w, r, &request, handlerData.config.Webserver.MaxRequestBodyLength) {
+	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
 		return
 	}
 
@@ -38,20 +39,20 @@ func NamespaceActionHandler(handlerData handlerData, w http.ResponseWriter, r *h
 	switch request.Type {
 	case models.UserNamespaceType:
 		{
-			if !handlerData.user.CanCreateUserNamespaces() {
+			if !handlerData.User.CanCreateUserNamespaces() {
 				sendResponse(w, models.ResponseError, "Not allowed to create user namespaces", nil, http.StatusForbidden)
 				return
 			}
 
 			//Set namespace name to usernamespace name if action is create
-			if action == "create" && !strings.HasPrefix(namespaceName, handlerData.user.Username+"_") {
-				namespaceName = handlerData.user.Username + "_" + namespaceName
+			if action == "create" && !strings.HasPrefix(namespaceName, handlerData.User.Username+"_") {
+				namespaceName = handlerData.User.Username + "_" + namespaceName
 			}
 
 		}
 	case models.CustomNamespaceType:
 		{
-			if !handlerData.user.CanCreateCustomNamespaces() {
+			if !handlerData.User.CanCreateCustomNamespaces() {
 				sendResponse(w, models.ResponseError, "Not allowed to create custom namespaces", nil, http.StatusForbidden)
 				return
 			}
@@ -64,7 +65,7 @@ func NamespaceActionHandler(handlerData handlerData, w http.ResponseWriter, r *h
 	}
 
 	//Find namespace
-	namespace := models.FindNamespace(handlerData.db, namespaceName, handlerData.user)
+	namespace := models.FindNamespace(handlerData.Db, namespaceName, handlerData.User)
 
 	if action == "create" {
 		//Check if namespace already exists
@@ -86,25 +87,25 @@ func NamespaceActionHandler(handlerData handlerData, w http.ResponseWriter, r *h
 	case "create":
 		{
 			// Create namespaceo
-			err = handlerData.db.Model(&models.Namespace{}).Create(&models.Namespace{
+			err = handlerData.Db.Model(&models.Namespace{}).Create(&models.Namespace{
 				Name:   namespaceName,
-				User:   handlerData.user,
-				UserID: handlerData.user.ID,
+				User:   handlerData.User,
+				UserID: handlerData.User.ID,
 			}).Error
 		}
 	case "update":
 		{
 			// Update namespace
 			namespace.Name = request.NewName
-			err = handlerData.db.Model(&models.Namespace{}).Save(namespace).Error
+			err = handlerData.Db.Model(&models.Namespace{}).Save(namespace).Error
 		}
 	case "delete":
 		{
 			// Delete namespace
-			handlerData.db.Delete(namespace)
-			handlerData.db.Delete(&models.Tag{}, "namespace_id=?", namespace.ID)
-			handlerData.db.Delete(&models.Group{}, "namespace_id=?", namespace.ID)
-			handlerData.db.Delete(&models.File{}, "namespace_id=?", namespace.ID)
+			handlerData.Db.Delete(namespace)
+			handlerData.Db.Delete(&models.Tag{}, "namespace_id=?", namespace.ID)
+			handlerData.Db.Delete(&models.Group{}, "namespace_id=?", namespace.ID)
+			handlerData.Db.Delete(&models.File{}, "namespace_id=?", namespace.ID)
 		}
 	}
 
@@ -120,8 +121,8 @@ func NamespaceActionHandler(handlerData handlerData, w http.ResponseWriter, r *h
 }
 
 //NamespaceListHandler lists namespaces
-func NamespaceListHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
-	namespaces, err := models.FindUserNamespaces(handlerData.db, handlerData.user)
+func NamespaceListHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) {
+	namespaces, err := models.FindUserNamespaces(handlerData.Db, handlerData.User)
 	if LogError(err) {
 		sendServerError(w)
 		return

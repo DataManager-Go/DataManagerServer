@@ -2,25 +2,28 @@
 <html lang="en">
     <head>
         <style>
-        * {
-            margin: 0;
-            padding: 0;
-        }
-        .imgbox {
-            display: grid;
-            height: 100%;
-            margin: auto;
-        }
-        .center-fit {
-            max-width: 100%;
-            max-height: 100vh;
-            margin: auto;
-        }
+            /* Default body style */
+            body{
+                background-color: black;
+                color: white;
+            }
+
+            /* Center imgs */
+            .center img {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                -ms-transform: translate(-50%, -50%);
+                transform: translate(-50%, -50%);
+                max-width: 100%;
+                max-height: 100%;
+            }
         </style>
     </head>
     <body>
-        <div class="imgbox">
-            <img class="center-fit" src='/home/yukaru/Documents/image.png'>
+        {{.PreviewType}}
+        <div class="center">
+            <img src='http://<IP>/preview/raw/{{.PublicFilename}}'>
         </div>
     </body>
 </html>

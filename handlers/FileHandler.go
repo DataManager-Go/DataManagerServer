@@ -10,6 +10,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/JojiiOfficial/DataManagerServer/handlers/web"
 	"github.com/JojiiOfficial/DataManagerServer/models"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/gorilla/mux"
@@ -18,7 +19,7 @@ import (
 )
 
 //UploadfileHandler handler for uploading files
-func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
+func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) {
 	var request models.UploadRequest
 
 	//Get data from header
@@ -48,7 +49,7 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 	case models.FileUploadType:
 		{
 			//Check if user is allowed to upload files
-			if !handlerData.user.CanUploadFiles() {
+			if !handlerData.User.CanUploadFiles() {
 				sendResponse(w, models.ResponseError, "not allowed to upload files", nil, http.StatusForbidden)
 				return
 			}
@@ -56,7 +57,7 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 	case models.URLUploadType:
 		{
 			//Check if user is allowed to upload URLs
-			if !handlerData.user.AllowedToUploadURLs() {
+			if !handlerData.User.AllowedToUploadURLs() {
 				sendResponse(w, models.ResponseError, "not allowed to upload urls", nil, http.StatusForbidden)
 				return
 			}
@@ -81,23 +82,23 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 	}
 
 	//Select namespace
-	namespace := models.FindNamespace(handlerData.db, request.Attributes.Namespace, handlerData.user)
+	namespace := models.FindNamespace(handlerData.Db, request.Attributes.Namespace, handlerData.User)
 	if namespace == nil {
 		sendResponse(w, models.ResponseError, "namespace not found", nil, http.StatusNotFound)
 		return
 	}
 
 	//Check if user can access this namespace
-	if !namespace.IsOwnedBy(handlerData.user) && !handlerData.user.CanWriteForeignNamespace() {
+	if !namespace.IsOwnedBy(handlerData.User) && !handlerData.User.CanWriteForeignNamespace() {
 		sendResponse(w, models.ResponseError, "Write permission denied for foreign namespaces", nil, http.StatusForbidden)
 		return
 	}
 
 	//Get Tags
-	tags := models.TagsFromStringArr(request.Attributes.Tags, *namespace, handlerData.user)
+	tags := models.TagsFromStringArr(request.Attributes.Tags, *namespace, handlerData.User)
 
 	//Get Groups
-	groups := models.GroupsFromStringArr(request.Attributes.Groups, *namespace, handlerData.user)
+	groups := models.GroupsFromStringArr(request.Attributes.Groups, *namespace, handlerData.User)
 
 	//Ensure localname is not already in use
 	uniqueNameFound := false
@@ -105,7 +106,7 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 	for i := 0; i < 5; i++ {
 		localName = gaw.RandString(40)
 		var c int
-		handlerData.db.Model(&models.File{}).Where(&models.File{LocalName: localName}).Count(&c)
+		handlerData.Db.Model(&models.File{}).Where(&models.File{LocalName: localName}).Count(&c)
 		if c == 0 {
 			uniqueNameFound = true
 			break
@@ -142,7 +143,7 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 		file.IsPublic = true
 
 		//Check if public name already exists
-		_, found, _ := models.GetPublicFile(handlerData.db, publicName)
+		_, found, _ := models.GetPublicFile(handlerData.Db, publicName)
 		if found {
 			sendResponse(w, models.ResponseError, "public name already exists", nil)
 			return
@@ -153,7 +154,7 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 	file.LocalName = localName
 
 	//Create local file
-	f, err := os.Create(handlerData.config.GetStorageFile(localName))
+	f, err := os.Create(handlerData.Config.GetStorageFile(localName))
 	if LogError(err) {
 		sendServerError(w)
 		return
@@ -163,7 +164,7 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 	switch request.UploadType {
 	case models.FileUploadType:
 		//Read from uploaded file
-		r.ParseMultipartForm(handlerData.user.Role.MaxUploadFileSize)
+		r.ParseMultipartForm(handlerData.User.Role.MaxUploadFileSize)
 
 		uploadfile, _, err := r.FormFile("uploadfile")
 		if err != nil {
@@ -187,7 +188,7 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 		}
 	case models.URLUploadType:
 		//Read from HTTP request
-		status, err := downloadHTTP(handlerData.user, request.URL, f, &file)
+		status, err := downloadHTTP(handlerData.User, request.URL, f, &file)
 		if err != nil {
 			sendResponse(w, models.ResponseError, err.Error(), nil, http.StatusBadRequest)
 			return
@@ -207,7 +208,7 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 	}
 
 	//Save file to DB
-	err = file.Insert(handlerData.db, handlerData.user)
+	err = file.Insert(handlerData.Db, handlerData.User)
 
 	if !LogError(err) {
 		sendResponse(w, models.ResponseSuccess, "", models.UploadResponse{
@@ -221,9 +222,9 @@ func UploadfileHandler(handlerData handlerData, w http.ResponseWriter, r *http.R
 }
 
 //ListFilesHandler handler for listing files
-func ListFilesHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
+func ListFilesHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) {
 	var request models.FileListRequest
-	if !readRequestLimited(w, r, &request, handlerData.config.Webserver.MaxRequestBodyLength) {
+	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
 		return
 	}
 
@@ -231,14 +232,14 @@ func ListFilesHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 
 	if !request.AllNamespaces {
 		//Select namespace
-		namespace = models.FindNamespace(handlerData.db, request.Attributes.Namespace, handlerData.user)
+		namespace = models.FindNamespace(handlerData.Db, request.Attributes.Namespace, handlerData.User)
 		if namespace == nil || namespace.ID == 0 {
 			sendResponse(w, models.ResponseError, "Namespace not found", 404)
 			return
 		}
 
 		//Check if user can read from this namespace
-		if !namespace.IsOwnedBy(handlerData.user) && !handlerData.user.CanReadForeignNamespace() {
+		if !namespace.IsOwnedBy(handlerData.User) && !handlerData.User.CanReadForeignNamespace() {
 			sendResponse(w, models.ResponseError, "Read permission denied for foreign namespaces", nil, http.StatusForbidden)
 			return
 		}
@@ -246,7 +247,7 @@ func ListFilesHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 
 	var foundFiles []models.File
 
-	loaded := handlerData.db.Model(&foundFiles)
+	loaded := handlerData.Db.Model(&foundFiles)
 	if len(request.Attributes.Tags) > 0 || request.OptionalParams.Verbose > 1 {
 		loaded = loaded.Preload("Tags")
 	}
@@ -267,7 +268,7 @@ func ListFilesHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 		//Join to filter by namespace creator
 		loaded = loaded.
 			Joins("INNER JOIN namespaces ON namespaces.id = files.namespace_id").
-			Where("namespaces.creator = ?", handlerData.user.ID)
+			Where("namespaces.creator = ?", handlerData.User.ID)
 	} else {
 		//Just select the specified namespace
 		loaded = loaded.Where("namespace_id = ?", namespace.ID)
@@ -316,21 +317,21 @@ func ListFilesHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 }
 
 //FileHandler handler for updating files
-func FileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
+func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) {
 	var request models.FileRequest
-	if !readRequestLimited(w, r, &request, handlerData.config.Webserver.MaxRequestBodyLength) {
+	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
 		return
 	}
 
 	//Select namespace
-	namespace := models.FindNamespace(handlerData.db, request.Attributes.Namespace, handlerData.user)
+	namespace := models.FindNamespace(handlerData.Db, request.Attributes.Namespace, handlerData.User)
 	if namespace == nil || namespace.ID == 0 {
 		sendResponse(w, models.ResponseError, "Namespace not found", nil, http.StatusNotFound)
 		return
 	}
 
 	//Check if user can access this namespace
-	if !namespace.IsOwnedBy(handlerData.user) && !handlerData.user.CanWriteForeignNamespace() {
+	if !namespace.IsOwnedBy(handlerData.User) && !handlerData.User.CanWriteForeignNamespace() {
 		sendResponse(w, models.ResponseError, "Write permission denied for foreign namespaces", nil, http.StatusForbidden)
 		return
 	}
@@ -352,7 +353,7 @@ func FileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request
 	c, err := models.File{
 		Name:      request.Name,
 		Namespace: namespace,
-	}.GetCount(handlerData.db, request.FileID, handlerData.user)
+	}.GetCount(handlerData.Db, request.FileID, handlerData.User)
 
 	//Handle errors
 	if LogError(err) {
@@ -386,14 +387,14 @@ func FileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request
 	//Fill array with either one ore more instances
 	if request.All {
 		var err error
-		files, err = models.FindFiles(handlerData.db, request.Name, *namespace, handlerData.user)
+		files, err = models.FindFiles(handlerData.Db, request.Name, *namespace, handlerData.User)
 		if LogError(err) {
 			sendServerError(w)
 			return
 		}
 	} else {
 		//Get target file
-		file, err := models.FindFile(handlerData.db, request.Name, request.FileID, *namespace, handlerData.user)
+		file, err := models.FindFile(handlerData.Db, request.Name, request.FileID, *namespace, handlerData.User)
 		if LogError(err) {
 			sendServerError(w)
 			return
@@ -409,7 +410,7 @@ func FileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request
 	case "delete":
 		{
 			for _, file := range files {
-				err = file.Delete(handlerData.db, handlerData.config)
+				err = file.Delete(handlerData.Db, handlerData.Config)
 				if LogError(err) {
 					break
 				}
@@ -431,20 +432,20 @@ func FileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request
 				//Update namespace
 				if len(update.NewNamespace) > 0 {
 					//Get new namespace
-					newNamespace := models.FindNamespace(handlerData.db, update.NewNamespace, handlerData.user)
+					newNamespace := models.FindNamespace(handlerData.Db, update.NewNamespace, handlerData.User)
 					if newNamespace == nil || namespace.ID == 0 {
 						sendResponse(w, models.ResponseError, "New namespace not found", nil, http.StatusNotFound)
 						return
 					}
 
 					//Check if user can access this new namespace
-					if !newNamespace.IsOwnedBy(handlerData.user) && !handlerData.user.CanWriteForeignNamespace() {
+					if !newNamespace.IsOwnedBy(handlerData.User) && !handlerData.User.CanWriteForeignNamespace() {
 						sendResponse(w, models.ResponseError, "Write permission denied for foreign namespaces", nil, http.StatusForbidden)
 						return
 					}
 
 					//Update files namespace
-					err := file.UpdateNamespace(handlerData.db, newNamespace, handlerData.user)
+					err := file.UpdateNamespace(handlerData.Db, newNamespace, handlerData.User)
 					if LogError(err) {
 						sendServerError(w)
 						return
@@ -455,7 +456,7 @@ func FileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request
 
 				//Rename file
 				if len(update.NewName) > 0 {
-					if LogError(file.Rename(handlerData.db, update.NewName)) {
+					if LogError(file.Rename(handlerData.Db, update.NewName)) {
 						sendServerError(w)
 						return
 					}
@@ -475,7 +476,7 @@ func FileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request
 						return
 					}
 
-					if LogError(file.SetVilibility(handlerData.db, newVisibility)) {
+					if LogError(file.SetVilibility(handlerData.Db, newVisibility)) {
 						sendServerError(w)
 						return
 					}
@@ -485,7 +486,7 @@ func FileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request
 				//Add tags
 				if len(update.AddTags) > 0 {
 					currLenTags := len(file.Tags)
-					if LogError(file.AddTags(handlerData.db, update.AddTags, handlerData.user)) {
+					if LogError(file.AddTags(handlerData.Db, update.AddTags, handlerData.User)) {
 						sendServerError(w)
 						return
 					}
@@ -495,7 +496,7 @@ func FileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request
 				//Remove tags
 				if len(update.RemoveTags) > 0 {
 					currLenTags := len(file.Tags)
-					if LogError(file.RemoveTags(handlerData.db, update.RemoveTags)) {
+					if LogError(file.RemoveTags(handlerData.Db, update.RemoveTags)) {
 						sendServerError(w)
 						return
 					}
@@ -505,7 +506,7 @@ func FileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request
 				//Add Groups
 				if len(update.AddGroups) > 0 {
 					currLenGroups := len(file.Groups)
-					if LogError(file.AddGroups(handlerData.db, update.AddGroups, handlerData.user)) {
+					if LogError(file.AddGroups(handlerData.Db, update.AddGroups, handlerData.User)) {
 						sendServerError(w)
 						return
 					}
@@ -515,7 +516,7 @@ func FileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request
 				//Remove Groups
 				if len(update.RemoveGroups) > 0 {
 					currLenGroups := len(file.Groups)
-					if LogError(file.RemoveGroups(handlerData.db, update.RemoveGroups)) {
+					if LogError(file.RemoveGroups(handlerData.Db, update.RemoveGroups)) {
 						sendServerError(w)
 						return
 					}
@@ -540,7 +541,7 @@ func FileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request
 			file := files[0]
 
 			//Open local file
-			f, err := os.Open(handlerData.config.GetStorageFile(file.LocalName))
+			f, err := os.Open(handlerData.Config.GetStorageFile(file.LocalName))
 			if LogError(err) {
 				if os.IsNotExist(err) {
 					sendResponse(w, models.ResponseError, "File not found on server", nil, 404)
@@ -586,7 +587,7 @@ func FileHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request
 					continue
 				}
 
-				nameTaken, err := file.Publish(handlerData.db, request.PublicName)
+				nameTaken, err := file.Publish(handlerData.Db, request.PublicName)
 				if err != nil {
 					sendServerError(w)
 					return

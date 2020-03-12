@@ -3,13 +3,14 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/JojiiOfficial/DataManagerServer/handlers/web"
 	"github.com/JojiiOfficial/DataManagerServer/models"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/gorilla/mux"
 )
 
 //AttributeHandler handler for attributes
-func AttributeHandler(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
+func AttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) {
 
 	//Get vars
 	vars := mux.Vars(r)
@@ -24,7 +25,7 @@ func AttributeHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 
 	//read request body
 	var request models.UpdateAttributeRequest
-	if !readRequestLimited(w, r, &request, handlerData.config.Webserver.MaxRequestBodyLength) {
+	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
 		return
 	}
 
@@ -35,14 +36,14 @@ func AttributeHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 	}
 
 	//Find namespace
-	namespace := models.FindNamespace(handlerData.db, request.Namespace, handlerData.user)
+	namespace := models.FindNamespace(handlerData.Db, request.Namespace, handlerData.User)
 	if namespace == nil {
 		sendResponse(w, models.ResponseError, "namespace not found", nil, http.StatusNotFound)
 		return
 	}
 
 	//Check if user can access this namespace
-	if !namespace.IsOwnedBy(handlerData.user) && !handlerData.user.CanWriteForeignNamespace() {
+	if !namespace.IsOwnedBy(handlerData.User) && !handlerData.User.CanWriteForeignNamespace() {
 		sendResponse(w, models.ResponseError, "Write permission denied for foreign namespaces", nil, http.StatusForbidden)
 		return
 	}
@@ -54,7 +55,7 @@ func AttributeHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 
 	if attributeKind == "tag" {
 		//Find instance
-		tag, err := models.FindTag(handlerData.db, request.Name, namespace, handlerData.user)
+		tag, err := models.FindTag(handlerData.Db, request.Name, namespace, handlerData.User)
 		if tag == nil || err != nil {
 			sendResponse(w, models.ResponseError, "Tag not found", nil, 404)
 			return
@@ -63,14 +64,14 @@ func AttributeHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 		//Do action for tag
 		if action == "delete" {
 			//Delete relations
-			err = handlerData.db.Unscoped().Table("files_tags").Where("tag_id=?", tag.ID).Delete(models.Tag{}).Error
+			err = handlerData.Db.Unscoped().Table("files_tags").Where("tag_id=?", tag.ID).Delete(models.Tag{}).Error
 			if LogError(err) {
 				sendServerError(w)
 				return
 			}
 
 			//Delete tags
-			err = handlerData.db.Delete(tag).Error
+			err = handlerData.Db.Delete(tag).Error
 			if LogError(err) {
 				sendServerError(w)
 				return
@@ -78,7 +79,7 @@ func AttributeHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 		} else if action == "update" {
 			//Update tags name
 			tag.Name = request.NewName
-			err := handlerData.db.Save(tag).Error
+			err := handlerData.Db.Save(tag).Error
 
 			if LogError(err) {
 				sendServerError(w)
@@ -87,7 +88,7 @@ func AttributeHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 		}
 	} else if attributeKind == "group" {
 		//Find instance
-		group, err := models.FindGroup(handlerData.db, request.Name, namespace, handlerData.user)
+		group, err := models.FindGroup(handlerData.Db, request.Name, namespace, handlerData.User)
 		if group == nil || err != nil {
 			sendResponse(w, models.ResponseError, "Group not found", nil, 404)
 			return
@@ -96,14 +97,14 @@ func AttributeHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 		//Do action for group
 		if action == "delete" {
 			//Delete relations
-			err = handlerData.db.Unscoped().Table("files_groups").Where("group_id=?", group.ID).Delete(models.Group{}).Error
+			err = handlerData.Db.Unscoped().Table("files_groups").Where("group_id=?", group.ID).Delete(models.Group{}).Error
 			if LogError(err) {
 				sendServerError(w)
 				return
 			}
 
 			//Delete tags
-			err = handlerData.db.Delete(group).Error
+			err = handlerData.Db.Delete(group).Error
 			if LogError(err) {
 				sendServerError(w)
 				return
@@ -111,7 +112,7 @@ func AttributeHandler(handlerData handlerData, w http.ResponseWriter, r *http.Re
 		} else if action == "update" {
 			//Update groups name
 			group.Name = request.NewName
-			err := handlerData.db.Save(group).Error
+			err := handlerData.Db.Save(group).Error
 
 			if LogError(err) {
 				sendServerError(w)

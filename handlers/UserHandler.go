@@ -3,16 +3,17 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/JojiiOfficial/DataManagerServer/handlers/web"
 	"github.com/JojiiOfficial/DataManagerServer/models"
 	"github.com/JojiiOfficial/gaw"
 )
 
 //Login login handler
 //-> /user/login
-func Login(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
+func Login(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) {
 	var request models.CredentialsRequest
 
-	if !readRequestLimited(w, r, &request, handlerData.config.Webserver.MaxRequestBodyLength) {
+	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
 		return
 	}
 
@@ -26,7 +27,7 @@ func Login(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
 		Password: gaw.SHA512(request.Username + request.Password),
 	}
 
-	session, err := user.Login(handlerData.db)
+	session, err := user.Login(handlerData.Db)
 	if err != nil {
 		sendResponse(w, models.ResponseError, "Invalid credentials", nil)
 		return
@@ -44,15 +45,15 @@ func Login(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
 
 //Register register handler
 //-> /user/create
-func Register(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
-	if !handlerData.config.Server.AllowRegistration {
+func Register(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) {
+	if !handlerData.Config.Server.AllowRegistration {
 		sendResponse(w, models.ResponseError, "Server doesn't accept registrations", nil, http.StatusForbidden)
 		return
 	}
 
 	var request models.CredentialsRequest
 
-	if !readRequestLimited(w, r, &request, handlerData.config.Webserver.MaxRequestBodyLength) {
+	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
 		return
 	}
 
@@ -66,7 +67,7 @@ func Register(handlerData handlerData, w http.ResponseWriter, r *http.Request) {
 		Password: request.Password,
 	}
 
-	err := user.Register(handlerData.db, handlerData.config)
+	err := user.Register(handlerData.Db, handlerData.Config)
 	if err == models.ErrorUserAlreadyExists {
 		sendResponse(w, models.ResponseError, "User already exists", nil)
 	} else if err != nil {

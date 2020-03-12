@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/JojiiOfficial/DataManagerServer/handlers/web"
 	"github.com/JojiiOfficial/DataManagerServer/models"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/jinzhu/gorm"
@@ -12,12 +13,6 @@ import (
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 )
-
-type handlerData struct {
-	config *models.Config
-	db     *gorm.DB
-	user   *models.User
-}
 
 //Route for REST
 type Route struct {
@@ -50,7 +45,7 @@ const (
 type Routes []Route
 
 //RouteFunction function for handling a route
-type RouteFunction func(handlerData, http.ResponseWriter, *http.Request)
+type RouteFunction func(web.HandlerData, http.ResponseWriter, *http.Request)
 
 //Routes
 var (
@@ -106,14 +101,14 @@ var (
 		Route{
 			Name:        "preview",
 			Pattern:     "/preview/{fileID}",
-			HandlerFunc: PrevievFileHandler,
+			HandlerFunc: web.PrevievFileHandler,
 			HandlerType: defaultRequest,
 			Method:      GetMethod,
 		},
 		Route{
 			Name:        "raw file",
 			Pattern:     "/preview/raw/{fileID}",
-			HandlerFunc: RawFileHandler,
+			HandlerFunc: web.RawFileHandler,
 			HandlerType: defaultRequest,
 			Method:      GetMethod,
 		},
@@ -147,9 +142,9 @@ var (
 
 //NewRouter create new router
 func NewRouter(config *models.Config, db *gorm.DB) *mux.Router {
-	handlerData := handlerData{
-		config: config,
-		db:     db,
+	handlerData := web.HandlerData{
+		Config: config,
+		Db:     db,
 	}
 
 	router := mux.NewRouter().StrictSlash(true)
@@ -167,24 +162,24 @@ func NewRouter(config *models.Config, db *gorm.DB) *mux.Router {
 	return router
 }
 
-func addCustomRoutes(router *mux.Router, handlerData *handlerData) {
+func addCustomRoutes(router *mux.Router, handlerData *web.HandlerData) {
 	// 404 Handler
-	router.NotFoundHandler = RouteHandler(defaultRequest, handlerData, NotFoundHandler, "not found")
+	router.NotFoundHandler = RouteHandler(defaultRequest, handlerData, web.NotFoundHandler, "not found")
 
 	// Index routes
-	handler := RouteHandler(defaultRequest, handlerData, IndexPageHandler, "index")
+	handler := RouteHandler(defaultRequest, handlerData, web.IndexPageHandler, "index")
 	router.Handle("/", handler)
 	router.Handle("/preview/", handler)
 
 	//Favicon
-	router.Handle("/favicon.ico", RouteHandler(defaultRequest, handlerData, FavIconHandler, ""))
+	router.Handle("/favicon.ico", RouteHandler(defaultRequest, handlerData, web.FavIconHandler, ""))
 
 	// Serve static files
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./html/static"))))
 }
 
 //RouteHandler logs stuff
-func RouteHandler(requestType requestType, handlerData *handlerData, inner RouteFunction, name string) http.Handler {
+func RouteHandler(requestType requestType, handlerData *web.HandlerData, inner RouteFunction, name string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		needDebug := len(name) > 0
 
@@ -194,7 +189,7 @@ func RouteHandler(requestType requestType, handlerData *handlerData, inner Route
 
 		start := time.Now()
 
-		if validateHeader(handlerData.config, w, r) {
+		if validateHeader(handlerData.Config, w, r) {
 			return
 		}
 
@@ -214,7 +209,7 @@ func RouteHandler(requestType requestType, handlerData *handlerData, inner Route
 }
 
 //Return false on error
-func (requestType requestType) validate(handlerData *handlerData, r *http.Request, w http.ResponseWriter) bool {
+func (requestType requestType) validate(handlerData *web.HandlerData, r *http.Request, w http.ResponseWriter) bool {
 	switch requestType {
 	case sessionRequest:
 		{
@@ -224,13 +219,13 @@ func (requestType requestType) validate(handlerData *handlerData, r *http.Reques
 				return false
 			}
 
-			user, err := models.GetUserFromSession(handlerData.db, authHandler.GetBearer())
+			user, err := models.GetUserFromSession(handlerData.Db, authHandler.GetBearer())
 			if err != nil || user == nil {
 				sendResponse(w, models.ResponseError, "Invalid token", http.StatusUnauthorized)
 				return false
 			}
 
-			handlerData.user = user
+			handlerData.User = user
 		}
 	}
 
