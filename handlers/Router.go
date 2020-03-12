@@ -110,6 +110,13 @@ var (
 			HandlerType: defaultRequest,
 			Method:      GetMethod,
 		},
+		Route{
+			Name:        "raw file",
+			Pattern:     "/preview/raw/{fileID}",
+			HandlerFunc: PrevievRawFileHandler,
+			HandlerType: defaultRequest,
+			Method:      GetMethod,
+		},
 
 		// Attribute
 		Route{
@@ -168,6 +175,9 @@ func addCustomRoutes(router *mux.Router, handlerData *handlerData) {
 	handler := RouteHandler(defaultRequest, handlerData, IndexPageHandler, "index")
 	router.Handle("/", handler)
 	router.Handle("/preview/", handler)
+
+	//Favicon
+	router.Handle("/favicon.ico", RouteHandler(defaultRequest, handlerData, FavIconHandler, "favicon"))
 
 	// Serve static files
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./html/static"))))
