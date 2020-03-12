@@ -2,6 +2,8 @@ package web
 
 import (
 	"net/http"
+	"path"
+	"text/template"
 
 	"github.com/JojiiOfficial/DataManagerServer/models"
 	"github.com/gorilla/mux"
@@ -13,6 +15,7 @@ const (
 	IndexFile    = "index.html"
 	PreviewFile  = "Preview.html"
 	FavIconFile  = "favicon.ico"
+	ContentFile  = "Content.html"
 )
 
 //PrevievFileHandler handler for previews
@@ -49,8 +52,32 @@ func PrevievFileHandler(handlerData HandlerData, w http.ResponseWriter, r *http.
 		Filename:       file.Name,
 		PublicFilename: file.PublicFilename.String,
 		PreviewType:    models.PreviewTypeFromMime(file.FileType),
+		Host:           r.Host,
 	}
 
 	//Serve preview
-	LogError(serveTemplate(handlerData.Config, PreviewFile, w, templateData))
+	LogError(servePreviewTemplate(handlerData.Config, w, templateData))
+}
+
+func servePreviewTemplate(config *models.Config, w http.ResponseWriter, data interface{}) error {
+	PreviewFile := config.GetTemplateFile(PreviewFile)
+	ContentFile := config.GetTemplateFile(ContentFile)
+
+	templateName := path.Base(PreviewFile)
+
+	//Create template
+	t := template.New("")
+	t.Funcs(template.FuncMap{
+		"IsImagePreview":   models.IsImagePreview,
+		"IsTextPreview":    models.IsTextPreview,
+		"IsDefaultPreview": models.IsDefaultPreview,
+	})
+
+	t, err := t.ParseFiles(PreviewFile, ContentFile)
+
+	if err != nil {
+		return err
+	}
+
+	return t.ExecuteTemplate(w, templateName, data)
 }

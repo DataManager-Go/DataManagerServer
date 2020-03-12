@@ -24,6 +24,7 @@ type PreviewTemplate struct {
 	Filename       string
 	PublicFilename string
 	PreviewType    PreviewType
+	Host           string
 }
 
 //PreviewTypeFromMime get Type to preview from mime
@@ -47,4 +48,19 @@ func PreviewTypeFromMime(sMime string) PreviewType {
 	}
 
 	return DefaultPreviewType
+}
+
+//IsImagePreview return true if pt is image previewtype
+func IsImagePreview(pt PreviewType) bool {
+	return pt == ImagePreviewType
+}
+
+//IsTextPreview return true if pt is text previewtype
+func IsTextPreview(pt PreviewType) bool {
+	return pt == TextPreviewType
+}
+
+//IsDefaultPreview return true if pt is default previewtype
+func IsDefaultPreview(pt PreviewType) bool {
+	return pt == DefaultPreviewType
 }

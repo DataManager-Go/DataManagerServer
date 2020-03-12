@@ -248,6 +248,16 @@ func (config Config) GetHTMLFile(fileName string) string {
 	return path.Join(config.Webserver.HTMLFiles, fileName)
 }
 
+//GetStaticFile return path of html file
+func (config Config) GetStaticFile(fileName string) string {
+	return path.Join(config.Webserver.HTMLFiles, "static", fileName)
+}
+
+//GetTemplateFile return path of html file
+func (config Config) GetTemplateFile(fileName string) string {
+	return path.Join(config.Webserver.HTMLFiles, "templates", fileName)
+}
+
 //GetDefaultRole return the path and file for an uploaded file
 func (config Config) GetDefaultRole() *Role {
 	for rI, role := range config.Server.Roles.Roles {

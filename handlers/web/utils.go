@@ -3,12 +3,10 @@ package web
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime"
 	"net/http"
 	"os"
 	"strings"
-	"text/template"
 
 	"github.com/JojiiOfficial/DataManagerServer/models"
 	"github.com/JojiiOfficial/gaw"
@@ -75,23 +73,6 @@ func serveStaticFile(config *models.Config, file string, w http.ResponseWriter, 
 	}
 
 	return serveFileStream(config, f, w)
-}
-
-func serveTemplate(config *models.Config, file string, w http.ResponseWriter, data interface{}) error {
-	//Read file
-	fileContent, err := ioutil.ReadFile(config.GetHTMLFile(file))
-	if err != nil {
-		return err
-	}
-
-	//Create template
-	t := template.New("template")
-	t, err = t.Parse(string(fileContent))
-	if err != nil {
-		return err
-	}
-
-	return t.Execute(w, data)
 }
 
 //Handles errors and respond with 404 if this caused the error

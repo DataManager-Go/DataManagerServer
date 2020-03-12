@@ -162,14 +162,13 @@ func NewRouter(config *models.Config, db *gorm.DB) *mux.Router {
 	return router
 }
 
+//Add custom web-routes
 func addCustomRoutes(router *mux.Router, handlerData *web.HandlerData) {
 	// 404 Handler
 	router.NotFoundHandler = RouteHandler(defaultRequest, handlerData, web.NotFoundHandler, "not found")
 
 	// Index routes
-	handler := RouteHandler(defaultRequest, handlerData, web.IndexPageHandler, "index")
-	router.Handle("/", handler)
-	router.Handle("/preview/", handler)
+	router.Handle("/", RouteHandler(defaultRequest, handlerData, web.IndexPageHandler, "index"))
 
 	//Favicon
 	router.Handle("/favicon.ico", RouteHandler(defaultRequest, handlerData, web.FavIconHandler, ""))
