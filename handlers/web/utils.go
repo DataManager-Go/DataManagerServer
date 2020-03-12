@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"mime"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -91,4 +92,30 @@ func handleBrowserServeError(err error, handerData HandlerData, w http.ResponseW
 func returnRawByUseragent(useragent string) bool {
 	useragent = strings.ToLower(useragent)
 	return strings.HasPrefix(useragent, "curl") || strings.HasPrefix(useragent, "wget")
+}
+
+var telegramIPs = []string{
+	"149.154.160.0/22",
+	"149.154.164.0/22",
+	"91.108.4.0/22",
+	"91.108.56.0/22",
+	"91.108.8.0/22",
+	"95.161.64.0/20",
+}
+
+func isTelegramIP(sIP string) bool {
+	ip := net.ParseIP(sIP)
+	if ip.To4() == nil {
+		return false
+	}
+	for _, reservedIP := range telegramIPs {
+		_, subnet, err := net.ParseCIDR(reservedIP)
+		if err != nil {
+			return false
+		}
+		if subnet.Contains(ip) {
+			return true
+		}
+	}
+	return false
 }

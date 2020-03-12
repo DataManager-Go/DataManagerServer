@@ -6,6 +6,7 @@ import (
 	"text/template"
 
 	"github.com/JojiiOfficial/DataManagerServer/models"
+	"github.com/JojiiOfficial/gaw"
 	"github.com/gorilla/mux"
 )
 
@@ -20,8 +21,8 @@ const (
 
 //PrevievFileHandler handler for previews
 func PrevievFileHandler(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
-	//Return raw file if useragent is curl or wget
-	if returnRawByUseragent(r.UserAgent()) {
+	//Return raw file if useragent is curl or wget or if its telegram
+	if returnRawByUseragent(r.UserAgent()) || (handlerData.Config.Webserver.TelegramRaw && isTelegramIP(gaw.GetIPFromHTTPrequest(r))) {
 		RawFileHandler(handlerData, w, r)
 		return
 	}

@@ -20,10 +20,11 @@ type Config struct {
 }
 
 type webserverConf struct {
-	MaxHeaderLength      uint   `default:"8000" required:"true"`
-	MaxRequestBodyLength int64  `default:"10000" required:"true"`
-	MaxUploadFileLength  int64  `default:"1000000000" required:"true"`
-	DownloadFileBuffer   int    `default:"100000" required:"true"`
+	MaxHeaderLength      uint  `default:"8000" required:"true"`
+	MaxRequestBodyLength int64 `default:"10000" required:"true"`
+	MaxUploadFileLength  int64 `default:"1000000000" required:"true"`
+	DownloadFileBuffer   int   `default:"100000" required:"true"`
+	TelegramRaw          bool
 	HTMLFiles            string `default:"./html/" required:"true"`
 	HTTP                 configHTTPstruct
 	HTTPS                configTLSStruct
@@ -184,6 +185,10 @@ func InitConfig(confFile string, createMode bool) (*Config, bool) {
 
 //Check check the config file of logical errors
 func (config *Config) Check() bool {
+	if config.Webserver.TelegramRaw {
+		log.Info("View telegram raw")
+	}
+
 	if !config.Webserver.HTTP.Enabled && !config.Webserver.HTTPS.Enabled {
 		log.Error("You must at least enable one of the server protocols!")
 		return false
