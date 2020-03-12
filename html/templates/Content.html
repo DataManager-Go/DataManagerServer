@@ -3,7 +3,7 @@
         {{- /* View image */ -}}
         {{if  IsImagePreview .PreviewType }}
             <div class="center">
-                <img src='http://{{.Host}}/preview/raw/{{.PublicFilename}}'>
+                <img src='https://{{.Host}}/preview/raw/{{.PublicFilename}}'>
             </div>
         {{end}}
 
@@ -19,8 +19,8 @@
                 <h1 style="color: black;font-size: 2.5em;">Can't view this shit. You have to press download</h1>
             </span>
 
-            <div class="center">
-                <a href="http://{{.Host}}/preview/raw/{{.PublicFilename}}" class="downloadButton">Download</a>
+            <div class="centered">
+                <a href="https://{{.Host}}/preview/raw/{{.PublicFilename}}" class="downloadButton">Download</a>
             </div>
 
             <img style="bottom: 0;left: 20%;;position: absolute;" src="https://keepcoding.io/es/wp-content/uploads/sites/4/2017/04/go-lenguaje-programacion.png"> 

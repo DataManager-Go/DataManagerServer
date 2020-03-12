@@ -1,5 +1,5 @@
 
-FROM golang:1.14-rc-alpine3.11 as builder1
+FROM golang:1.13-alpine3.11 as builder1
 
 # Setting up environment for builder1
 ENV GO111MODULE=on
