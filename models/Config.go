@@ -24,7 +24,7 @@ type webserverConf struct {
 	MaxRequestBodyLength int64 `default:"10000" required:"true"`
 	MaxUploadFileLength  int64 `default:"1000000000" required:"true"`
 	DownloadFileBuffer   int   `default:"100000" required:"true"`
-	TelegramRaw          bool
+	UserAgentsRawfile    []string
 	HTMLFiles            string `default:"./html/" required:"true"`
 	HTTP                 configHTTPstruct
 	HTTPS                configTLSStruct
@@ -145,6 +145,11 @@ func InitConfig(confFile string, createMode bool) (*Config, bool) {
 				},
 			},
 			Webserver: webserverConf{
+				UserAgentsRawfile: []string{
+					"curl",
+					"wget",
+					"telegrambot",
+				},
 				HTMLFiles:            "./html",
 				MaxRequestBodyLength: 100000,
 				MaxUploadFileLength:  10000000000,
@@ -185,10 +190,6 @@ func InitConfig(confFile string, createMode bool) (*Config, bool) {
 
 //Check check the config file of logical errors
 func (config *Config) Check() bool {
-	if config.Webserver.TelegramRaw {
-		log.Info("View telegram raw")
-	}
-
 	if !config.Webserver.HTTP.Enabled && !config.Webserver.HTTPS.Enabled {
 		log.Error("You must at least enable one of the server protocols!")
 		return false
@@ -241,6 +242,12 @@ func (config *Config) Check() bool {
 	}
 
 	return true
+}
+
+//IsRawUseragent return true if file should be raw depending on useragent
+func (config Config) IsRawUseragent(agent string) bool {
+	agent = strings.ToLower(agent)
+	return gaw.IsInStringArrayContains(agent, config.Webserver.UserAgentsRawfile)
 }
 
 //GetStorageFile return the path and file for an uploaded file

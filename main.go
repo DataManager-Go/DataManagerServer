@@ -18,7 +18,7 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-const version = "0.0.1a"
+const version = "v1.0.0"
 
 var (
 	app         = kingpin.New("dmserver", "The data manager server")
@@ -134,7 +134,6 @@ func main() {
 		}
 
 		log.Debug("Successfully connected to DB")
-
 	}
 
 	//Init gaw random seed

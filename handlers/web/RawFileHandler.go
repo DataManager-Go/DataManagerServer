@@ -50,9 +50,5 @@ func RawFileHandler(handlerData HandlerData, w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	err = serveFileStream(handlerData.Config, f, w)
-	if LogError(err) {
-		http.Error(w, "Server error", http.StatusInternalServerError)
-		return
-	}
+	serveFileStream(handlerData.Config, f, w)
 }
