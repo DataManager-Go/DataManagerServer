@@ -8,6 +8,7 @@ import (
 
 	"github.com/JojiiOfficial/DataManagerServer/models"
 	"github.com/gorilla/mux"
+	"github.com/sbani/go-humanizer/units"
 )
 
 //Static files
@@ -54,6 +55,7 @@ func PrevievFileHandler(handlerData HandlerData, w http.ResponseWriter, r *http.
 		PublicFilename: file.PublicFilename.String,
 		PreviewType:    models.PreviewTypeFromMime(file.FileType),
 		Host:           r.Host,
+		FileSizeStr:    units.BinarySuffix(float64(file.FileSize)),
 	}
 
 	//Serve preview

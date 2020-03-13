@@ -1,29 +1,52 @@
 {{ define "content" }}
+        {{ if  IsImagePreview .PreviewType }}
+            <!-- Image Preview -->
 
-        {{- /* View image */ -}}
-        {{if  IsImagePreview .PreviewType }}
             <div class="center">
                 <img src='https://{{.Host}}/preview/raw/{{.PublicFilename}}'>
             </div>
-        {{end}}
+        {{ end }}
 
-        {{- /* View Text */ -}}
-        {{if  IsTextPreview .PreviewType }}
-            Here would have been some text
-        {{end}}
+        {{ if  IsTextPreview .PreviewType }}
+            <!-- Text preview -->
 
-        {{- /* View Download content */ -}}
-        {{if  IsDefaultPreview .PreviewType }}
-            <br><br><br><br>
+            <center><h1>{{.Filename}}</h1></center>
+            <textarea id="tdata" class="lined areapreview" style="width: 100%;min-height: 85vh;"></textarea>
+            <script>
+                $(function() {
+                    $(".lined").linedtextarea();
+                });
+
+                //Encode html
+                function htmlEncode(value){
+                    return $('<textarea/>').text(value).html();
+                }
+
+                //Request data
+                $.get("http://{{.Host}}/preview/raw/{{.PublicFilename}}",{}, function(data){
+                    document.getElementById("tdata").innerHTML = htmlEncode(data)
+                })
+            </script>
+        {{ end }}
+
+        {{ if  IsDefaultPreview .PreviewType }}
+            <!-- Download View -->
+
+            <br>
             <span style="text-align: center;">
                 <h1 style="color: black;font-size: 2.5em;">Can't view this shit. You have to press download</h1>
             </span>
 
+            <!-- Download button -->
             <div class="centered">
                 <a href="https://{{.Host}}/preview/raw/{{.PublicFilename}}" class="downloadButton">Download</a>
+                <br>
+                <center>
+                    <span class="cv" style="font-size: 1.7rem;">({{.FileSizeStr}})</span>
+                </center>
             </div>
 
-            <img style="bottom: 0;left: 20%;;position: absolute;" src="https://keepcoding.io/es/wp-content/uploads/sites/4/2017/04/go-lenguaje-programacion.png"> 
-        {{end}}
-
+            <!-- GO -->
+            <img style="bottom: 0;left: 20%;;position: absolute;" src="https://keepcoding.io/es/wp-content/uploads/sites/4/2017/04/go-lenguaje-programacion.png" width="300px"> 
+        {{ end }}
 {{ end }}

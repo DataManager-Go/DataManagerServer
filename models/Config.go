@@ -25,6 +25,7 @@ type webserverConf struct {
 	MaxUploadFileLength  int64 `default:"1000000000" required:"true"`
 	DownloadFileBuffer   int   `default:"100000" required:"true"`
 	UserAgentsRawfile    []string
+	MaxPreviewFilesize   int64  `default:"50000"`
 	HTMLFiles            string `default:"./html/" required:"true"`
 	HTTP                 configHTTPstruct
 	HTTPS                configTLSStruct
@@ -150,6 +151,7 @@ func InitConfig(confFile string, createMode bool) (*Config, bool) {
 					"wget",
 					"telegrambot",
 				},
+				MaxPreviewFilesize:   50000,
 				HTMLFiles:            "./html",
 				MaxRequestBodyLength: 100000,
 				MaxUploadFileLength:  10000000000,

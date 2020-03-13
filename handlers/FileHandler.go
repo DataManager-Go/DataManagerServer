@@ -9,10 +9,12 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/JojiiOfficial/DataManagerServer/handlers/web"
 	"github.com/JojiiOfficial/DataManagerServer/models"
 	"github.com/JojiiOfficial/gaw"
+	"github.com/gabriel-vasile/mimetype"
 	"github.com/gorilla/mux"
 	"github.com/h2non/filetype"
 	log "github.com/sirupsen/logrus"
@@ -182,10 +184,6 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 
 		//Set filesize to written bytes
 		file.FileSize = int64(size)
-
-		if len(request.FileType) > 0 && filetype.IsMIMESupported(request.FileType) {
-			file.FileType = request.FileType
-		}
 	case models.URLUploadType:
 		//Read from HTTP request
 		status, err := downloadHTTP(handlerData.User, request.URL, f, &file)
@@ -202,9 +200,14 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 	}
 
 	//Close file
-	if LogError(f.Close()) {
-		sendServerError(w)
-		return
+	f.Close()
+
+	//Detect mime type
+	mime, err := mimetype.DetectFile(handlerData.Config.GetStorageFile(localName))
+	if err != nil {
+		log.Info("Can't detect mime: ", err.Error())
+	} else {
+		file.FileType = strings.Split(mime.String(), ";")[0]
 	}
 
 	//Save file to DB

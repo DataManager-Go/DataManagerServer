@@ -7,6 +7,9 @@ var PreviewMimes map[PreviewType][]string = map[PreviewType][]string{
 	ImagePreviewType: []string{
 		"image/*",
 	},
+	TextPreviewType: []string{
+		"text/*",
+	},
 }
 
 //PreviewType type of preview
@@ -25,6 +28,7 @@ type PreviewTemplate struct {
 	PublicFilename string
 	PreviewType    PreviewType
 	Host           string
+	FileSizeStr    string
 }
 
 //PreviewTypeFromMime get Type to preview from mime

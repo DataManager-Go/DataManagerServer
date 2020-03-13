@@ -7,12 +7,6 @@
         <meta property="og:site_name" content="A very illegal upload service">
         <meta property="og:title" content="Not an illegal file" />
         <style>
-            /* Default body style */
-            body{
-                background-color: black;
-                color: white;
-            }
-
             .centered {
                 position: absolute;
                 top: 50%;
@@ -42,23 +36,29 @@
                 cursor:pointer;
                 color:#707070;
                 font-family:Times New Roman;
-                font-size:4rem;
+                font-size:2.5rem;
                 font-weight:bold;
                 padding:14px 55px;
                 text-decoration:none;
             }
             .downloadButton:active {
                 position:relative;
+	            background-color:#dfdfdf;
+	            background:#dfdfdf;
                 top:1px;
             }
+
+            .cv {
+                line-height: 60px;
+                text-align: center;
+            }
         </style>
+        <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+	    <link href="/static/linenumbers.css" type="text/css" rel="stylesheet" />
+        <script src="/static/linenumbers.js"></script>
+
     </head>
     <body background="https://images.pexels.com/photos/1242348/pexels-photo-1242348.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940" style="background-size: 300% auto;">
-        <link itemprop="thumbnailUrl" href="url_image"> 
-        <span itemprop="thumbnail" itemscope itemtype="http://schema.org/ImageObject"> 
-        <link itemprop="url" href="url_image"> 
-        </span>
-
         {{template "content" .}}
     </body>
 </html>
