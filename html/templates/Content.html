@@ -23,7 +23,7 @@
                 }
 
                 //Request data
-                $.get("http://{{.Host}}/preview/raw/{{.PublicFilename}}",{}, function(data){
+                $.get("https://{{.Host}}/preview/raw/{{.PublicFilename}}",{}, function(data){
                     document.getElementById("tdata").innerHTML = htmlEncode(data)
                 })
             </script>
