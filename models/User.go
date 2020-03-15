@@ -100,3 +100,9 @@ func (user *User) CreateDefaultNamespace(db *gorm.DB) (*Namespace, error) {
 
 	return &namespace, nil
 }
+
+//HasAccess return true if user has access to the given namespace
+func (user *User) HasAccess(namespace *Namespace) bool {
+	// User has access if it's his namespace or if he can write others
+	return namespace.IsOwnedBy(user) || user.CanWriteForeignNamespace()
+}

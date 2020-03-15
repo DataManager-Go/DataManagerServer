@@ -17,6 +17,7 @@ import (
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/gorilla/mux"
 	"github.com/h2non/filetype"
+	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -326,26 +327,13 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	//Validate input
+	// Validate input
 	if len(request.Name) == 0 && request.FileID <= 0 {
 		sendResponse(w, models.ResponseError, "Bad request", nil, http.StatusBadRequest)
 		return
 	}
 
-	//Select namespace
-	namespace := models.FindNamespace(handlerData.Db, request.Attributes.Namespace, handlerData.User)
-	if namespace == nil || namespace.ID == 0 {
-		sendResponse(w, models.ResponseError, "Namespace not found", nil, http.StatusNotFound)
-		return
-	}
-
-	//Check if user can access this namespace
-	if !namespace.IsOwnedBy(handlerData.User) && !handlerData.User.CanWriteForeignNamespace() {
-		sendResponse(w, models.ResponseError, "Write permission denied for foreign namespaces", nil, http.StatusForbidden)
-		return
-	}
-
-	//Get action
+	// Get action
 	vars := mux.Vars(r)
 	action, has := vars["action"]
 	if !has {
@@ -353,65 +341,72 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	//Check if action is valid
-	if !gaw.IsInStringArray(action, []string{"delete", "update", "get", "publish"}) {
-		sendResponse(w, models.ResponseError, "invalid action", nil)
-		return
-	}
-	//Get count of files with same name (ID only if provided)
-	c, err := models.File{
-		Name:      request.Name,
-		Namespace: namespace,
-	}.GetCount(handlerData.Db, request.FileID)
-
-	//Handle errors
-	if LogError(err) {
-		sendServerError(w)
-		return
-	}
-
-	// Get all files not allowed
+	// Getting all files is not allowed
 	if request.All && action == "get" {
 		sendResponse(w, models.ResponseError, "Illegal request", nil)
 		return
 	}
 
-	var files []models.File
+	var namespace *models.Namespace
 
-	// Only verify count if all is false
-	if !request.All {
-		//Send error if multiple files are available and no ID was specified
-		if c > 1 && request.FileID == 0 {
-			sendResponse(w, models.ResponseError, "multiple files with same name", nil)
+	// Use given namespace if fileID is not set
+	if request.FileID == 0 {
+		// Select namespace
+		namespace = models.FindNamespace(handlerData.Db, request.Attributes.Namespace, handlerData.User)
+		if namespace == nil || namespace.ID == 0 {
+			sendResponse(w, models.ResponseError, "Namespace not found", nil, http.StatusNotFound)
+			return
+		}
+
+		// Check if user can access this namespace
+		if !handlerData.User.HasAccess(namespace) {
+			sendResponse(w, models.ResponseError, "Write permission denied for this namespaces", nil, http.StatusForbidden)
 			return
 		}
 	}
 
-	//Exit if file not found
-	if c == 0 {
+	// Check if action is valid
+	if !gaw.IsInStringArray(action, []string{"delete", "update", "get", "publish"}) {
+		sendResponse(w, models.ResponseError, "invalid action", nil)
+		return
+	}
+
+	// Find files
+	files, err := models.FindFiles(handlerData.Db, models.File{
+		Model: gorm.Model{
+			ID: request.FileID,
+		},
+		Name:      request.Name,
+		Namespace: namespace,
+	})
+
+	if LogError(err) {
+		sendServerError(w)
+		return
+	}
+
+	// Exit if no file was found
+	if len(files) == 0 {
 		sendResponse(w, models.ResponseError, "Nothing found", nil)
 		return
 	}
 
-	//Fill array with either one ore more instances
-	if request.All && len(request.Name) > 0 {
-		var err error
-		files, err = models.FindFiles(handlerData.Db, request.Name, *namespace)
-		if LogError(err) {
-			sendServerError(w)
-			return
-		}
-	} else {
-		//Get target file
-		file, err := models.FindFile(handlerData.Db, request.Name, request.FileID, *namespace)
-		if LogError(err) {
-			sendServerError(w)
-			return
-		}
-		files = append(files, *file)
+	// Check if files are more than requested
+	if len(files) > 1 && !request.All {
+		sendResponse(w, models.ResponseError, "found multiple files with same name", nil)
+		return
 	}
 
-	err = nil
+	// If namespace was not set, use the namespace of the returned file
+	if namespace == nil {
+		namespace = files[0].Namespace
+		if !handlerData.User.HasAccess(namespace) {
+			sendResponse(w, models.ResponseError, "Write permission denied for this namespaces", nil, http.StatusForbidden)
+			return
+		}
+	}
+
+	// Determine if an update was applied
 	var didUpdate bool
 
 	//Execute action
@@ -419,6 +414,7 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 	case "delete":
 		{
 			for _, file := range files {
+				// Delete each file
 				err = file.Delete(handlerData.Db, handlerData.Config)
 				if LogError(err) {
 					break
@@ -434,26 +430,26 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 		{
 			var count uint32
 
-			//Do for every file
+			// Do for every file
 			for _, file := range files {
 				update := request.Updates
 
-				//Update namespace
+				// Update namespace
 				if len(update.NewNamespace) > 0 {
-					//Get new namespace
+					// Get new namespace
 					newNamespace := models.FindNamespace(handlerData.Db, update.NewNamespace, handlerData.User)
 					if newNamespace == nil || namespace.ID == 0 {
 						sendResponse(w, models.ResponseError, "New namespace not found", nil, http.StatusNotFound)
 						return
 					}
 
-					//Check if user can access this new namespace
+					// Check if user can access this new namespace
 					if !newNamespace.IsOwnedBy(handlerData.User) && !handlerData.User.CanWriteForeignNamespace() {
 						sendResponse(w, models.ResponseError, "Write permission denied for foreign namespaces", nil, http.StatusForbidden)
 						return
 					}
 
-					//Update files namespace
+					// Update files namespace
 					err := file.UpdateNamespace(handlerData.Db, newNamespace, handlerData.User)
 					if LogError(err) {
 						sendServerError(w)
@@ -463,7 +459,7 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 					didUpdate = true
 				}
 
-				//Rename file
+				// Rename file
 				if len(update.NewName) > 0 {
 					if LogError(file.Rename(handlerData.Db, update.NewName)) {
 						sendServerError(w)
@@ -472,7 +468,7 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 					didUpdate = true
 				}
 
-				//Set public/private
+				// Set public/private
 				if len(update.IsPublic) > 0 {
 					if !file.PublicFilename.Valid {
 						sendResponse(w, models.ResponseError, "You need to share this file first", nil)
@@ -492,7 +488,7 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 					didUpdate = true
 				}
 
-				//Add tags
+				// Add tags
 				if len(update.AddTags) > 0 {
 					currLenTags := len(file.Tags)
 					if LogError(file.AddTags(handlerData.Db, update.AddTags, handlerData.User)) {
@@ -502,7 +498,7 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 					didUpdate = len(file.Tags) > currLenTags
 				}
 
-				//Remove tags
+				// Remove tags
 				if len(update.RemoveTags) > 0 {
 					currLenTags := len(file.Tags)
 					if LogError(file.RemoveTags(handlerData.Db, update.RemoveTags)) {
@@ -512,7 +508,7 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 					didUpdate = len(file.Tags) < currLenTags
 				}
 
-				//Add Groups
+				// Add Groups
 				if len(update.AddGroups) > 0 {
 					currLenGroups := len(file.Groups)
 					if LogError(file.AddGroups(handlerData.Db, update.AddGroups, handlerData.User)) {
@@ -522,7 +518,7 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 					didUpdate = len(file.Groups) > currLenGroups
 				}
 
-				//Remove Groups
+				// Remove Groups
 				if len(update.RemoveGroups) > 0 {
 					currLenGroups := len(file.Groups)
 					if LogError(file.RemoveGroups(handlerData.Db, update.RemoveGroups)) {
@@ -532,7 +528,7 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 					didUpdate = len(file.Groups) < currLenGroups
 				}
 
-				//Only count if updated
+				// Only count if updated
 				if didUpdate {
 					count++
 				}
@@ -543,13 +539,13 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 				Count: count,
 			})
 		}
-	//Get file
+	// Get file
 	case "get":
 		{
-			//use first file
+			// Use first file
 			file := files[0]
 
-			//Open local file
+			// Open local file
 			f, err := os.Open(handlerData.Config.GetStorageFile(file.LocalName))
 			if LogError(err) {
 				if os.IsNotExist(err) {
@@ -561,25 +557,25 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 				return
 			}
 
-			//Set ContentType header
+			// Set ContentType header
 			if len(file.FileType) > 0 && filetype.IsMIMESupported(file.FileType) {
 				w.Header().Set(models.HeaderContentType, file.FileType)
 			}
 
-			//Set filename header
+			// Set filename header
 			w.Header().Set(models.HeaderFileName, file.Name)
 
-			//Write contents to responsewriter
+			// Write contents to responsewriter
 			_, err = io.Copy(w, f)
 			if LogError(err) {
 				sendServerError(w)
 				return
 			}
 
-			//Close file
+			// Close file
 			LogError(f.Close())
 		}
-	//Publish a file
+	// Publish a file
 	case "publish":
 		{
 			publishResponse := models.PublishResponse{}
@@ -607,7 +603,7 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 				}
 
 				fmt.Println(file.PublicFilename.String)
-				//use buik response if requested "all"
+				// Use bulk response if requested "all"
 				if request.All {
 					bulkPublishResponse.Files = append(bulkPublishResponse.Files, models.UploadResponse{
 						FileID:         file.ID,
@@ -615,14 +611,14 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 						PublicFilename: file.PublicFilename.String,
 					})
 				} else {
-					//Otherwise respond with a single item
+					// Otherwise respond with a single item
 					publishResponse = models.PublishResponse{
 						PublicFilename: file.PublicFilename.String,
 					}
 				}
 			}
 
-			//Send success
+			// Send success
 			if request.All {
 				sendResponse(w, models.ResponseSuccess, "", bulkPublishResponse)
 			} else {

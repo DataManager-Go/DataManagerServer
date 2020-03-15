@@ -23,7 +23,7 @@ type File struct {
 	PublicFilename sql.NullString `gorm:"unique"`
 	Groups         []Group        `gorm:"many2many:files_groups;association_autoupdate:false"`
 	Tags           []Tag          `gorm:"many2many:files_tags;association_autoupdate:false"`
-	Namespace      *Namespace     `gorm:"association_autoupdate:false;association_autocreate:false"`
+	Namespace      *Namespace     `gorm:"association_autoupdate:false;association_autocreate:false;"`
 	NamespaceID    uint           `sql:"index" gorm:"not null"`
 }
 
@@ -112,12 +112,32 @@ func (file File) IsInGroupList(groups []string) bool {
 }
 
 //FindFiles finds file
-func FindFiles(db *gorm.DB, fileName string, namespace Namespace) ([]File, error) {
+func FindFiles(db *gorm.DB, file File) ([]File, error) {
 	var files []File
-	a := db.Model(&File{}).Where("name like ? AND namespace_id = ? AND uploader = ?", fileName, namespace.ID, namespace.User.ID)
+	a := db.Model(&File{})
+
+	// Filter by filename
+	if len(file.Name) > 0 {
+		a = a.Where("name like ?", file.Name)
+	}
+
+	// Filter by ID
+	if file.ID != 0 {
+		a = a.Where("id = ?", file.ID)
+	}
+
+	// Filter by namespace ID and uploader
+	if file.Namespace != nil {
+		a = a.Where("namespace_id = ? AND uploader = ?", file.Namespace.ID, file.Namespace.User.ID)
+	}
 
 	//Get file to delete
-	err := a.Preload("Namespace").Preload("Tags").Preload("Groups").Find(&files).Error
+	err := a.
+		Preload("Namespace").
+		Preload("Namespace.User").
+		Preload("Tags").
+		Preload("Groups").
+		Find(&files).Error
 	if err != nil {
 		return nil, err
 	}
@@ -127,14 +147,17 @@ func FindFiles(db *gorm.DB, fileName string, namespace Namespace) ([]File, error
 
 //FindFile finds file
 func FindFile(db *gorm.DB, fileName string, fileID uint, namespace Namespace) (*File, error) {
-	a := db.Model(&File{}).Where("namespace_id = ? AND uploader = ?", namespace.ID, namespace.User.ID)
+	a := db.Model(&File{}).Where("AND uploader = ?", namespace.User.ID)
 
 	if len(fileName) > 0 {
 		a = a.Where("name like ?", fileName)
 	}
 
+	//Include ID if set. Otherwise use namespace
 	if fileID != 0 {
 		a = a.Where("id = ?", fileID)
+	} else {
+		a = a.Where("namespace_id = ?", namespace.ID)
 	}
 
 	//Get file to delete
@@ -283,11 +306,17 @@ func (file *File) Save(db *gorm.DB) error {
 func (file File) GetCount(db *gorm.DB, fileID uint) (uint, error) {
 	var c uint
 
+	fileFilter := File{
+		Model: file.Model,
+	}
+
+	//Include namespace in search if not nil
+	if file.Namespace != nil {
+		fileFilter.NamespaceID = file.NamespaceID
+	}
+
 	//Create count statement
-	del := db.Model(&File{}).Where(&File{
-		NamespaceID: file.Namespace.ID,
-		Model:       file.Model,
-	}).Where("deleted_at is NULL")
+	del := db.Model(&File{}).Where(&fileFilter).Where("deleted_at is NULL")
 
 	if len(file.Name) > 0 {
 		//Allow searching for wildcards
