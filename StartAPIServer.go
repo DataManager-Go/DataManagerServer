@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/JojiiOfficial/DataManagerServer/services"
+	"github.com/jinzhu/gorm"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -35,11 +36,11 @@ func startAPI() {
 		}
 	})()
 
-	awaitExit(apiService)
+	awaitExit(apiService, db)
 }
 
 //Shutdown server gracefully
-func awaitExit(httpServer *services.APIService) {
+func awaitExit(httpServer *services.APIService, db *gorm.DB) {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, os.Interrupt, syscall.SIGKILL, syscall.SIGTERM)
 
@@ -62,9 +63,11 @@ func awaitExit(httpServer *services.APIService) {
 		log.Info("HTTPs server shutdown complete")
 	}
 
-	//if db != nil && db.DB != nil {
-	//log.Info("Database shutdown complete")
-	//}
+	//Close db connection
+	if db != nil {
+		db.Close()
+		log.Info("Database shutdown complete")
+	}
 
 	log.Info("Shutting down complete")
 	os.Exit(0)

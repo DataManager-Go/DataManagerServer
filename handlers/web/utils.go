@@ -13,7 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-//HandlerData handlerdata for web
+//HandlerData handlerData for web
 type HandlerData struct {
 	Config *models.Config
 	Db     *gorm.DB
@@ -35,13 +35,8 @@ func LogError(err error, context ...map[string]interface{}) bool {
 }
 
 //Copy stream
-func serveFileStream(config *models.Config, reader io.Reader, w http.ResponseWriter) error {
-	err := gaw.BufferedCopy(config.Webserver.DownloadFileBuffer, w, reader)
-	//Ignore EOF
-	if err == io.EOF {
-		return nil
-	}
-	return err
+func serveFileStream(config *models.Config, reader io.Reader, w http.ResponseWriter) {
+	_ = gaw.BufferedCopy(config.Webserver.DownloadFileBuffer, w, reader)
 }
 
 //Detect and set Content-Type by extension
@@ -64,23 +59,24 @@ func serveStaticFile(config *models.Config, file string, w http.ResponseWriter, 
 		return err
 	}
 
-	//Set contenttype
+	//Set contentType
 	if len(contentType) == 0 || len(contentType[0]) == 0 {
 		autoSetContentType(w, file)
 	} else {
 		w.Header().Set(models.HeaderContentType, contentType[0])
 	}
 
-	return serveFileStream(config, f, w)
+	serveFileStream(config, f, w)
+	return nil
 }
 
 //Handles errors and respond with 404 if this caused the error
-func handleBrowserServeError(err error, handerData HandlerData, w http.ResponseWriter, r *http.Request) {
+func handleBrowserServeError(err error, handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println(err)
 		if os.IsNotExist(err) {
 
-			NotFoundHandler(handerData, w, r)
+			NotFoundHandler(handlerData, w, r)
 			return
 		}
 		http.Error(w, "Server error", http.StatusInternalServerError)

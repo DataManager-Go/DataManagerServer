@@ -12,7 +12,7 @@ import (
 //RawFileHandler handler for previews
 func RawFileHandler(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	fileID, _ := vars["fileID"]
+	fileID  := vars["fileID"]
 
 	//Get requested file
 	file, found, err := models.GetPublicFile(handlerData.Db, fileID)

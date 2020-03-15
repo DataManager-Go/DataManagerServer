@@ -29,7 +29,7 @@ func PrevievFileHandler(handlerData HandlerData, w http.ResponseWriter, r *http.
 	}
 
 	vars := mux.Vars(r)
-	fileID, _ := vars["fileID"]
+	fileID := vars["fileID"]
 
 	//Get requested file
 	file, found, err := models.GetPublicFile(handlerData.Db, fileID)

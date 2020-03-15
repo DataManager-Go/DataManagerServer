@@ -24,7 +24,6 @@ var (
 	app         = kingpin.New("dmserver", "The data manager server")
 	appLogLevel = app.Flag("log-level", "Enable debug mode").HintOptions(constants.LogLevels...).Envar(getEnVar(EnVarLogLevel)).Short('l').Default(constants.LogLevels[2]).String()
 	appNoColor  = app.Flag("no-color", "Disable colors").Envar(getEnVar(EnVarNoColor)).Bool()
-	appYes      = app.Flag("yes", "Skips confirmations").Short('y').Envar(getEnVar(EnVarYes)).Bool()
 	appCfgFile  = app.
 			Flag("config", "the configuration file for the server").
 			Envar(getEnVar(EnVarConfigFile)).
@@ -44,7 +43,6 @@ var (
 
 var (
 	config  *models.Config
-	isDebug bool = false
 	db      *gorm.DB
 )
 
@@ -55,7 +53,6 @@ const (
 
 	EnVarLogLevel   = "LOG_LEVEL"
 	EnVarNoColor    = "NO_COLOR"
-	EnVarYes        = "SKIP_CONFIRM"
 	EnVarConfigFile = "CONFIG"
 )
 
@@ -72,14 +69,7 @@ func main() {
 	//parsing the args
 	parsed := kingpin.MustParse(app.Parse(os.Args[1:]))
 
-	log.SetOutput(os.Stdout)
-	log.SetFormatter(&log.TextFormatter{
-		DisableTimestamp: false,
-		TimestampFormat:  time.Stamp,
-		FullTimestamp:    true,
-		ForceColors:      !*appNoColor,
-		DisableColors:    *appNoColor,
-	})
+	setupLogger()
 
 	log.Infof("LogLevel: %s\n", *appLogLevel)
 
@@ -88,7 +78,6 @@ func main() {
 	case constants.LogLevels[0]:
 		//Debug
 		log.SetLevel(log.DebugLevel)
-		isDebug = true
 	case constants.LogLevels[1]:
 		//Info
 		log.SetLevel(log.InfoLevel)
@@ -128,10 +117,11 @@ func main() {
 		}
 
 		//Check if connected to db
-		if isconnected, err := storage.CheckConnection(db); !isconnected {
+		if isConnected, err := storage.CheckConnection(db); !isConnected {
 			log.Fatalln(err)
 			return
 		}
+
 
 		log.Debug("Successfully connected to DB")
 	}
@@ -148,8 +138,18 @@ func main() {
 	//Config --------------------
 	case configCmdCreate.FullCommand():
 		{
-			//whsub config create
 			models.InitConfig(*configCmdCreateName, true)
 		}
 	}
+}
+
+func setupLogger() {
+	log.SetOutput(os.Stdout)
+	log.SetFormatter(&log.TextFormatter{
+		DisableTimestamp: false,
+		TimestampFormat:  time.Stamp,
+		FullTimestamp:    true,
+		ForceColors:      !*appNoColor,
+		DisableColors:    *appNoColor,
+	})
 }

@@ -326,6 +326,12 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	//Validate input
+	if len(request.Name) == 0 && request.FileID <= 0 {
+		sendResponse(w, models.ResponseError, "Bad request", nil, http.StatusBadRequest)
+		return
+	}
+
 	//Select namespace
 	namespace := models.FindNamespace(handlerData.Db, request.Attributes.Namespace, handlerData.User)
 	if namespace == nil || namespace.ID == 0 {
@@ -356,7 +362,7 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 	c, err := models.File{
 		Name:      request.Name,
 		Namespace: namespace,
-	}.GetCount(handlerData.Db, request.FileID, handlerData.User)
+	}.GetCount(handlerData.Db, request.FileID)
 
 	//Handle errors
 	if LogError(err) {
@@ -388,16 +394,16 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 	}
 
 	//Fill array with either one ore more instances
-	if request.All {
+	if request.All && len(request.Name) > 0 {
 		var err error
-		files, err = models.FindFiles(handlerData.Db, request.Name, *namespace, handlerData.User)
+		files, err = models.FindFiles(handlerData.Db, request.Name, *namespace)
 		if LogError(err) {
 			sendServerError(w)
 			return
 		}
 	} else {
 		//Get target file
-		file, err := models.FindFile(handlerData.Db, request.Name, request.FileID, *namespace, handlerData.User)
+		file, err := models.FindFile(handlerData.Db, request.Name, request.FileID, *namespace)
 		if LogError(err) {
 			sendServerError(w)
 			return

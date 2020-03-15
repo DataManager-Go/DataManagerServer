@@ -112,9 +112,9 @@ func (file File) IsInGroupList(groups []string) bool {
 }
 
 //FindFiles finds file
-func FindFiles(db *gorm.DB, fileName string, namespace Namespace, user *User) ([]File, error) {
+func FindFiles(db *gorm.DB, fileName string, namespace Namespace) ([]File, error) {
 	var files []File
-	a := db.Model(&File{}).Where("name like ? AND namespace_id = ? AND uploader = ?", fileName, namespace.ID, user.ID)
+	a := db.Model(&File{}).Where("name like ? AND namespace_id = ? AND uploader = ?", fileName, namespace.ID, namespace.User.ID)
 
 	//Get file to delete
 	err := a.Preload("Namespace").Preload("Tags").Preload("Groups").Find(&files).Error
@@ -126,8 +126,13 @@ func FindFiles(db *gorm.DB, fileName string, namespace Namespace, user *User) ([
 }
 
 //FindFile finds file
-func FindFile(db *gorm.DB, fileName string, fileID uint, namespace Namespace, user *User) (*File, error) {
-	a := db.Model(&File{}).Where("name like ? AND namespace_id = ? AND uploader = ?", fileName, namespace.ID, user.ID)
+func FindFile(db *gorm.DB, fileName string, fileID uint, namespace Namespace) (*File, error) {
+	a := db.Model(&File{}).Where("namespace_id = ? AND uploader = ?", namespace.ID, namespace.User.ID)
+
+	if len(fileName) > 0 {
+		a = a.Where("name like ?", fileName)
+	}
+
 	if fileID != 0 {
 		a = a.Where("id = ?", fileID)
 	}
@@ -275,7 +280,7 @@ func (file *File) Save(db *gorm.DB) error {
 }
 
 //GetCount get count if file
-func (file File) GetCount(db *gorm.DB, fileID uint, user *User) (uint, error) {
+func (file File) GetCount(db *gorm.DB, fileID uint) (uint, error) {
 	var c uint
 
 	//Create count statement
@@ -284,16 +289,18 @@ func (file File) GetCount(db *gorm.DB, fileID uint, user *User) (uint, error) {
 		Model:       file.Model,
 	}).Where("deleted_at is NULL")
 
-	//Allow searching for wildcards
-	if strings.HasSuffix(file.Name, "%") || strings.HasPrefix(file.Name, "%") {
-		//Apply wildcard
-		del = del.Where("name like ?", file.Name)
-	} else {
-		del = del.Where("name = ?", file.Name)
+	if len(file.Name) > 0 {
+		//Allow searching for wildcards
+		if strings.HasSuffix(file.Name, "%") || strings.HasPrefix(file.Name, "%") {
+			//Apply wildcard
+			del = del.Where("name like ?", file.Name)
+		} else {
+			del = del.Where("name = ?", file.Name)
+		}
 	}
 
 	//Also use fileID if set
-	if fileID != 0 {
+	if fileID > 0 {
 		del = del.Where("id = ?", fileID)
 	}
 
