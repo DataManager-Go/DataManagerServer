@@ -37,14 +37,9 @@ func AttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 
 	//Find namespace
 	namespace := models.FindNamespace(handlerData.Db, request.Namespace, handlerData.User)
-	if namespace == nil {
-		sendResponse(w, models.ResponseError, "namespace not found", nil, http.StatusNotFound)
-		return
-	}
 
-	//Check if user can access this namespace
-	if !namespace.IsOwnedBy(handlerData.User) && !handlerData.User.CanWriteForeignNamespace() {
-		sendResponse(w, models.ResponseError, "Write permission denied for foreign namespaces", nil, http.StatusForbidden)
+	// Handle namespace errors (not found || no access)
+	if !handleNamespaceErorrs(namespace, handlerData.User, w) {
 		return
 	}
 

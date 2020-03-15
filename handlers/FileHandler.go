@@ -86,14 +86,9 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 
 	//Select namespace
 	namespace := models.FindNamespace(handlerData.Db, request.Attributes.Namespace, handlerData.User)
-	if namespace == nil {
-		sendResponse(w, models.ResponseError, "namespace not found", nil, http.StatusNotFound)
-		return
-	}
 
-	//Check if user can access this namespace
-	if !namespace.IsOwnedBy(handlerData.User) && !handlerData.User.CanWriteForeignNamespace() {
-		sendResponse(w, models.ResponseError, "Write permission denied for foreign namespaces", nil, http.StatusForbidden)
+	// Handle namespace errors (not found || no access)
+	if !handleNamespaceErorrs(namespace, handlerData.User, w) {
 		return
 	}
 
@@ -237,14 +232,9 @@ func ListFilesHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 	if !request.AllNamespaces {
 		//Select namespace
 		namespace = models.FindNamespace(handlerData.Db, request.Attributes.Namespace, handlerData.User)
-		if namespace == nil || namespace.ID == 0 {
-			sendResponse(w, models.ResponseError, "Namespace not found", 404)
-			return
-		}
 
-		//Check if user can read from this namespace
-		if !namespace.IsOwnedBy(handlerData.User) && !handlerData.User.CanReadForeignNamespace() {
-			sendResponse(w, models.ResponseError, "Read permission denied for foreign namespaces", nil, http.StatusForbidden)
+		// Handle namespace errors (not found || no access)
+		if !handleNamespaceErorrs(namespace, handlerData.User, w) {
 			return
 		}
 	}
@@ -353,14 +343,9 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 	if request.FileID == 0 {
 		// Select namespace
 		namespace = models.FindNamespace(handlerData.Db, request.Attributes.Namespace, handlerData.User)
-		if namespace == nil || namespace.ID == 0 {
-			sendResponse(w, models.ResponseError, "Namespace not found", nil, http.StatusNotFound)
-			return
-		}
 
-		// Check if user can access this namespace
-		if !handlerData.User.HasAccess(namespace) {
-			sendResponse(w, models.ResponseError, "Write permission denied for this namespaces", nil, http.StatusForbidden)
+		// Handle namespace errors (not found || no access)
+		if !handleNamespaceErorrs(namespace, handlerData.User, w) {
 			return
 		}
 	}

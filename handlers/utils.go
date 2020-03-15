@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -18,32 +17,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func sendResponse(w http.ResponseWriter, status models.ResponseStatus, message string, payload interface{}, params ...int) {
-	statusCode := http.StatusOK
-	s := "0"
-	if status == 1 {
-		s = "1"
-	}
-
-	w.Header().Set(models.HeaderStatus, s)
-	w.Header().Set(models.HeaderStatusMessage, message)
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-
-	if len(params) > 0 {
-		statusCode = params[0]
-		w.WriteHeader(statusCode)
-	}
-
-	var err error
-	if payload != nil {
-		err = json.NewEncoder(w).Encode(payload)
-	} else if len(message) > 0 {
-		_, err = fmt.Fprintln(w, message)
-	}
-
-	LogError(err)
-}
-
 func readRequestLimited(w http.ResponseWriter, r *http.Request, p interface{}, limit int64) bool {
 	return readRequestBody(w, io.LimitReader(r.Body, limit), p)
 }
@@ -57,18 +30,6 @@ func readRequestBody(w http.ResponseWriter, r io.Reader, p interface{}) bool {
 	}
 
 	return !handleAndSendError(json.Unmarshal(body, p), w, models.WrongInputFormatError, http.StatusUnprocessableEntity)
-}
-
-func handleAndSendError(err error, w http.ResponseWriter, message string, statusCode int) bool {
-	if !LogError(err) {
-		return false
-	}
-	sendResponse(w, models.ResponseError, message, nil, statusCode)
-	return true
-}
-
-func sendServerError(w http.ResponseWriter) {
-	sendResponse(w, models.ResponseError, "internal server error", nil, http.StatusInternalServerError)
 }
 
 //LogError returns true on error

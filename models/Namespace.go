@@ -81,3 +81,8 @@ func UserNamespaceName(namespaceName string, user *User) string {
 	}
 	return user.Username + "_" + namespaceName
 }
+
+//IsValid return true if namespace is valid
+func (namespace *Namespace) IsValid() bool {
+	return (namespace != nil && namespace.ID > 0)
+}
