@@ -299,6 +299,11 @@ func ListFilesHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 				IsPublic:     file.IsPublic,
 			}
 
+			// Set encryption
+			if file.Encryption.Valid && constants.EncryptionIValid(file.Encryption.Int32) {
+				respItem.Encryption = constants.ChiperToString(file.Encryption.Int32)
+			}
+
 			// Append public name if available
 			if file.PublicFilename.Valid && len(file.PublicFilename.String) > 0 {
 				respItem.PublicName = file.PublicFilename.String
@@ -561,7 +566,6 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 
 			// Set encryption cipher header
 			if file.Encryption.Valid {
-				fmt.Println("Set header", constants.ChiperToString(file.Encryption.Int32))
 				w.Header().Set(models.HeaderEncryption, constants.ChiperToString(file.Encryption.Int32))
 			}
 

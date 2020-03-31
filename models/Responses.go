@@ -71,6 +71,7 @@ type FileResponseItem struct {
 	PublicName   string         `json:"pubname"`
 	IsPublic     bool           `json:"isPub"`
 	Attributes   FileAttributes `json:"attrib"`
+	Encryption   string         `json:"e"`
 }
 
 //PublishResponse response for publishing a file

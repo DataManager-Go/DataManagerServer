@@ -90,7 +90,7 @@ var (
 			HandlerType: sessionRequest,
 		},
 		Route{
-			Name:        "update file",
+			Name:        "fileaction",
 			Pattern:     "/file/{action}",
 			Method:      POSTMethod,
 			HandlerFunc: FileHandler,

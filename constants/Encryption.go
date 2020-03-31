@@ -22,9 +22,18 @@ func ChiperToInt(c string) int32 {
 	return 0
 }
 
+// EncryptionIValid return true if encryption i is valid
+func EncryptionIValid(i int32) bool {
+	if i-1 < 0 || i-1 >= int32(len(EncryptionCiphers)) {
+		return false
+	}
+
+	return true
+}
+
 // ChiperToString cipter to int
 func ChiperToString(i int32) string {
-	if i-1 < 0 || i-1 >= int32(len(EncryptionCiphers)) {
+	if !EncryptionIValid(i) {
 		return ""
 	}
 
