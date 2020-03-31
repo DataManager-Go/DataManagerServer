@@ -46,6 +46,8 @@ const (
 	HeaderContentType string = "Content-Type"
 	//HeaderFileName filename header
 	HeaderFileName string = "X-Filename"
+	//HeaderEncryption encryption header
+	HeaderEncryption string = "X-Encryption"
 	//HeaderRequest request content
 	HeaderRequest string = "Request"
 )

@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/JojiiOfficial/DataManagerServer/constants"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
@@ -25,6 +26,7 @@ type File struct {
 	Tags           []Tag          `gorm:"many2many:files_tags;association_autoupdate:false"`
 	Namespace      *Namespace     `gorm:"association_autoupdate:false;association_autocreate:false;"`
 	NamespaceID    uint           `sql:"index" gorm:"not null"`
+	Encryption     sql.NullInt32
 }
 
 //FileAttributes attributes for a file
@@ -412,4 +414,17 @@ func (file *File) Publish(db *gorm.DB, publicName string) (bool, error) {
 
 	//Save new file
 	return false, file.Save(db)
+}
+
+//SetEncryption set encryption
+func (file *File) SetEncryption(encription string) {
+	e := sql.NullInt32{
+		Valid: false,
+	}
+	if len(encription) > 0 && constants.IsValidCipher(encription) {
+		e.Valid = true
+		e.Int32 = constants.ChiperToInt(encription)
+	}
+
+	file.Encryption = e
 }

@@ -1,11 +1,11 @@
 package models
 
-//PingRequest ping request
+// PingRequest ping request
 type PingRequest struct {
 	Payload string
 }
 
-//CredentialsRequest request containing credentials
+// CredentialsRequest request containing credentials
 type CredentialsRequest struct {
 	Username string `json:"username"`
 	Password string `json:"pass"`
@@ -21,7 +21,7 @@ type FileRequest struct {
 	Attributes FileAttributes `json:"attributes"`
 }
 
-//NamespaceRequest namespace action request
+// NamespaceRequest namespace action request
 type NamespaceRequest struct {
 	Namespace string        `json:"ns"`
 	NewName   string        `json:"newName,omitempty"`
@@ -65,9 +65,10 @@ type UploadRequest struct {
 	UploadType UploadType     `json:"type"`
 	URL        string         `json:"url"`
 	Name       string         `json:"name"`
-	Public     bool           `json:"public"`
-	PublicName string         `json:"pbname"`
-	Attributes FileAttributes `json:"attributes"`
+	Public     bool           `json:"pb"`
+	PublicName string         `json:"pbname,omitempty"`
+	Attributes FileAttributes `json:"attr"`
+	Encryption string         `json:"e,omitempty"`
 }
 
 //UploadType type of upload

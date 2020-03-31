@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/JojiiOfficial/DataManagerServer/constants"
 	"github.com/JojiiOfficial/DataManagerServer/handlers/web"
 	"github.com/JojiiOfficial/DataManagerServer/models"
 	"github.com/JojiiOfficial/gaw"
@@ -25,21 +26,21 @@ import (
 func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) {
 	var request models.UploadRequest
 
-	//Get data from header
+	// Get data from header
 	requestData := r.Header.Get(models.HeaderRequest)
 	if len(requestData) == 0 {
 		sendResponse(w, models.ResponseError, "Bad request", nil, http.StatusBadRequest)
 		return
 	}
 
-	//Decode header base64
+	// Decode header base64
 	rBaseBytes, err := base64.StdEncoding.DecodeString(requestData)
 	if err != nil {
 		sendResponse(w, models.ResponseError, "Bad request", nil, http.StatusBadRequest)
 		return
 	}
 
-	//Parse json from request header
+	// Parse json from request header
 	err = json.Unmarshal(rBaseBytes, &request)
 	if LogError(err) {
 		fmt.Println("Invalid Json:", err)
@@ -47,11 +48,17 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 		return
 	}
 
+	// Check requested encryption type
+	if len(request.Encryption) > 0 && !constants.IsValidCipher(request.Encryption) {
+		sendResponse(w, models.ResponseError, "Encryption not supported", nil, http.StatusUnprocessableEntity)
+		return
+	}
+
 	// Validating request, for desired upload Type
 	switch request.UploadType {
 	case models.FileUploadType:
 		{
-			//Check if user is allowed to upload files
+			// Check if user is allowed to upload files
 			if !handlerData.User.CanUploadFiles() {
 				sendResponse(w, models.ResponseError, "not allowed to upload files", nil, http.StatusForbidden)
 				return
@@ -59,13 +66,13 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 		}
 	case models.URLUploadType:
 		{
-			//Check if user is allowed to upload URLs
+			// Check if user is allowed to upload URLs
 			if !handlerData.User.AllowedToUploadURLs() {
 				sendResponse(w, models.ResponseError, "not allowed to upload urls", nil, http.StatusForbidden)
 				return
 			}
 
-			//Check if url is set and valid
+			// Check if url is set and valid
 			if len(request.URL) == 0 || !isValidHTTPURL(request.URL) {
 				sendResponse(w, models.ResponseError, "missing or malformed url", nil, http.StatusUnprocessableEntity)
 				return
@@ -73,18 +80,18 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 		}
 	default:
 		{
-			//Send error if UploadType was not found
+			// Send error if UploadType was not found
 			sendResponse(w, models.ResponseError, "invalid upload type", nil, http.StatusUnprocessableEntity)
 			return
 		}
 	}
 
-	//Set random name if not specified
+	// Set random name if not specified
 	if len(request.Name) == 0 {
 		request.Name = gaw.RandString(20)
 	}
 
-	//Select namespace
+	// Select namespace
 	namespace := models.FindNamespace(handlerData.Db, request.Attributes.Namespace, handlerData.User)
 
 	// Handle namespace errors (not found || no access)
@@ -92,13 +99,13 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 		return
 	}
 
-	//Get Tags
+	// Get Tags
 	tags := models.TagsFromStringArr(request.Attributes.Tags, *namespace, handlerData.User)
 
-	//Get Groups
+	// Get Groups
 	groups := models.GroupsFromStringArr(request.Attributes.Groups, *namespace, handlerData.User)
 
-	//Ensure localname is not already in use
+	// Ensure localname is not already in use
 	uniqueNameFound := false
 	var localName string
 	for i := 0; i < 5; i++ {
@@ -118,7 +125,7 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 		return
 	}
 
-	//Generate file
+	// Generate file
 	file := models.File{
 		Groups:    groups,
 		Tags:      tags,
@@ -126,21 +133,23 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 		Name:      request.Name,
 	}
 
+	file.SetEncryption(request.Encryption)
+
 	if request.Public {
-		//Determine public name
+		// Determine public name
 		publicName := request.PublicName
 		if len(publicName) == 0 {
 			publicName = gaw.RandString(25)
 		}
 
-		//Set file public name
+		// Set file public name
 		file.PublicFilename = sql.NullString{
 			String: publicName,
 			Valid:  true,
 		}
 		file.IsPublic = true
 
-		//Check if public name already exists
+		// Check if public name already exists
 		_, found, _ := models.GetPublicFile(handlerData.Db, publicName)
 		if found {
 			sendResponse(w, models.ResponseError, "public name already exists", nil)
@@ -148,20 +157,20 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 		}
 	}
 
-	//set local name
+	// Set local name
 	file.LocalName = localName
 
-	//Create local file
+	// Create local file
 	f, err := os.Create(handlerData.Config.GetStorageFile(localName))
 	if LogError(err) {
 		sendServerError(w)
 		return
 	}
 
-	//Read from the desired source (file/url)
+	// Read from the desired source (file/url)
 	switch request.UploadType {
 	case models.FileUploadType:
-		//Read from uploaded file
+		// Read from uploaded file
 		r.ParseMultipartForm(handlerData.User.Role.MaxUploadFileSize)
 
 		uploadfile, _, err := r.FormFile("uploadfile")
@@ -171,34 +180,34 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 		}
 		defer uploadfile.Close()
 
-		//Copy stream to file
+		// Copy stream to file
 		size, err := io.Copy(f, uploadfile)
 		if LogError(err) {
 			sendServerError(w)
 			return
 		}
 
-		//Set filesize to written bytes
+		// Set filesize to written bytes
 		file.FileSize = int64(size)
 	case models.URLUploadType:
-		//Read from HTTP request
+		// Read from HTTP request
 		status, err := downloadHTTP(handlerData.User, request.URL, f, &file)
 		if err != nil {
 			sendResponse(w, models.ResponseError, err.Error(), nil, http.StatusBadRequest)
 			return
 		}
 
-		//Check statuscode
+		// Check statuscode
 		if status > 299 || status < 200 {
 			sendResponse(w, models.ResponseError, "Non ok response: "+strconv.Itoa(status), nil, http.StatusBadRequest)
 			return
 		}
 	}
 
-	//Close file
+	// Close file
 	f.Close()
 
-	//Detect mime type
+	// Detect mime type
 	mime, err := mimetype.DetectFile(handlerData.Config.GetStorageFile(localName))
 	if err != nil {
 		log.Info("Can't detect mime: ", err.Error())
@@ -206,7 +215,7 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 		file.FileType = strings.Split(mime.String(), ";")[0]
 	}
 
-	//Save file to DB
+	// Save file to DB
 	err = file.Insert(handlerData.Db, handlerData.User)
 
 	if !LogError(err) {
@@ -220,7 +229,7 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 	}
 }
 
-//ListFilesHandler handler for listing files
+// ListFilesHandler handler for listing files
 func ListFilesHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) {
 	var request models.FileListRequest
 	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
@@ -230,7 +239,7 @@ func ListFilesHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 	var namespace *models.Namespace
 
 	if !request.AllNamespaces {
-		//Select namespace
+		// Select namespace
 		namespace = models.FindNamespace(handlerData.Db, request.Attributes.Namespace, handlerData.User)
 
 		// Handle namespace errors (not found || no access)
@@ -259,28 +268,28 @@ func ListFilesHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 	}
 
 	if request.AllNamespaces {
-		//Join to filter by namespace creator
+		// Join to filter by namespace creator
 		loaded = loaded.
 			Joins("INNER JOIN namespaces ON namespaces.id = files.namespace_id").
 			Where("namespaces.creator = ?", handlerData.User.ID)
 	} else {
-		//Just select the specified namespace
+		// Just select the specified namespace
 		loaded = loaded.Where("namespace_id = ?", namespace.ID)
 	}
 
-	//search
+	// Search
 	err := loaded.Find(&foundFiles).Error
 	if LogError(err) {
 		sendServerError(w)
 		return
 	}
 
-	//Convert to ResponseFile
+	// Convert to ResponseFile
 	var retFiles []models.FileResponseItem
 	for _, file := range foundFiles {
-		//Filter tags
+		// Filter tags
 		if (len(request.Attributes.Tags) == 0 || (len(request.Attributes.Tags) > 0 && file.IsInTagList(request.Attributes.Tags))) &&
-			//Filter groups
+			// Filter groups
 			(len(request.Attributes.Groups) == 0 || (len(request.Attributes.Groups) > 0 && file.IsInGroupList(request.Attributes.Groups))) {
 			respItem := models.FileResponseItem{
 				ID:           file.ID,
@@ -290,17 +299,17 @@ func ListFilesHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 				IsPublic:     file.IsPublic,
 			}
 
-			//Append public name if available
+			// Append public name if available
 			if file.PublicFilename.Valid && len(file.PublicFilename.String) > 0 {
 				respItem.PublicName = file.PublicFilename.String
 			}
 
-			//Return attributes on verbose
+			// Return attributes on verbose
 			if request.OptionalParams.Verbose > 1 || request.AllNamespaces {
 				respItem.Attributes = file.GetAttributes()
 			}
 
-			//Add if matching filter
+			// Add if matching filter
 			retFiles = append(retFiles, respItem)
 		}
 	}
@@ -310,7 +319,7 @@ func ListFilesHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 	})
 }
 
-//FileHandler handler for updating files
+// FileHandler handler for updating files
 func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) {
 	var request models.FileRequest
 	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
@@ -394,7 +403,7 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 	// Determine if an update was applied
 	var didUpdate bool
 
-	//Execute action
+	// Execute action
 	switch action {
 	case "delete":
 		{
@@ -550,6 +559,12 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 			// Set filename header
 			w.Header().Set(models.HeaderFileName, file.Name)
 
+			// Set encryption cipher header
+			if file.Encryption.Valid {
+				fmt.Println("Set header", constants.ChiperToString(file.Encryption.Int32))
+				w.Header().Set(models.HeaderEncryption, constants.ChiperToString(file.Encryption.Int32))
+			}
+
 			// Write contents to responsewriter
 			_, err = io.Copy(w, f)
 			if LogError(err) {
@@ -567,9 +582,9 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 			bulkPublishResponse := models.BulkPublishResponse{}
 
 			for _, file := range files {
-				//Ignore if already public
+				// Ignore if already public
 				if file.IsPublic {
-					//Send error if publishing only one file
+					// Send error if publishing only one file
 					if len(files) == 1 {
 						sendResponse(w, models.ResponseError, "Already public", nil, http.StatusConflict)
 						return
@@ -609,7 +624,6 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 			} else {
 				sendResponse(w, models.ResponseSuccess, "", publishResponse)
 			}
-
 		}
 	}
 }
