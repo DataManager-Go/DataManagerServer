@@ -7,6 +7,7 @@ require (
 	github.com/JojiiOfficial/gaw v1.1.56
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
+	github.com/fatih/color v1.9.0
 	github.com/gabriel-vasile/mimetype v1.0.3
 	github.com/gorilla/mux v1.7.4
 	github.com/h2non/filetype v1.0.12
