@@ -4,12 +4,16 @@ import (
 	"database/sql"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/JojiiOfficial/DataManagerServer/constants"
 	"github.com/JojiiOfficial/gaw"
+	"github.com/JojiiOfficial/shred"
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
 )
+
+var shredder = shred.Shredder{}
 
 //File a file uploaded to the db
 type File struct {
@@ -186,43 +190,63 @@ func (file File) HasGroup(sGroup string) bool {
 	return false
 }
 
-//Delete deletes a file
+// Delete deletes a file
 func (file *File) Delete(db *gorm.DB, config *Config) error {
-	//Remove public filename to free this keyword
+	// Remove public filename to free this keyword
 	file.IsPublic = false
 	file.PublicFilename = sql.NullString{
 		Valid: false,
 	}
 
-	//Save new state
+	// Save new state
 	err := file.Save(db)
 	if err != nil {
 		return err
 	}
 
-	//Delete local file
-	err = os.Remove(config.GetStorageFile(file.LocalName))
+	localFile := config.GetStorageFile(file.LocalName)
+	s, err := os.Stat(localFile)
 	if err != nil {
 		log.Warn(err)
+	} else {
+		// Shredder file in background
+		go (func() {
+			var shredConfig *shred.ShredderConf
+
+			if s.Size() >= 1000000000 {
+				// Size >= 1GB
+				shredConfig = shred.NewShredderConf(&shredder, shred.WriteZeros, 1, true)
+			} else if s.Size() >= 10000000 {
+				// Size >= 10MB
+				shredConfig = shred.NewShredderConf(&shredder, shred.WriteZeros|shred.WriteRand, 2, true)
+			} else {
+				shredConfig = shred.NewShredderConf(&shredder, shred.WriteZeros|shred.WriteRandSecure, 3, true)
+			}
+
+			// Delete local file
+			start := time.Now()
+			shredConfig.ShredFile(localFile)
+			log.Debug("Shredding took ", time.Since(start).String())
+		})()
 	}
 
-	//Delete from DB
+	// Delete from DB
 	return db.Delete(&file).Error
 }
 
-//Rename renames a file
+// Rename renames a file
 func (file *File) Rename(db *gorm.DB, newName string) error {
 	file.Name = newName
 	return file.Save(db)
 }
 
-//SetVilibility sets public/private
+// SetVilibility sets public/private
 func (file *File) SetVilibility(db *gorm.DB, newVisibility bool) error {
 	file.IsPublic = newVisibility
 	return file.Save(db)
 }
 
-//AddTags adds tags to file
+// AddTags adds tags to file
 func (file *File) AddTags(db *gorm.DB, tagsToAdd []string, user *User) error {
 	for _, sTag := range tagsToAdd {
 		if file.HasTag(sTag) {
