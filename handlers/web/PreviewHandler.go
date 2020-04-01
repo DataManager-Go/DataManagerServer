@@ -6,6 +6,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/JojiiOfficial/DataManagerServer/constants"
 	"github.com/JojiiOfficial/DataManagerServer/models"
 	"github.com/gorilla/mux"
 	"github.com/sbani/go-humanizer/units"
@@ -56,6 +57,7 @@ func PrevievFileHandler(handlerData HandlerData, w http.ResponseWriter, r *http.
 		PreviewType:    models.PreviewTypeFromMime(file.FileType),
 		Host:           r.Host,
 		FileSizeStr:    units.BinarySuffix(float64(file.FileSize)),
+		Encrypted:      (file.Encryption.Valid && constants.EncryptionIValid(file.Encryption.Int32)),
 	}
 
 	//Serve preview

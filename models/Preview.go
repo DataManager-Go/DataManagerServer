@@ -29,6 +29,7 @@ type PreviewTemplate struct {
 	PreviewType    PreviewType
 	Host           string
 	FileSizeStr    string
+	Encrypted      bool
 }
 
 //PreviewTypeFromMime get Type to preview from mime
