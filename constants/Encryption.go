@@ -7,8 +7,6 @@ import (
 // EncryptionCiphers supported encryption chipers
 var EncryptionCiphers = []string{
 	"aes",
-	"rsa",
-	"pgp",
 }
 
 // ChiperToInt cipter to int
