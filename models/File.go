@@ -31,8 +31,8 @@ type File struct {
 
 //FileAttributes attributes for a file
 type FileAttributes struct {
-	Tags      []string `json:"tags"`
-	Groups    []string `json:"groups"`
+	Tags      []string `json:"tags,omitempty"`
+	Groups    []string `json:"groups,omitempty"`
 	Namespace string   `json:"ns"`
 }
 
