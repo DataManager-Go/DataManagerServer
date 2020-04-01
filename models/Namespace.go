@@ -55,11 +55,11 @@ func FindNamespace(db *gorm.DB, ns string, user *User) *Namespace {
 }
 
 //IsOwnedBy returns true if namespace is users
-func (namespace Namespace) IsOwnedBy(user *User) bool {
-	if user == nil || namespace.User == nil {
+func (namespace *Namespace) IsOwnedBy(user *User) bool {
+	if user == nil || namespace == nil {
 		return false
 	}
-	return namespace.User.ID == user.ID
+	return namespace.UserID == user.ID
 }
 
 //FindUserNamespaces get all namespaces for user

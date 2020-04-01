@@ -148,23 +148,17 @@ func FindFiles(db *gorm.DB, file File) ([]File, error) {
 }
 
 //FindFile finds file
-func FindFile(db *gorm.DB, fileName string, fileID uint, namespace Namespace) (*File, error) {
-	a := db.Model(&File{}).Where("AND uploader = ?", namespace.User.ID)
-
-	if len(fileName) > 0 {
-		a = a.Where("name like ?", fileName)
-	}
+func FindFile(db *gorm.DB, fileID, userID uint) (*File, error) {
+	a := db.Model(&File{}).Where("uploader = ?", userID)
 
 	//Include ID if set. Otherwise use namespace
 	if fileID != 0 {
 		a = a.Where("id = ?", fileID)
-	} else {
-		a = a.Where("namespace_id = ?", namespace.ID)
 	}
 
-	//Get file to delete
+	//Get file
 	var file File
-	err := a.Preload("Namespace").Preload("Tags").Preload("Groups").First(&file).Error
+	err := a.Preload("Namespace").First(&file).Error
 	if err != nil {
 		return nil, err
 	}
@@ -417,7 +411,7 @@ func (file *File) Publish(db *gorm.DB, publicName string) (bool, error) {
 }
 
 //SetEncryption set encryption
-func (file *File) SetEncryption(encription string) {
+func (file *File) SetEncryption(encription string) *File {
 	e := sql.NullInt32{
 		Valid: false,
 	}
@@ -427,4 +421,23 @@ func (file *File) SetEncryption(encription string) {
 	}
 
 	file.Encryption = e
+	return file
+}
+
+//SetUniqueFilename sets unique filename
+func (file *File) SetUniqueFilename(db *gorm.DB) bool {
+	var localName string
+	for i := 0; i < 5; i++ {
+		localName = gaw.RandString(40)
+		var c int
+		db.Model(&File{}).Where(&File{LocalName: localName}).Count(&c)
+		if c == 0 {
+			file.LocalName = localName
+			return true
+		}
+
+		log.Warningf("Name collision found. Trying again (%d/%d)", i, 5)
+	}
+
+	return false
 }

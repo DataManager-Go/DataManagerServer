@@ -86,53 +86,58 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 		}
 	}
 
-	// Set random name if not specified
-	if len(request.Name) == 0 {
-		request.Name = gaw.RandString(20)
-	}
+	var namespace *models.Namespace
+	var file *models.File
+	var replaceMode bool
 
-	// Select namespace
-	namespace := models.FindNamespace(handlerData.Db, request.Attributes.Namespace, handlerData.User)
+	if request.ReplaceFile > 0 {
+		replaceMode = true
+
+		// Find file
+		file, err = models.FindFile(handlerData.Db, request.ReplaceFile, handlerData.User.ID)
+		if LogError(err) {
+			sendResponse(w, models.ResponseError, "File not found", nil, http.StatusNotFound)
+			return
+		}
+		if file == nil || file.Namespace == nil {
+			sendServerError(w)
+			return
+		}
+
+		// Select namespace
+		namespace = file.Namespace
+	} else {
+		if len(request.Name) == 0 {
+			request.Name = gaw.RandString(25)
+		}
+
+		// Select namespace
+		namespace = models.FindNamespace(handlerData.Db, request.Attributes.Namespace, handlerData.User)
+
+		// Generate file
+		file = &models.File{
+			Namespace: namespace,
+			Name:      request.Name,
+		}
+
+		if !file.SetUniqueFilename(handlerData.Db) {
+			sendServerError(w)
+			return
+		}
+	}
 
 	// Handle namespace errors (not found || no access)
 	if !handleNamespaceErorrs(namespace, handlerData.User, w) {
 		return
 	}
 
-	// Get Tags
-	tags := models.TagsFromStringArr(request.Attributes.Tags, *namespace, handlerData.User)
-
-	// Get Groups
-	groups := models.GroupsFromStringArr(request.Attributes.Groups, *namespace, handlerData.User)
-
-	// Ensure localname is not already in use
-	uniqueNameFound := false
-	var localName string
-	for i := 0; i < 5; i++ {
-		localName = gaw.RandString(40)
-		var c int
-		handlerData.Db.Model(&models.File{}).Where(&models.File{LocalName: localName}).Count(&c)
-		if c == 0 {
-			uniqueNameFound = true
-			break
-		}
-
-		log.Warningf("Name collision found. Trying again (%d/%d)", i, 5)
+	// Set Tags, Groups and encryption
+	if len(request.Attributes.Tags) > 0 {
+		file.Tags = models.TagsFromStringArr(request.Attributes.Tags, *namespace, handlerData.User)
 	}
-
-	if !uniqueNameFound {
-		sendServerError(w)
-		return
+	if len(request.Attributes.Groups) > 0 {
+		file.Groups = models.GroupsFromStringArr(request.Attributes.Groups, *namespace, handlerData.User)
 	}
-
-	// Generate file
-	file := models.File{
-		Groups:    groups,
-		Tags:      tags,
-		Namespace: namespace,
-		Name:      request.Name,
-	}
-
 	file.SetEncryption(request.Encryption)
 
 	if request.Public {
@@ -157,11 +162,8 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 		}
 	}
 
-	// Set local name
-	file.LocalName = localName
-
 	// Create local file
-	f, err := os.Create(handlerData.Config.GetStorageFile(localName))
+	f, err := os.Create(handlerData.Config.GetStorageFile(file.LocalName))
 	if LogError(err) {
 		sendServerError(w)
 		return
@@ -191,7 +193,7 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 		file.FileSize = int64(size)
 	case models.URLUploadType:
 		// Read from HTTP request
-		status, err := downloadHTTP(handlerData.User, request.URL, f, &file)
+		status, err := downloadHTTP(handlerData.User, request.URL, f, file)
 		if err != nil {
 			sendResponse(w, models.ResponseError, err.Error(), nil, http.StatusBadRequest)
 			return
@@ -208,15 +210,20 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 	f.Close()
 
 	// Detect mime type
-	mime, err := mimetype.DetectFile(handlerData.Config.GetStorageFile(localName))
+	mime, err := mimetype.DetectFile(handlerData.Config.GetStorageFile(file.LocalName))
 	if err != nil {
 		log.Info("Can't detect mime: ", err.Error())
 	} else {
 		file.FileType = strings.Split(mime.String(), ";")[0]
 	}
 
-	// Save file to DB
-	err = file.Insert(handlerData.Db, handlerData.User)
+	if replaceMode {
+		// Update file
+		err = file.Save(handlerData.Db)
+	} else {
+		// Insert file to DB
+		err = file.Insert(handlerData.Db, handlerData.User)
+	}
 
 	if !LogError(err) {
 		sendResponse(w, models.ResponseSuccess, "", models.UploadResponse{
