@@ -104,6 +104,11 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 			return
 		}
 
+		// Use new name if set
+		if len(request.Name) > 0 {
+			file.Name = request.Name
+		}
+
 		// Select namespace
 		namespace = file.Namespace
 	} else {
