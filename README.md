@@ -24,6 +24,7 @@ go mod download && go build -o main
 To download the dependencies and build the application. Go 1.11+ is required.
 
 # Configuration
+Create an example config using `./main config create`<br>
 By default the config file is stored in `./data/config.yml`<br><br>
 ### Configurations:
 #### Server
@@ -36,3 +37,7 @@ By default the config file is stored in `./data/config.yml`<br><br>
 `useragentsrawfile` Respond with the raw file instead of the preview file. Very nice if you want to download the file instead of the preview if you are using wget or curl<br>
 `maxpreviewfilesize` Max filesize for the preivew<br>
 `htmlfiles` Path for the webroot. By default `./html`<br>
+
+# Run
+Run the server using `./main server start`<br>
+You can add `-l debug` to view debug logs
