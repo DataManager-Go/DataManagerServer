@@ -5,6 +5,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/JojiiOfficial/DataManagerServer/constants"
 
@@ -25,8 +26,10 @@ type webserverConf struct {
 	MaxUploadFileLength  int64 `default:"1000000000" required:"true"`
 	DownloadFileBuffer   int   `default:"100000" required:"true"`
 	UserAgentsRawfile    []string
-	MaxPreviewFilesize   int64  `default:"50000"`
-	HTMLFiles            string `default:"./html/" required:"true"`
+	MaxPreviewFilesize   int64         `default:"50000"`
+	HTMLFiles            string        `default:"./html/" required:"true"`
+	ReadTimeout          time.Duration `default:"1m0s"`
+	WriteTimeout         time.Duration `default:"30s"`
 	HTTP                 configHTTPstruct
 	HTTPS                configTLSStruct
 }

@@ -2,7 +2,6 @@ package services
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/JojiiOfficial/DataManagerServer/handlers"
 	"github.com/JojiiOfficial/DataManagerServer/models"
@@ -32,8 +31,8 @@ func NewAPIService(config *models.Config, db *gorm.DB) *APIService {
 		httpServer = &http.Server{
 			Handler:      router,
 			Addr:         config.Webserver.HTTP.ListenAddress,
-			ReadTimeout:  10 * time.Second,
-			WriteTimeout: 10 * time.Second,
+			ReadTimeout:  config.Webserver.ReadTimeout,
+			WriteTimeout: config.Webserver.WriteTimeout,
 		}
 	}
 
@@ -42,8 +41,8 @@ func NewAPIService(config *models.Config, db *gorm.DB) *APIService {
 		httpsServer = &http.Server{
 			Handler:      router,
 			Addr:         config.Webserver.HTTPS.ListenAddress,
-			ReadTimeout:  10 * time.Second,
-			WriteTimeout: 10 * time.Second,
+			ReadTimeout:  config.Webserver.ReadTimeout,
+			WriteTimeout: config.Webserver.WriteTimeout,
 		}
 	}
 
