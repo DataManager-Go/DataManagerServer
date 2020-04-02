@@ -100,7 +100,7 @@ func InitConfig(confFile string, createMode bool) (*Config, bool) {
 		path, _ := filepath.Split(confFile)
 		_, err := os.Stat(path)
 		if err != nil {
-			err = os.MkdirAll(path, 0770)
+			err = os.MkdirAll(path, 0700)
 			if err != nil {
 				log.Fatalln(err)
 				return nil, true

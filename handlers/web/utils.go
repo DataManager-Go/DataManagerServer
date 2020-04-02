@@ -53,11 +53,10 @@ func setContentType(w http.ResponseWriter, contentType string) {
 func serveStaticFile(config *models.Config, file string, w http.ResponseWriter, contentType ...string) error {
 	//Open file
 	f, err := os.Open(config.GetHTMLFile(file))
-	defer f.Close()
-
 	if LogError(err) {
 		return err
 	}
+	defer f.Close()
 
 	//Set contentType
 	if len(contentType) == 0 || len(contentType[0]) == 0 {

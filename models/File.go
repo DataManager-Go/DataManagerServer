@@ -57,7 +57,10 @@ func (file *File) Insert(db *gorm.DB, user *User) error {
 			if err := db.Where(&Group{
 				Name: file.Groups[i].Name,
 			}).Find(&file.Groups[i]).Error; err != nil {
-				file.Groups[i].Insert(db, user)
+				err = file.Groups[i].Insert(db, user)
+				if err != nil {
+					log.Warn(err)
+				}
 			}
 		}
 	}
@@ -68,7 +71,10 @@ func (file *File) Insert(db *gorm.DB, user *User) error {
 			if err := db.Where(&Tag{
 				Name: file.Tags[i].Name,
 			}).Find(&file.Tags[i]).Error; err != nil {
-				file.Tags[i].Insert(db, user)
+				err = file.Tags[i].Insert(db, user)
+				if err != nil {
+					log.Warn(err)
+				}
 			}
 		}
 	}
@@ -220,12 +226,20 @@ func (file *File) Delete(db *gorm.DB, config *Config) error {
 				// Size >= 10MB
 				shredConfig = shred.NewShredderConf(&shredder, shred.WriteZeros|shred.WriteRand, 2, true)
 			} else {
+				// Size < 10MB
 				shredConfig = shred.NewShredderConf(&shredder, shred.WriteZeros|shred.WriteRandSecure, 3, true)
 			}
 
-			// Delete local file
+			// Shredder & Delete local file
 			start := time.Now()
-			shredConfig.ShredFile(localFile)
+			err = shredConfig.ShredFile(localFile)
+			if err != nil {
+				log.Error(err)
+				err = os.Remove(localFile)
+				if err != nil {
+					log.Warn(err)
+				}
+			}
 			log.Debug("Shredding took ", time.Since(start).String())
 		})()
 	}

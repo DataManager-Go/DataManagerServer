@@ -178,7 +178,11 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 	switch request.UploadType {
 	case models.FileUploadType:
 		// Read from uploaded file
-		r.ParseMultipartForm(handlerData.User.Role.MaxUploadFileSize)
+		err = r.ParseMultipartForm(handlerData.User.Role.MaxUploadFileSize)
+		if LogError(err) {
+			sendServerError(w)
+			return
+		}
 
 		uploadfile, _, err := r.FormFile("uploadfile")
 		if err != nil {

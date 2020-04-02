@@ -10,6 +10,7 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/JojiiOfficial/DataManagerServer/models"
 
@@ -102,7 +103,15 @@ func hasEmptyValue(e reflect.Value) bool {
 }
 
 func downloadHTTP(user *models.User, url string, f *os.File, file *models.File) (int, error) {
-	res, err := http.Get(url)
+	if !isValidHTTPURL(url) {
+		return 0, errors.New("invalid url")
+	}
+
+	httpClient := http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	res, err := httpClient.Get(url)
 	if LogError(err) {
 		return 0, err
 	}

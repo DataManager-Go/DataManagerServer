@@ -13,22 +13,22 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-//Services
+// Services
 var (
-	apiService *services.APIService //Handle endpoints
+	apiService *services.APIService // Handle endpoints
 )
 
 func startAPI() {
 	log.Info("Starting version " + version)
 
-	//Create the APIService and start it
+	// Create the APIService and start it
 	apiService = services.NewAPIService(config, db)
 	apiService.Start()
 
-	//Startup done
+	// Startup done
 	log.Info("Startup completed")
 
-	//Start loop to tick the services
+	// Start loop to tick the services
 	go (func() {
 		for {
 			time.Sleep(time.Hour)
@@ -39,7 +39,7 @@ func startAPI() {
 	awaitExit(apiService, db)
 }
 
-//Shutdown server gracefully
+// Shutdown server gracefully
 func awaitExit(httpServer *services.APIService, db *gorm.DB) {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, os.Interrupt, syscall.SIGKILL, syscall.SIGTERM)
@@ -54,18 +54,27 @@ func awaitExit(httpServer *services.APIService, db *gorm.DB) {
 	log.Info("Shutting down server")
 
 	if httpServer.HTTPServer != nil {
-		httpServer.HTTPServer.Shutdown(ctx)
+		err := httpServer.HTTPServer.Shutdown(ctx)
+		if err != nil {
+			log.Warn(err)
+		}
 		log.Info("HTTP server shutdown complete")
 	}
 
 	if httpServer.HTTPTLSServer != nil {
-		httpServer.HTTPTLSServer.Shutdown(ctx)
+		err := httpServer.HTTPTLSServer.Shutdown(ctx)
+		if err != nil {
+			log.Warn(err)
+		}
 		log.Info("HTTPs server shutdown complete")
 	}
 
-	//Close db connection
+	// Close db connection
 	if db != nil {
-		db.Close()
+		err := db.Close()
+		if err != nil {
+			log.Warn(err)
+		}
 		log.Info("Database shutdown complete")
 	}
 
