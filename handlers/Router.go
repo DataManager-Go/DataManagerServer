@@ -30,6 +30,7 @@ type HTTPMethod string
 const (
 	GetMethod    HTTPMethod = "GET"
 	POSTMethod   HTTPMethod = "POST"
+	PUTMethod    HTTPMethod = "PUT"
 	DeleteMethod HTTPMethod = "DELETE"
 )
 
@@ -78,7 +79,7 @@ var (
 		Route{
 			Name:        "upload",
 			Pattern:     "/upload/file",
-			Method:      POSTMethod,
+			Method:      PUTMethod,
 			HandlerFunc: UploadfileHandler,
 			HandlerType: sessionRequest,
 		},

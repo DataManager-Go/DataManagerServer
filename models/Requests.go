@@ -70,6 +70,7 @@ type UploadRequest struct {
 	Attributes  FileAttributes `json:"attr,omitempty"`
 	Encryption  string         `json:"e,omitempty"`
 	ReplaceFile uint           `json:"r,omitempty"`
+	Size        int64          `json:"s"`
 }
 
 //UploadType type of upload

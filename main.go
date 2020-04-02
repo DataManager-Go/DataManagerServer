@@ -42,8 +42,8 @@ var (
 )
 
 var (
-	config  *models.Config
-	db      *gorm.DB
+	config *models.Config
+	db     *gorm.DB
 )
 
 //Env vars
@@ -121,7 +121,6 @@ func main() {
 			log.Fatalln(err)
 			return
 		}
-
 
 		log.Debug("Successfully connected to DB")
 	}

@@ -22,6 +22,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const boundary = "MachliJalKiRaniHaiJeevanUskaPaaniHai"
+
 //UploadfileHandler handler for uploading files
 func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) {
 	var request models.UploadRequest
@@ -168,7 +170,8 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 	}
 
 	// Create local file
-	f, err := os.Create(handlerData.Config.GetStorageFile(file.LocalName))
+	localFile := handlerData.Config.GetStorageFile(file.LocalName)
+	f, err := os.Create(localFile)
 	if LogError(err) {
 		sendServerError(w)
 		return
@@ -177,46 +180,47 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 	// Read from the desired source (file/url)
 	switch request.UploadType {
 	case models.FileUploadType:
-		// Read from uploaded file
-		err = r.ParseMultipartForm(handlerData.User.Role.MaxUploadFileSize)
-		if LogError(err) {
-			sendServerError(w)
-			return
-		}
+		{
+			// Read file
+			size, exit := readMultipartToFile(f, r.Body, w)
 
-		uploadfile, _, err := r.FormFile("uploadfile")
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		defer uploadfile.Close()
+			// Close file and log error only
+			LogError(f.Close())
 
-		// Copy stream to file
-		size, err := io.Copy(f, uploadfile)
-		if LogError(err) {
-			sendServerError(w)
-			return
-		}
+			// exit with server error response
+			if exit {
+				sendServerError(w)
+				return
+			}
 
-		// Set filesize to written bytes
-		file.FileSize = int64(size)
+			// Check if clients filesize match with server filesize
+			if request.Size != size {
+				log.Warn("Size doesn't match!")
+
+				// Shredder file
+				models.ShredderFile(localFile, -1)
+				sendResponse(w, models.ResponseError, "filesize doesn't match", nil)
+				return
+			}
+
+			file.FileSize = size
+		}
 	case models.URLUploadType:
-		// Read from HTTP request
-		status, err := downloadHTTP(handlerData.User, request.URL, f, file)
-		if err != nil {
-			sendResponse(w, models.ResponseError, err.Error(), nil, http.StatusBadRequest)
-			return
-		}
+		{
+			// Read from HTTP request
+			status, err := downloadHTTP(handlerData.User, request.URL, f, file)
+			if err != nil {
+				sendResponse(w, models.ResponseError, err.Error(), nil, http.StatusBadRequest)
+				return
+			}
 
-		// Check statuscode
-		if status > 299 || status < 200 {
-			sendResponse(w, models.ResponseError, "Non ok response: "+strconv.Itoa(status), nil, http.StatusBadRequest)
-			return
+			// Check statuscode
+			if status > 299 || status < 200 {
+				sendResponse(w, models.ResponseError, "Non ok response: "+strconv.Itoa(status), nil, http.StatusBadRequest)
+				return
+			}
 		}
 	}
-
-	// Close file
-	f.Close()
 
 	// Detect mime type
 	mime, err := mimetype.DetectFile(handlerData.Config.GetStorageFile(file.LocalName))

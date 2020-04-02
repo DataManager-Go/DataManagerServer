@@ -29,20 +29,20 @@ func NewAPIService(config *models.Config, db *gorm.DB) *APIService {
 	//Init http server
 	if config.Webserver.HTTP.Enabled {
 		httpServer = &http.Server{
-			Handler:      router,
-			Addr:         config.Webserver.HTTP.ListenAddress,
-			ReadTimeout:  config.Webserver.ReadTimeout,
-			WriteTimeout: config.Webserver.WriteTimeout,
+			Handler:           router,
+			Addr:              config.Webserver.HTTP.ListenAddress,
+			ReadHeaderTimeout: config.Webserver.ReadTimeout,
+			WriteTimeout:      config.Webserver.WriteTimeout,
 		}
 	}
 
 	//Init https server
 	if config.Webserver.HTTPS.Enabled {
 		httpsServer = &http.Server{
-			Handler:      router,
-			Addr:         config.Webserver.HTTPS.ListenAddress,
-			ReadTimeout:  config.Webserver.ReadTimeout,
-			WriteTimeout: config.Webserver.WriteTimeout,
+			Handler:           router,
+			Addr:              config.Webserver.HTTPS.ListenAddress,
+			ReadHeaderTimeout: config.Webserver.ReadTimeout,
+			WriteTimeout:      config.Webserver.WriteTimeout,
 		}
 	}
 

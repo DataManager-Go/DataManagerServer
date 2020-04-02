@@ -216,36 +216,48 @@ func (file *File) Delete(db *gorm.DB, config *Config) error {
 		log.Warn(err)
 	} else {
 		// Shredder file in background
-		go (func() {
-			var shredConfig *shred.ShredderConf
-
-			if s.Size() >= 1000000000 {
-				// Size >= 1GB
-				shredConfig = shred.NewShredderConf(&shredder, shred.WriteZeros, 1, true)
-			} else if s.Size() >= 10000000 {
-				// Size >= 10MB
-				shredConfig = shred.NewShredderConf(&shredder, shred.WriteZeros|shred.WriteRand, 2, true)
-			} else {
-				// Size < 10MB
-				shredConfig = shred.NewShredderConf(&shredder, shred.WriteZeros|shred.WriteRandSecure, 3, true)
-			}
-
-			// Shredder & Delete local file
-			start := time.Now()
-			err = shredConfig.ShredFile(localFile)
-			if err != nil {
-				log.Error(err)
-				err = os.Remove(localFile)
-				if err != nil {
-					log.Warn(err)
-				}
-			}
-			log.Debug("Shredding took ", time.Since(start).String())
-		})()
+		go ShredderFile(localFile, s.Size())
 	}
 
 	// Delete from DB
 	return db.Delete(&file).Error
+}
+
+// ShredderFile shreddres a file
+func ShredderFile(localFile string, size int64) {
+	var shredConfig *shred.ShredderConf
+	if size < 0 {
+		s, err := os.Stat(localFile)
+		if err != nil {
+			log.Warn("File to shredder not found")
+			return
+		}
+		size = s.Size()
+	}
+
+	if size >= 1000000000 {
+		// Size >= 1GB
+		shredConfig = shred.NewShredderConf(&shredder, shred.WriteZeros, 1, true)
+	} else if size >= 10000000 {
+		// Size >= 10MB
+		shredConfig = shred.NewShredderConf(&shredder, shred.WriteZeros|shred.WriteRand, 1, true)
+	} else {
+		// Size < 10MB
+		shredConfig = shred.NewShredderConf(&shredder, shred.WriteZeros|shred.WriteRandSecure, 3, true)
+	}
+
+	// Shredder & Delete local file
+	start := time.Now()
+	err := shredConfig.ShredFile(localFile)
+	if err != nil {
+		log.Error(err)
+		// Delete file if shredder didn't
+		err = os.Remove(localFile)
+		if err != nil {
+			log.Warn(err)
+		}
+	}
+	log.Debug("Shredding took ", time.Since(start).String())
 }
 
 // Rename renames a file

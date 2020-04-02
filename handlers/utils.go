@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"os"
@@ -149,4 +150,49 @@ func downloadHTTP(user *models.User, url string, f *os.File, file *models.File) 
 	//Set file size
 	file.FileSize = size
 	return res.StatusCode, nil
+}
+
+func readMultipartToFile(f *os.File, reader io.Reader, w http.ResponseWriter) (size int64, exit bool) {
+	// Create multipart reader
+	partReader := multipart.NewReader(reader, boundary)
+	part, err := partReader.NextPart()
+
+	// EOF is in this case 'no file found'
+	if err == io.EOF {
+		sendResponse(w, models.ResponseError, "No file provided", nil, http.StatusUnprocessableEntity)
+		return
+	} else if LogError(err) {
+		sendServerError(w)
+		return
+	}
+
+	buf := make([]byte, 512)
+	var n int
+
+	for {
+		br := false
+		n, err = part.Read(buf)
+
+		if n > 0 {
+			if err == io.EOF {
+				br = true
+			} else if err != nil {
+				exit = true
+				break
+			}
+
+			size += int64(n)
+			_, err := f.Write(buf[:n])
+			if LogError(err) {
+				exit = true
+				break
+			}
+		}
+
+		if br || n == 0 {
+			break
+		}
+	}
+
+	return
 }
