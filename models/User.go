@@ -1,6 +1,8 @@
 package models
 
 import (
+	"errors"
+
 	"github.com/JojiiOfficial/gaw"
 	"github.com/jinzhu/gorm"
 )
@@ -15,19 +17,17 @@ type User struct {
 }
 
 //Login login user
-func (user User) Login(db *gorm.DB) (*LoginSession, error) {
-	token := gaw.RandString(64)
-
+func (user *User) Login(db *gorm.DB) (*LoginSession, error) {
 	//Return if user not exists
 	if has, err := user.Has(db, true); !has {
 		return nil, err
 	}
 
 	//Generate session
-	session := LoginSession{
-		Token:  token,
-		UserID: user.ID,
-		User:   &user,
+	session := NewSession(user)
+
+	if session == nil {
+		return nil, errors.New("Can't generate session")
 	}
 
 	//Save session
@@ -35,7 +35,7 @@ func (user User) Login(db *gorm.DB) (*LoginSession, error) {
 		return nil, err
 	}
 
-	return &session, nil
+	return session, nil
 }
 
 //Register register user
