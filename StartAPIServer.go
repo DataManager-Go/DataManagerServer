@@ -15,26 +15,22 @@ import (
 
 // Services
 var (
-	apiService *services.APIService // Handle endpoints
+	apiService     *services.APIService     // Handle endpoints
+	cleanupService *services.CleanupService // Cleanup db stuff
 )
 
 func startAPI() {
 	log.Info("Starting version " + version)
 
-	// Create the APIService and start it
+	// Create and start required services
 	apiService = services.NewAPIService(config, db)
 	apiService.Start()
 
+	cleanupService = services.NewClienupService(config, db)
+	cleanupService.Start()
+
 	// Startup done
 	log.Info("Startup completed")
-
-	// Start loop to tick the services
-	go (func() {
-		for {
-			time.Sleep(time.Hour)
-
-		}
-	})()
 
 	awaitExit(apiService, db)
 }

@@ -7,8 +7,9 @@ type PingRequest struct {
 
 // CredentialsRequest request containing credentials
 type CredentialsRequest struct {
-	Username string `json:"username"`
-	Password string `json:"pass"`
+	MachineID string `json:"mid,omitempty"`
+	Username  string `json:"username"`
+	Password  string `json:"pass"`
 }
 
 // FileRequest contains data to update a file

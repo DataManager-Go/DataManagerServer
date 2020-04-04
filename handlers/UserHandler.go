@@ -17,7 +17,7 @@ func Login(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	if isStructInvalid(request) {
+	if len(request.Password) == 0 || len(request.Username) == 0 {
 		sendResponse(w, models.ResponseError, "input missing", nil, http.StatusUnprocessableEntity)
 		return
 	}
@@ -27,7 +27,7 @@ func Login(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) 
 		Password: gaw.SHA512(request.Username + request.Password),
 	}
 
-	session, err := user.Login(handlerData.Db)
+	session, err := user.Login(handlerData.Db, request.MachineID)
 	if err != nil {
 		sendResponse(w, models.ResponseError, "Invalid credentials", nil)
 		return

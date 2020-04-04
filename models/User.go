@@ -5,9 +5,10 @@ import (
 
 	"github.com/JojiiOfficial/gaw"
 	"github.com/jinzhu/gorm"
+	"github.com/sirupsen/logrus"
 )
 
-//User user in db
+// User user in db
 type User struct {
 	gorm.Model
 	Username string
@@ -16,21 +17,30 @@ type User struct {
 	Role     *Role `gorm:"association_autoupdate:false;association_autocreate:false"`
 }
 
-//Login login user
-func (user *User) Login(db *gorm.DB) (*LoginSession, error) {
-	//Return if user not exists
+// Login login user
+func (user *User) Login(db *gorm.DB, machineID string) (*LoginSession, error) {
+	// Truncat machineID if too big
+	if len(machineID) > 100 {
+		machineID = ""
+	}
+
+	// Return if user not exists
 	if has, err := user.Has(db, true); !has {
 		return nil, err
 	}
 
-	//Generate session
-	session := NewSession(user)
+	// Clean old sessions for user + machineID
+	if err := user.cleanOldSessions(db, machineID); err != nil {
+		logrus.Error(err)
+	}
 
+	// Generate session
+	session := NewSession(user, machineID)
 	if session == nil {
 		return nil, errors.New("Can't generate session")
 	}
 
-	//Save session
+	// Save session
 	if err := db.Create(&session).Error; err != nil {
 		return nil, err
 	}
@@ -38,9 +48,21 @@ func (user *User) Login(db *gorm.DB) (*LoginSession, error) {
 	return session, nil
 }
 
-//Register register user
+func (user *User) cleanOldSessions(db *gorm.DB, machineID string) error {
+	if len(machineID) == 0 {
+		return nil
+	}
+
+	// Delete session(s)
+	return db.Unscoped().Where(&LoginSession{
+		UserID:    user.ID,
+		MachineID: machineID,
+	}).Delete(&LoginSession{}).Error
+}
+
+// Register register user
 func (user User) Register(db *gorm.DB, config *Config) error {
-	//Return if user already exists
+	// Return if user already exists
 	has, _ := user.Has(db, false)
 	if has {
 		return ErrorUserAlreadyExists
@@ -58,7 +80,7 @@ func (user User) Register(db *gorm.DB, config *Config) error {
 		return err
 	}
 
-	//Create namespace for user
+	// Create namespace for user
 	_, err = user.CreateDefaultNamespace(db)
 	return err
 }

@@ -35,10 +35,11 @@ type webserverConf struct {
 }
 
 type configServer struct {
-	Database          configDBstruct
-	PathConfig        pathConfig
-	Roles             roleConfig
-	AllowRegistration bool `default:"false"`
+	Database                  configDBstruct
+	PathConfig                pathConfig
+	Roles                     roleConfig
+	AllowRegistration         bool          `default:"false"`
+	DeleteUnusedSessionsAfter time.Duration `default:"10m"`
 }
 
 type roleConfig struct {
@@ -121,7 +122,8 @@ func InitConfig(confFile string, createMode bool) (*Config, bool) {
 				PathConfig: pathConfig{
 					FileStore: "./files",
 				},
-				AllowRegistration: false,
+				AllowRegistration:         false,
+				DeleteUnusedSessionsAfter: 10 * time.Minute,
 				Roles: roleConfig{
 					DefaultRole: 1,
 					Roles: []Role{

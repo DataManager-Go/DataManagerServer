@@ -9,9 +9,11 @@ import (
 //LoginSession session for loggedin user
 type LoginSession struct {
 	gorm.Model
-	User   *User `gorm:"association_autoupdate:false;association_autocreate:false"`
-	UserID uint
-	Token  string
+	User      *User `gorm:"association_autoupdate:false;association_autocreate:false"`
+	UserID    uint
+	Token     string
+	Requests  int64
+	MachineID string
 }
 
 // SessionTokenLength length of session token
@@ -28,11 +30,22 @@ func GetUserFromSession(db *gorm.DB, token string) (*User, error) {
 		return nil, err
 	}
 
+	// Increase request counter
+	session.Requests++
+	err = db.Save(&session).Error
+	if err != nil {
+		log.Error(err)
+	}
+
 	return session.User, nil
 }
 
 // NewSession create new login session
-func NewSession(user *User) *LoginSession {
+func NewSession(user *User, machineID string) *LoginSession {
+	if len(machineID) > 100 {
+		machineID = ""
+	}
+
 	var token string
 	var err error
 	tries := 0
@@ -55,8 +68,9 @@ func NewSession(user *User) *LoginSession {
 
 	//Generate session
 	return &LoginSession{
-		Token:  token,
-		UserID: user.ID,
-		User:   user,
+		Token:     token,
+		UserID:    user.ID,
+		User:      user,
+		MachineID: machineID,
 	}
 }
