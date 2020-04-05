@@ -38,18 +38,20 @@ const (
 )
 
 const (
-	//HeaderStatus headername for status in response
+	// HeaderStatus headername for status in response
 	HeaderStatus string = "X-Response-Status"
-	//HeaderStatusMessage headername for status in response
+	// HeaderStatusMessage headername for status in response
 	HeaderStatusMessage string = "X-Response-Message"
-	//HeaderContentType contenttype of response
+	// HeaderContentType contenttype of response
 	HeaderContentType string = "Content-Type"
-	//HeaderFileName filename header
+	// HeaderFileName filename header
 	HeaderFileName string = "X-Filename"
-	//HeaderEncryption encryption header
+	// HeaderEncryption encryption header
 	HeaderEncryption string = "X-Encryption"
-	//HeaderRequest request content
+	// HeaderRequest request content
 	HeaderRequest string = "Request"
+	// HeaderContentLength request content length
+	HeaderContentLength string = "ContentLength"
 )
 
 //StringResponse response containing only one string
