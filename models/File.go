@@ -6,7 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/JojiiOfficial/DataManagerServer/constants"
+	"github.com/DataManager-Go/DataManagerServer/constants"
+
 	"github.com/JojiiOfficial/gaw"
 	"github.com/JojiiOfficial/shred"
 	"github.com/jinzhu/gorm"

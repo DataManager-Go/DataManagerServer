@@ -6,8 +6,9 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/JojiiOfficial/DataManagerServer/constants"
-	"github.com/JojiiOfficial/DataManagerServer/models"
+	"github.com/DataManager-Go/DataManagerServer/constants"
+	"github.com/DataManager-Go/DataManagerServer/models"
+
 	"github.com/gorilla/mux"
 	"github.com/sbani/go-humanizer/units"
 )

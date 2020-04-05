@@ -3,8 +3,9 @@ package services
 import (
 	"net/http"
 
-	"github.com/JojiiOfficial/DataManagerServer/handlers"
-	"github.com/JojiiOfficial/DataManagerServer/models"
+	"github.com/DataManager-Go/DataManagerServer/handlers"
+	"github.com/DataManager-Go/DataManagerServer/models"
+
 	"github.com/jinzhu/gorm"
 
 	"github.com/gorilla/mux"

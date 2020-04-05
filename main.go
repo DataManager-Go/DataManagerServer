@@ -7,9 +7,9 @@ import (
 
 	"github.com/JojiiOfficial/gaw"
 
-	"github.com/JojiiOfficial/DataManagerServer/constants"
-	"github.com/JojiiOfficial/DataManagerServer/models"
-	"github.com/JojiiOfficial/DataManagerServer/storage"
+	"github.com/DataManager-Go/DataManagerServer/constants"
+	"github.com/DataManager-Go/DataManagerServer/models"
+	"github.com/DataManager-Go/DataManagerServer/storage"
 
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"

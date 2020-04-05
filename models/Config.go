@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/JojiiOfficial/DataManagerServer/constants"
+	"github.com/DataManager-Go/DataManagerServer/constants"
 
 	"github.com/JojiiOfficial/configService"
 	"github.com/JojiiOfficial/gaw"

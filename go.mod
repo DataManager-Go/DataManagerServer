@@ -1,4 +1,4 @@
-module github.com/JojiiOfficial/DataManagerServer
+module github.com/DataManager-Go/DataManagerServer
 
 go 1.14
 

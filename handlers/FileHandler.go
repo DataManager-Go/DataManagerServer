@@ -11,9 +11,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/JojiiOfficial/DataManagerServer/constants"
-	"github.com/JojiiOfficial/DataManagerServer/handlers/web"
-	"github.com/JojiiOfficial/DataManagerServer/models"
+	"github.com/DataManager-Go/DataManagerServer/constants"
+	"github.com/DataManager-Go/DataManagerServer/handlers/web"
+	"github.com/DataManager-Go/DataManagerServer/models"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/gorilla/mux"

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/JojiiOfficial/DataManagerServer/models"
+	"github.com/DataManager-Go/DataManagerServer/models"
 )
 
 func handleAndSendError(err error, w http.ResponseWriter, message string, statusCode int) bool {

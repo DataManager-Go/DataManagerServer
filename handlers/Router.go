@@ -5,8 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/JojiiOfficial/DataManagerServer/handlers/web"
-	"github.com/JojiiOfficial/DataManagerServer/models"
+	"github.com/DataManager-Go/DataManagerServer/handlers/web"
+	"github.com/DataManager-Go/DataManagerServer/models"
+
 	"github.com/JojiiOfficial/gaw"
 	"github.com/jinzhu/gorm"
 

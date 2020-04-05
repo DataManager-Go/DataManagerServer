@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/JojiiOfficial/DataManagerServer/models"
+	"github.com/DataManager-Go/DataManagerServer/models"
 
 	"github.com/JojiiOfficial/gaw"
 	log "github.com/sirupsen/logrus"

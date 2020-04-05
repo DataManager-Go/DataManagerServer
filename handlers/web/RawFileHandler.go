@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/JojiiOfficial/DataManagerServer/models"
+	"github.com/DataManager-Go/DataManagerServer/models"
 	"github.com/gorilla/mux"
 	"github.com/h2non/filetype"
 )
@@ -12,7 +12,7 @@ import (
 //RawFileHandler handler for previews
 func RawFileHandler(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	fileID  := vars["fileID"]
+	fileID := vars["fileID"]
 
 	//Get requested file
 	file, found, err := models.GetPublicFile(handlerData.Db, fileID)
