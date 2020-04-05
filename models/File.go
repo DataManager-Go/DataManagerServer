@@ -140,7 +140,7 @@ func FindFiles(db *gorm.DB, file File) ([]File, error) {
 
 	// Filter by namespace ID and uploader
 	if file.Namespace != nil {
-		a = a.Where("namespace_id = ? AND uploader = ?", file.Namespace.ID, file.Namespace.User.ID)
+		a = a.Where("namespace_id = ? AND uploader = ?", file.Namespace.ID, file.Namespace.UserID)
 	}
 
 	//Get file to delete
