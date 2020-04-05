@@ -57,7 +57,7 @@ func Register(handlerData web.HandlerData, w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if isStructInvalid(request) {
+	if len(request.Password) == 0 || len(request.Username) == 0 {
 		sendResponse(w, models.ResponseError, "input missing", nil, http.StatusUnprocessableEntity)
 		return
 	}
