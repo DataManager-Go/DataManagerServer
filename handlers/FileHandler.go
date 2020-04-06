@@ -182,7 +182,11 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 	case models.FileUploadType:
 		{
 			// Read file
-			size, exit := readMultipartToFile(f, r.Body, w)
+			size, success, exit := readMultipartToFile(f, r.Body, w)
+
+			if LogError(err) {
+				exit = true
+			}
 
 			// Close file and log error only
 			LogError(f.Close())
@@ -194,9 +198,9 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 			}
 
 			// Check if clients filesize match with server filesize
-			if request.Size != size {
-				log.Warn("Size doesn't match!")
-				sendResponse(w, models.ResponseError, "filesize doesn't match", nil)
+			if !success {
+				log.Warn("Files don't match!")
+				sendResponse(w, models.ResponseError, "files don't match", nil)
 
 				// Only shredder file if not in replace mode
 				if request.ReplaceFile == 0 {

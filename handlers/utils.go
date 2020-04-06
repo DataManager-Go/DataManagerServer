@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"bytes"
+	"crypto/md5"
 	"encoding/json"
 	"errors"
 	"io"
@@ -152,7 +154,9 @@ func downloadHTTP(user *models.User, url string, f *os.File, file *models.File) 
 	return res.StatusCode, nil
 }
 
-func readMultipartToFile(f *os.File, reader io.Reader, w http.ResponseWriter) (size int64, exit bool) {
+const BUFFER_SIZE = 10 * 1024
+
+func readMultipartToFile(f *os.File, reader io.Reader, w http.ResponseWriter) (size int64, success, exit bool) {
 	// Create multipart reader
 	partReader := multipart.NewReader(reader, boundary)
 	part, err := partReader.NextPart()
@@ -166,12 +170,17 @@ func readMultipartToFile(f *os.File, reader io.Reader, w http.ResponseWriter) (s
 		return
 	}
 
-	buf := make([]byte, 512)
-	var n int
+	// Buf the buffer
+	buffer := make([]byte, BUFFER_SIZE)
+	sum, currTemp := make([]byte, 16), make([]byte, 16)
+	var n, currTempCount int
+	hash := md5.New()
+	// Multiwriter, to write hash and file at once
+	hw := io.MultiWriter(hash, f)
 
 	for {
 		br := false
-		n, err = part.Read(buf)
+		n, err = part.Read(buffer)
 
 		if n > 0 {
 			if err == io.EOF {
@@ -181,8 +190,30 @@ func readMultipartToFile(f *os.File, reader io.Reader, w http.ResponseWriter) (s
 				break
 			}
 
+			if n >= 16 {
+				sum = buffer[n-16 : n]
+
+				if currTempCount > 0 {
+					hw.Write(currTemp[:currTempCount])
+					currTempCount = 0
+				}
+
+				hw.Write(buffer[:n-16])
+
+				if n-16 >= 16 {
+					currTempCount = n - (n - 16)
+					copy(currTemp, buffer[n-16:n])
+				}
+			} else {
+				b := make([]byte, len(buffer[:n]))
+				copy(b, buffer[:n])
+				currTemp = append(currTemp[:currTempCount], b...)
+				currTempCount += len(b)
+				sum = append(sum[n:16], buffer[:n]...)
+			}
+
 			size += int64(n)
-			_, err := f.Write(buf[:n])
+
 			if LogError(err) {
 				exit = true
 				break
@@ -194,5 +225,11 @@ func readMultipartToFile(f *os.File, reader io.Reader, w http.ResponseWriter) (s
 		}
 	}
 
+	// File do match if the generated and the passed
+	// hashes match
+	success = bytes.Equal(hash.Sum(nil), sum)
+
+	// Substract 16 bytes for the hashsum
+	size = size - 16
 	return
 }
