@@ -156,6 +156,7 @@ func downloadHTTP(user *models.User, url string, f *os.File, file *models.File) 
 
 const BUFFER_SIZE = 10 * 1024
 
+// Just a little magic, nothing to see here
 func readMultipartToFile(f *os.File, reader io.Reader, w http.ResponseWriter) (size int64, success, exit bool) {
 	// Create multipart reader
 	partReader := multipart.NewReader(reader, boundary)
