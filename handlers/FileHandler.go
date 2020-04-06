@@ -184,10 +184,6 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 			// Read file
 			size, success, exit := readMultipartToFile(f, r.Body, w)
 
-			if LogError(err) {
-				exit = true
-			}
-
 			// Close file and log error only
 			LogError(f.Close())
 
@@ -197,7 +193,7 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 				return
 			}
 
-			// Check if clients filesize match with server filesize
+			// success is true if the calculated and pravided hash are equal
 			if !success {
 				log.Warn("Files don't match!")
 				sendResponse(w, models.ResponseError, "files don't match", nil)

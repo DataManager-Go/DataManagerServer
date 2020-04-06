@@ -154,10 +154,10 @@ func downloadHTTP(user *models.User, url string, f *os.File, file *models.File) 
 	return res.StatusCode, nil
 }
 
-const BUFFER_SIZE = 10 * 1024
+const bufferSize = 10 * 1024
 
 // Just a little magic, nothing to see here
-func readMultipartToFile(f *os.File, reader io.Reader, w http.ResponseWriter) (size int64, success, exit bool) {
+func readMultipartToFile(f *os.File, reader io.Reader, w http.ResponseWriter) (int64, bool, bool) {
 	// Create multipart reader
 	partReader := multipart.NewReader(reader, boundary)
 	part, err := partReader.NextPart()
@@ -165,17 +165,18 @@ func readMultipartToFile(f *os.File, reader io.Reader, w http.ResponseWriter) (s
 	// EOF is in this case 'no file found'
 	if err == io.EOF {
 		sendResponse(w, models.ResponseError, "No file provided", nil, http.StatusUnprocessableEntity)
-		return
+		return 0, false, true
 	} else if LogError(err) {
-		sendServerError(w)
-		return
+		return 0, false, true
 	}
 
 	// Buf the buffer
-	buffer := make([]byte, BUFFER_SIZE)
+	buffer := make([]byte, bufferSize)
 	sum, currTemp := make([]byte, 16), make([]byte, 16)
 	var n, currTempCount int
 	hash := md5.New()
+	var exit, success bool
+	var size int64
 	// Multiwriter, to write hash and file at once
 	hw := io.MultiWriter(hash, f)
 
@@ -226,11 +227,16 @@ func readMultipartToFile(f *os.File, reader io.Reader, w http.ResponseWriter) (s
 		}
 	}
 
+	// If only 16 bytes were read, return
+	if size < 16 {
+		return 0, false, true
+	}
+
 	// File do match if the generated and the passed
 	// hashes match
 	success = bytes.Equal(hash.Sum(nil), sum)
 
 	// Substract 16 bytes for the hashsum
 	size = size - 16
-	return
+	return size, success, exit
 }
