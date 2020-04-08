@@ -210,20 +210,27 @@ func readMultipartToFile(f *os.File, reader io.Reader, w http.ResponseWriter) (i
 				if currTempCount+n > 16 {
 					rb := ((n + currTempCount) - 16)
 					hw.Write(currTemp[:rb])
-					currTemp = append(currTemp[rb:], buffer[:n]...)
+
+					// like -> currTemp = append(currTemp[rb:], buffer[:n]...)
+					// but better
+					copy(currTemp, currTemp[rb:])
+					app(16-rb, currTemp, buffer[:n])
+
 					currTempCount = 16
 				} else {
 					add := 16 - currTempCount
 					if add > n {
 						add = n
 					}
-					b := make([]byte, len(buffer[:add]))
-					copy(b, buffer[:add])
-					currTemp = append(currTemp[:currTempCount], b...)
-					currTempCount += len(b)
+
+					copy(currTemp[currTempCount:currTempCount+add], buffer[:add])
+					currTempCount += add
 				}
 
-				sum = append(sum[n:16], buffer[:n]...)
+				// like sum = append(sum[n:16], buffer[:n]...)
+				// but better
+				c := copy(sum[:16-n], sum[n:16])
+				copy(sum[c:], buffer[:n])
 			}
 
 			size += int64(n)
@@ -251,4 +258,11 @@ func readMultipartToFile(f *os.File, reader io.Reader, w http.ResponseWriter) (i
 	// Substract 16 bytes for the hashsum
 	size = size - 16
 	return size, success, exit
+}
+
+// app appends src to dest using offset 'start'
+func app(start int, dest, src []byte) {
+	for i := start; i-start < len(src); i++ {
+		dest[i] = src[i-start]
+	}
 }
