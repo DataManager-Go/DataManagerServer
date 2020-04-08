@@ -436,17 +436,19 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 	switch action {
 	case "delete":
 		{
+			var ids []uint
 			for _, file := range files {
 				// Delete each file
 				err = file.Delete(handlerData.Db, handlerData.Config)
 				if LogError(err) {
 					break
 				}
+				ids = append(ids, file.ID)
 			}
 
 			// Send response
-			sendResponse(w, models.ResponseSuccess, "", models.CountResponse{
-				Count: uint32(len(files)),
+			sendResponse(w, models.ResponseSuccess, "", models.IDsResponse{
+				IDs: ids,
 			})
 		}
 	case "update":
@@ -588,6 +590,9 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 			// Set filename header
 			w.Header().Set(models.HeaderFileName, file.Name)
 
+			// Set fileID header
+			w.Header().Set(models.HeaderFileID, strconv.FormatUint(uint64(file.ID), 10))
+
 			// Set ContentLength header
 			w.Header().Set(models.HeaderContentLength, strconv.FormatInt(file.FileSize, 10))
 
@@ -597,7 +602,8 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 			}
 
 			// Write contents to responsewriter
-			_, err = io.Copy(w, f)
+			buff := make([]byte, 10*1024)
+			_, err = io.CopyBuffer(w, f, buff)
 			if LogError(err) {
 				sendServerError(w)
 				return

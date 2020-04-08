@@ -40,16 +40,25 @@ const (
 const (
 	// HeaderStatus headername for status in response
 	HeaderStatus string = "X-Response-Status"
+
 	// HeaderStatusMessage headername for status in response
 	HeaderStatusMessage string = "X-Response-Message"
+
 	// HeaderContentType contenttype of response
 	HeaderContentType string = "Content-Type"
+
 	// HeaderFileName filename header
 	HeaderFileName string = "X-Filename"
+
+	// HeaderFileID fileid header
+	HeaderFileID string = "X-FileID"
+
 	// HeaderEncryption encryption header
 	HeaderEncryption string = "X-Encryption"
+
 	// HeaderRequest request content
 	HeaderRequest string = "Request"
+
 	// HeaderContentLength request content length
 	HeaderContentLength string = "ContentLength"
 )
@@ -107,4 +116,9 @@ type LoginResponse struct {
 //CountResponse response containing a count of changed items
 type CountResponse struct {
 	Count uint32 `json:"count"`
+}
+
+// IDsResponse response containing a list of ids
+type IDsResponse struct {
+	IDs []uint `json:"ids"`
 }

@@ -207,10 +207,22 @@ func readMultipartToFile(f *os.File, reader io.Reader, w http.ResponseWriter) (i
 					copy(currTemp, buffer[n-16:n])
 				}
 			} else {
-				b := make([]byte, len(buffer[:n]))
-				copy(b, buffer[:n])
-				currTemp = append(currTemp[:currTempCount], b...)
-				currTempCount += len(b)
+				if currTempCount+n > 16 {
+					rb := ((n + currTempCount) - 16)
+					hw.Write(currTemp[:rb])
+					currTemp = append(currTemp[rb:], buffer[:n]...)
+					currTempCount = 16
+				} else {
+					add := 16 - currTempCount
+					if add > n {
+						add = n
+					}
+					b := make([]byte, len(buffer[:add]))
+					copy(b, buffer[:add])
+					currTemp = append(currTemp[:currTempCount], b...)
+					currTempCount += len(b)
+				}
+
 				sum = append(sum[n:16], buffer[:n]...)
 			}
 
