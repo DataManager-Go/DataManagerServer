@@ -154,13 +154,14 @@ func downloadHTTP(user *models.User, url string, f *os.File, file *models.File) 
 	return res.StatusCode, nil
 }
 
-const bufferSize = 1024
-
-// const bufferSize = 10 * 1024
-
 var (
 	// ErrMissingFile error if file is missing
 	ErrMissingFile = errors.New("missing upload file")
+)
+
+const (
+	bufferSize = 1024
+	boundary   = "MachliJalKiRaniHaiJeevanUskaPaaniHai"
 )
 
 // Just a little magic, nothing to see here

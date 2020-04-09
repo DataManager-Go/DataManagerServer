@@ -29,6 +29,10 @@ func startAPI() {
 	cleanupService = services.NewClienupService(config, db)
 	cleanupService.Start()
 
+	if config.Webserver.Profiling {
+		log.Info("Starting in profiling mode")
+	}
+
 	// Startup done
 	log.Info("Startup completed")
 

@@ -22,8 +22,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const boundary = "MachliJalKiRaniHaiJeevanUskaPaaniHai"
-
 //UploadfileHandler handler for uploading files
 func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) {
 	var request models.UploadRequest
@@ -183,7 +181,6 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 		{
 			// Read requestd file
 			size, checksum, err := readMultipartToFile(f, r.Body, w)
-			fmt.Println(checksum)
 
 			// Close file and log error only
 			LogError(f.Close())
@@ -252,6 +249,7 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 			FileID:         file.ID,
 			Filename:       file.Name,
 			PublicFilename: file.PublicFilename.String,
+			Checksum:       file.Checksum,
 		})
 	} else {
 		sendServerError(w)
