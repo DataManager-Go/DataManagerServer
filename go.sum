@@ -4,8 +4,8 @@ github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28 h1:nYo
 github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28/go.mod h1:j1kHFoYWAbLRPE5nyAAtODwUc0xwd2+ifPZ3uCAgv/g=
 github.com/JojiiOfficial/gaw v1.2.0 h1:qIu6xVtCvd4yhAfI0MGGr5CPus0hpY+eFUDUGqc/sYQ=
 github.com/JojiiOfficial/gaw v1.2.0/go.mod h1:Y0hrpN0iX0L5bBf/8+kIER7R/m4GTNuKkifXisMG4S4=
-github.com/JojiiOfficial/shred v1.0.1 h1:5WIaDlDzcIuYIj7wk+P2H05+LHxcdctCL5LUnS51frk=
-github.com/JojiiOfficial/shred v1.0.1/go.mod h1:5bGv1PyUFAzdVb/+dvQYrfrIvJFcUsO7hJ1yoBR5A+o=
+github.com/JojiiOfficial/shred v1.2.1 h1:658CFVTqcAkYVg815vW+guYnyJTLOIoS15tMyPTYhNo=
+github.com/JojiiOfficial/shred v1.2.1/go.mod h1:/OAxd6eYOhrXb3KW+2wmDog2BiFlUld8oJEKa+xblxU=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 h1:JYp7IbQjafoB+tBA3gMyHYHrpOtNuDiK/uB5uXxq5wM=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d h1:UQZhZ2O0vMHr2cI+DC1Mbh0TJxzA3RcLoMsFw+aXw7E=

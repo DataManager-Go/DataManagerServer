@@ -21,15 +21,16 @@ type Config struct {
 }
 
 type webserverConf struct {
+	Profiling            bool
 	MaxHeaderLength      uint  `default:"8000" required:"true"`
 	MaxRequestBodyLength int64 `default:"10000" required:"true"`
 	MaxUploadFileLength  int64 `default:"1000000000" required:"true"`
 	DownloadFileBuffer   int   `default:"100000" required:"true"`
 	UserAgentsRawfile    []string
-	MaxPreviewFilesize   int64         `default:"50000"`
-	HTMLFiles            string        `default:"./html/" required:"true"`
-	ReadTimeout          time.Duration `default:"1m0s"`
-	WriteTimeout         time.Duration `default:"30s"`
+	MaxPreviewFilesize   int64  `default:"50000"`
+	HTMLFiles            string `default:"./html/" required:"true"`
+	ReadTimeout          time.Duration
+	WriteTimeout         time.Duration
 	HTTP                 configHTTPstruct
 	HTTPS                configTLSStruct
 }
@@ -127,7 +128,7 @@ func InitConfig(confFile string, createMode bool) (*Config, bool) {
 				Roles: roleConfig{
 					DefaultRole: 1,
 					Roles: []Role{
-						Role{
+						{
 							ID:                     1,
 							RoleName:               "user",
 							IsAdmin:                false,
@@ -137,7 +138,7 @@ func InitConfig(confFile string, createMode bool) (*Config, bool) {
 							MaxURLcontentSize:      5000000,
 							MaxUploadFileSize:      10000000000,
 						},
-						Role{
+						{
 							ID:                     2,
 							RoleName:               "admin",
 							IsAdmin:                true,
@@ -151,6 +152,7 @@ func InitConfig(confFile string, createMode bool) (*Config, bool) {
 				},
 			},
 			Webserver: webserverConf{
+				Profiling: false,
 				UserAgentsRawfile: []string{
 					"curl",
 					"wget",

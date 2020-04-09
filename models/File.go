@@ -32,6 +32,7 @@ type File struct {
 	Namespace      *Namespace     `gorm:"association_autoupdate:false;association_autocreate:false;"`
 	NamespaceID    uint           `sql:"index" gorm:"not null"`
 	Encryption     sql.NullInt32
+	Checksum       string
 }
 
 //FileAttributes attributes for a file

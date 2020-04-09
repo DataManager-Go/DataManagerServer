@@ -1,10 +1,10 @@
 package handlers
 
 import (
-	"bytes"
-	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"hash/crc32"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
@@ -154,115 +154,56 @@ func downloadHTTP(user *models.User, url string, f *os.File, file *models.File) 
 	return res.StatusCode, nil
 }
 
-const bufferSize = 10 * 1024
+const bufferSize = 1024
+
+// const bufferSize = 10 * 1024
+
+var (
+	// ErrMissingFile error if file is missing
+	ErrMissingFile = errors.New("missing upload file")
+)
 
 // Just a little magic, nothing to see here
-func readMultipartToFile(f *os.File, reader io.Reader, w http.ResponseWriter) (int64, bool, bool) {
-	// Create multipart reader
+func readMultipartToFile(f *os.File, reader io.Reader, w http.ResponseWriter) (int64, string, error) {
 	partReader := multipart.NewReader(reader, boundary)
+	// just use first part
 	part, err := partReader.NextPart()
-
-	// EOF is in this case 'no file found'
 	if err == io.EOF {
-		sendResponse(w, models.ResponseError, "No file provided", nil, http.StatusUnprocessableEntity)
-		return 0, false, true
-	} else if LogError(err) {
-		return 0, false, true
+		return 0, "", ErrMissingFile
 	}
 
-	// Buf the buffer
-	buffer := make([]byte, bufferSize)
-	sum, currTemp := make([]byte, 16), make([]byte, 16)
-	var n, currTempCount int
-	hash := md5.New()
-	var exit, success bool
 	var size int64
-	// Multiwriter, to write hash and file at once
-	hw := io.MultiWriter(hash, f)
+	var n int
+	// Crc hash to verify upload file
+	hash := crc32.NewIEEE()
+	// multiwriter for file and hash
+	writer := io.MultiWriter(f, hash)
+	// Buffer reading
+	buf := make([]byte, bufferSize)
 
 	for {
-		br := false
-		n, err = part.Read(buffer)
+		n, err = part.Read(buf)
+		if err != nil && err != io.EOF {
+			return 0, "", err
+		}
 
 		if n > 0 {
-			if err == io.EOF {
-				br = true
-			} else if err != nil {
-				exit = true
-				break
-			}
-
-			if n >= 16 {
-				sum = buffer[n-16 : n]
-
-				if currTempCount > 0 {
-					hw.Write(currTemp[:currTempCount])
-					currTempCount = 0
-				}
-
-				hw.Write(buffer[:n-16])
-
-				if n-16 >= 16 {
-					currTempCount = n - (n - 16)
-					copy(currTemp, buffer[n-16:n])
-				}
-			} else {
-				if currTempCount+n > 16 {
-					rb := ((n + currTempCount) - 16)
-					hw.Write(currTemp[:rb])
-
-					// like -> currTemp = append(currTemp[rb:], buffer[:n]...)
-					// but better
-					copy(currTemp, currTemp[rb:])
-					app(16-rb, currTemp, buffer[:n])
-
-					currTempCount = 16
-				} else {
-					add := 16 - currTempCount
-					if add > n {
-						add = n
-					}
-
-					copy(currTemp[currTempCount:currTempCount+add], buffer[:add])
-					currTempCount += add
-				}
-
-				// like sum = append(sum[n:16], buffer[:n]...)
-				// but better
-				c := copy(sum[:16-n], sum[n:16])
-				copy(sum[c:], buffer[:n])
-			}
-
 			size += int64(n)
 
-			if LogError(err) {
-				exit = true
-				break
+			// Write file and hash
+			// Don't tolerate any error
+			_, err := writer.Write(buf[:n])
+			if err != nil {
+				return 0, "", err
 			}
 		}
 
-		if br || n == 0 {
+		// If error is EOF uploading
+		// is done
+		if err == io.EOF {
 			break
 		}
 	}
 
-	// If only 16 bytes were read, return
-	if size < 16 {
-		return 0, false, true
-	}
-
-	// File do match if the generated and the passed
-	// hashes match
-	success = bytes.Equal(hash.Sum(nil), sum)
-
-	// Substract 16 bytes for the hashsum
-	size = size - 16
-	return size, success, exit
-}
-
-// app appends src to dest using offset 'start'
-func app(start int, dest, src []byte) {
-	for i := start; i-start < len(src); i++ {
-		dest[i] = src[i-start]
-	}
+	return size, hex.EncodeToString(hash.Sum(nil)), nil
 }

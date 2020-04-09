@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"net/http/pprof"
 	"time"
 
 	"github.com/DataManager-Go/DataManagerServer/handlers/web"
@@ -161,7 +162,24 @@ func NewRouter(config *models.Config, db *gorm.DB) *mux.Router {
 	//Adding custom routes
 	addCustomRoutes(router, &handlerData)
 
+	// Add profiler func if profiling is enabled
+	if config.Webserver.Profiling {
+		addProfilerFuncs(router)
+	}
+
 	return router
+}
+
+// add pprof funcs
+func addProfilerFuncs(router *mux.Router) {
+	router.HandleFunc("/debug/pprof/", pprof.Index)
+	router.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	router.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	router.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	router.Handle("/debug/pprof/heap", pprof.Handler("heap"))
+	router.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
+	router.Handle("/debug/pprof/block", pprof.Handler("block"))
+	router.Handle("/debug/pprof/threadcreate", pprof.Handler("threadcreate"))
 }
 
 //Add custom web-routes
@@ -182,6 +200,11 @@ func addCustomRoutes(router *mux.Router, handlerData *web.HandlerData) {
 //RouteHandler logs stuff
 func RouteHandler(requestType requestType, handlerData *web.HandlerData, inner RouteFunction, name string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			r.Body.Close()
+			log.Debug("Body closed")
+		}()
+
 		needDebug := len(name) > 0
 
 		if needDebug {

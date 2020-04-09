@@ -2,6 +2,7 @@ package services
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/DataManager-Go/DataManagerServer/handlers"
 	"github.com/DataManager-Go/DataManagerServer/models"
@@ -34,16 +35,18 @@ func NewAPIService(config *models.Config, db *gorm.DB) *APIService {
 			Addr:              config.Webserver.HTTP.ListenAddress,
 			ReadHeaderTimeout: config.Webserver.ReadTimeout,
 			WriteTimeout:      config.Webserver.WriteTimeout,
+			IdleTimeout:       0 * time.Second,
 		}
 	}
 
 	//Init https server
 	if config.Webserver.HTTPS.Enabled {
 		httpsServer = &http.Server{
-			Handler:           router,
-			Addr:              config.Webserver.HTTPS.ListenAddress,
-			ReadHeaderTimeout: config.Webserver.ReadTimeout,
-			WriteTimeout:      config.Webserver.WriteTimeout,
+			Handler:      router,
+			Addr:         config.Webserver.HTTPS.ListenAddress,
+			ReadTimeout:  config.Webserver.ReadTimeout,
+			WriteTimeout: config.Webserver.WriteTimeout,
+			IdleTimeout:  0 * time.Second,
 		}
 	}
 
@@ -83,3 +86,20 @@ func (service *APIService) Start() {
 		})()
 	}
 }
+
+// ConnContext: func(ctx context.Context, c net.Conn) context.Context {
+// 	connectionCancel, cancelWriteTimeout := context.WithCancel(ctx)
+// 	go func() {
+// 		defer cancelWriteTimeout()
+// 		_ = <-connectionCancel.Done()
+// 		if err := connectionCancel.Err(); err == context.DeadlineExceeded {
+// 			fmt.Println("a")
+// 			c.Close()
+// 		}
+// 	}()
+// 	return context.WithValue(ctx, ctx.Value(http.ServerContextKey), cancelWriteTimeout)
+// },
+// if f, ok := ctx.Value(ctx.Value(http.ServerContextKey)).(context.CancelFunc); ok {
+// 							f()
+// 						}
+// 						// sendResponse(w, models.ResponseError, "timeout", nil, http.StatusRequestTimeout)

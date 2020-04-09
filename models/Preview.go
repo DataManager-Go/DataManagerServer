@@ -4,10 +4,10 @@ import "strings"
 
 //PreviewMimes mimes assigned to preview
 var PreviewMimes map[PreviewType][]string = map[PreviewType][]string{
-	ImagePreviewType: []string{
+	ImagePreviewType: {
 		"image/*",
 	},
-	TextPreviewType: []string{
+	TextPreviewType: {
 		"text/*",
 	},
 }

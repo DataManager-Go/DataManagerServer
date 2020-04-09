@@ -181,33 +181,38 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 	switch request.UploadType {
 	case models.FileUploadType:
 		{
-			// Read file
-			size, success, exit := readMultipartToFile(f, r.Body, w)
+			// Read requestd file
+			size, checksum, err := readMultipartToFile(f, r.Body, w)
+			fmt.Println(checksum)
 
 			// Close file and log error only
 			LogError(f.Close())
 
-			// exit with server error response
-			if exit {
-				sendServerError(w)
-				return
-			}
-
-			// success is true if the calculated and pravided hash are equal
-			if !success {
-				log.Warn("Files don't match!")
-				sendResponse(w, models.ResponseError, "files don't match", nil)
-
+			// success is false if the calculated
+			// and provided hash are not equal
+			if err != nil {
 				// Only shredder file if not in replace mode
 				if request.ReplaceFile == 0 {
-					// Shredder file
-					models.ShredderFile(localFile, -1)
+					go func() {
+						// Shredder file
+						models.ShredderFile(localFile, -1)
+					}()
+				}
+
+				if LogError(err) {
+					// If error is a timeout error, send timeout error and close connectio
+					if err == http.ErrHandlerTimeout {
+						sendResponse(w, models.ResponseError, "timeout", nil, http.StatusRequestTimeout)
+					} else {
+						sendServerError(w)
+					}
 				}
 
 				return
 			}
 
 			file.FileSize = size
+			file.Checksum = checksum
 		}
 	case models.URLUploadType:
 		{
