@@ -61,6 +61,9 @@ const (
 
 	// HeaderContentLength request content length
 	HeaderContentLength string = "ContentLength"
+
+	// HeaderChecksum files checksum
+	HeaderChecksum string = "Checksum"
 )
 
 //StringResponse response containing only one string
@@ -83,6 +86,7 @@ type FileResponseItem struct {
 	IsPublic     bool           `json:"isPub"`
 	Attributes   FileAttributes `json:"attrib"`
 	Encryption   string         `json:"e"`
+	Checksum     string         `json:"checksum"`
 }
 
 //PublishResponse response for publishing a file

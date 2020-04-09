@@ -324,6 +324,7 @@ func ListFilesHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 				CreationDate: file.CreatedAt,
 				Size:         file.FileSize,
 				IsPublic:     file.IsPublic,
+				Checksum:     file.Checksum,
 			}
 
 			// Set encryption
@@ -592,6 +593,9 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 
 			// Set filename header
 			w.Header().Set(models.HeaderFileName, file.Name)
+
+			// Set checksum header
+			w.Header().Set(models.HeaderChecksum, file.Checksum)
 
 			// Set fileID header
 			w.Header().Set(models.HeaderFileID, strconv.FormatUint(uint64(file.ID), 10))
