@@ -191,7 +191,6 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 				// Only shredder file if not in replace mode
 				if request.ReplaceFile == 0 {
 					go func() {
-						// Shredder file
 						models.ShredderFile(localFile, -1)
 					}()
 				}
@@ -250,6 +249,8 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 			Filename:       file.Name,
 			PublicFilename: file.PublicFilename.String,
 			Checksum:       file.Checksum,
+			FileSize:       file.FileSize,
+			Namespace:      namespace.Name,
 		})
 	} else {
 		sendServerError(w)

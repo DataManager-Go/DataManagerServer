@@ -202,7 +202,6 @@ func RouteHandler(requestType requestType, handlerData *web.HandlerData, inner R
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			r.Body.Close()
-			log.Debug("Body closed")
 		}()
 
 		needDebug := len(name) > 0
