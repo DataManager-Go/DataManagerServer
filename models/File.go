@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/DataManager-Go/DataManagerServer/constants"
+	libdm "github.com/DataManager-Go/libdatamanager"
 
 	"github.com/JojiiOfficial/gaw"
 	"github.com/JojiiOfficial/shred"
@@ -467,9 +467,9 @@ func (file *File) SetEncryption(encription string) *File {
 	e := sql.NullInt32{
 		Valid: false,
 	}
-	if len(encription) > 0 && constants.IsValidCipher(encription) {
+	if len(encription) > 0 && libdm.IsValidCipher(encription) {
 		e.Valid = true
-		e.Int32 = constants.ChiperToInt(encription)
+		e.Int32 = libdm.ChiperToInt(encription)
 	}
 
 	file.Encryption = e

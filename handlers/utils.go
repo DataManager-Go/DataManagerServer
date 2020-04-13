@@ -139,8 +139,10 @@ func downloadHTTP(user *models.User, url string, f *os.File, file *models.File) 
 		reader = res.Body
 	}
 
+	hash := crc32.NewIEEE()
+
 	//Save body in file
-	size, err := io.Copy(f, reader)
+	size, err := io.Copy(io.MultiWriter(f, hash), reader)
 	if LogError(err) {
 		return 0, err
 	}
@@ -149,8 +151,9 @@ func downloadHTTP(user *models.User, url string, f *os.File, file *models.File) 
 		return 0, err
 	}
 
-	//Set file size
+	// Set file size and checksum
 	file.FileSize = size
+	file.Checksum = hex.EncodeToString(hash.Sum(nil))
 	return res.StatusCode, nil
 }
 
