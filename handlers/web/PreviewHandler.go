@@ -59,6 +59,7 @@ func PrevievFileHandler(handlerData HandlerData, w http.ResponseWriter, r *http.
 		Host:           r.Host,
 		FileSizeStr:    units.BinarySuffix(float64(file.FileSize)),
 		Encrypted:      (file.Encryption.Valid && libdm.EncryptionIValid(file.Encryption.Int32)),
+		MimeType:       file.FileType,
 	}
 
 	//Serve preview
@@ -74,7 +75,8 @@ func servePreviewTemplate(config *models.Config, w http.ResponseWriter, data int
 	//Create template
 	t := template.New("")
 	t.Funcs(template.FuncMap{
-		"IsImagePreview":   models.IsMediaPreview,
+		"IsImagePreview":   models.IsImagePreview,
+		"IsVideoPreview":   models.IsVideoPreview,
 		"IsTextPreview":    models.IsTextPreview,
 		"IsDefaultPreview": models.IsDefaultPreview,
 	})

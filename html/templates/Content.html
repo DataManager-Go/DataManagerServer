@@ -1,6 +1,17 @@
 {{ define "content" }}
-        {{ if  IsImagePreview .PreviewType }}
-            <!-- Image Preview -->
+        {{ if IsVideoPreview .PreviewType }}
+            <!-- Video Preview -->
+
+            <div class="center">
+                <video controls>
+                    <source src='https://{{.Host}}/preview/raw/{{.PublicFilename}}' type="{{.MimeType}}">
+                    Your browser does not support HTML5 video.
+                </video>
+            </div>
+        {{ end }}
+        
+        {{ if IsImagePreview .PreviewType }}
+            <!-- image Preview -->
 
             <div class="center">
                 <img src='https://{{.Host}}/preview/raw/{{.PublicFilename}}'>

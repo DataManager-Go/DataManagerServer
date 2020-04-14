@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="height: 100%;">
     <head>
         <meta property="og:image" content="https://{{.Host}}/preview/raw/{{.PublicFilename}}">
         <meta property="og:url" content="https://{{.Host}}/preview/raw/{{.PublicFilename}}" />
@@ -17,7 +17,7 @@
                 max-height: 100%;
             }
 
-            .center img {
+            .center  {
                 position: absolute;
                 top: 50%;
                 left: 50%;
@@ -58,7 +58,7 @@
         <script src="/static/linenumbers.js"></script>
 
     </head>
-    <body background="https://images.pexels.com/photos/1242348/pexels-photo-1242348.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940" style="background-size: 300% auto;">
+    <body background="https://images.pexels.com/photos/1242348/pexels-photo-1242348.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940" style="background-size: 300% auto;height: 100%;margin: 0;">
         {{template "content" .}}
     </body>
 </html>

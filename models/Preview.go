@@ -2,29 +2,31 @@ package models
 
 import "strings"
 
-//PreviewMimes mimes assigned to preview
+// PreviewMimes mimes assigned to preview
 var PreviewMimes map[PreviewType][]string = map[PreviewType][]string{
-	MediaPreviewType: {
+	ImagePreviewType: {
 		"image/*",
+	},
+	VideoPreviewType: {
 		"video/*",
-		"audio/*",
 	},
 	TextPreviewType: {
 		"text/*",
 	},
 }
 
-//PreviewType type of preview
+// PreviewType type of preview
 type PreviewType uint8
 
-//Preview types
+// Preview types
 const (
 	DefaultPreviewType PreviewType = iota
-	MediaPreviewType
+	ImagePreviewType
+	VideoPreviewType
 	TextPreviewType
 )
 
-//PreviewTemplate template struct for preview
+// PreviewTemplate template struct for preview
 type PreviewTemplate struct {
 	Filename       string
 	PublicFilename string
@@ -32,9 +34,10 @@ type PreviewTemplate struct {
 	Host           string
 	FileSizeStr    string
 	Encrypted      bool
+	MimeType       string
 }
 
-//PreviewTypeFromMime get Type to preview from mime
+// PreviewTypeFromMime get Type to preview from mime
 func PreviewTypeFromMime(sMime string) PreviewType {
 	if len(strings.TrimSpace(sMime)) == 0 {
 		return DefaultPreviewType
@@ -57,17 +60,22 @@ func PreviewTypeFromMime(sMime string) PreviewType {
 	return DefaultPreviewType
 }
 
-//IsMediaPreview return true if pt is image previewtype
-func IsMediaPreview(pt PreviewType) bool {
-	return pt == MediaPreviewType
+// IsVideoPreview return true if pt is video previewtype
+func IsVideoPreview(pt PreviewType) bool {
+	return pt == VideoPreviewType
 }
 
-//IsTextPreview return true if pt is text previewtype
+// IsImagePreview return true if pt is image previewtype
+func IsImagePreview(pt PreviewType) bool {
+	return pt == ImagePreviewType
+}
+
+// IsTextPreview return true if pt is text previewtype
 func IsTextPreview(pt PreviewType) bool {
 	return pt == TextPreviewType
 }
 
-//IsDefaultPreview return true if pt is default previewtype
+// IsDefaultPreview return true if pt is default previewtype
 func IsDefaultPreview(pt PreviewType) bool {
 	return pt == DefaultPreviewType
 }
