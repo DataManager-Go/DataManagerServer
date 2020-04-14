@@ -4,8 +4,10 @@ import "strings"
 
 //PreviewMimes mimes assigned to preview
 var PreviewMimes map[PreviewType][]string = map[PreviewType][]string{
-	ImagePreviewType: {
+	MediaPreviewType: {
 		"image/*",
+		"video/*",
+		"audio/*",
 	},
 	TextPreviewType: {
 		"text/*",
@@ -18,7 +20,7 @@ type PreviewType uint8
 //Preview types
 const (
 	DefaultPreviewType PreviewType = iota
-	ImagePreviewType
+	MediaPreviewType
 	TextPreviewType
 )
 
@@ -55,9 +57,9 @@ func PreviewTypeFromMime(sMime string) PreviewType {
 	return DefaultPreviewType
 }
 
-//IsImagePreview return true if pt is image previewtype
-func IsImagePreview(pt PreviewType) bool {
-	return pt == ImagePreviewType
+//IsMediaPreview return true if pt is image previewtype
+func IsMediaPreview(pt PreviewType) bool {
+	return pt == MediaPreviewType
 }
 
 //IsTextPreview return true if pt is text previewtype

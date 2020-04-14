@@ -74,7 +74,7 @@ func servePreviewTemplate(config *models.Config, w http.ResponseWriter, data int
 	//Create template
 	t := template.New("")
 	t.Funcs(template.FuncMap{
-		"IsImagePreview":   models.IsImagePreview,
+		"IsImagePreview":   models.IsMediaPreview,
 		"IsTextPreview":    models.IsTextPreview,
 		"IsDefaultPreview": models.IsDefaultPreview,
 	})

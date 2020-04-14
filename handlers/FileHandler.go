@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -43,7 +42,6 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 	// Parse json from request header
 	err = json.Unmarshal(rBaseBytes, &request)
 	if LogError(err) {
-		fmt.Println("Invalid Json:", err)
 		sendResponse(w, models.ResponseError, "Bad request", nil, http.StatusBadRequest)
 		return
 	}
@@ -648,7 +646,6 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 					return
 				}
 
-				fmt.Println(file.PublicFilename.String)
 				// Use bulk response if requested "all"
 				if request.All {
 					bulkPublishResponse.Files = append(bulkPublishResponse.Files, models.UploadResponse{
