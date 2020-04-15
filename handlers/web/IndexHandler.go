@@ -4,6 +4,7 @@ import "net/http"
 
 //FavIconHandler handle favicon
 func FavIconHandler(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
+	/* #nosec */
 	serveStaticFile(handlerData.Config, FavIconFile, w)
 }
 

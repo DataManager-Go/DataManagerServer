@@ -201,7 +201,10 @@ func addCustomRoutes(router *mux.Router, handlerData *web.HandlerData) {
 func RouteHandler(requestType requestType, handlerData *web.HandlerData, inner RouteFunction, name string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
-			r.Body.Close()
+			err := r.Body.Close()
+			if err != nil {
+				log.Info(err)
+			}
 		}()
 
 		needDebug := len(name) > 0
