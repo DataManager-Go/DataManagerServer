@@ -14,8 +14,6 @@ import (
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
 
-	_ "net/http/pprof"
-
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
