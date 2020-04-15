@@ -390,7 +390,7 @@ func (file File) GetCount(db *gorm.DB, fileID uint) (uint, error) {
 //GetPublicFile returns a file which is public
 func GetPublicFile(db *gorm.DB, publicFilename string) (*File, bool, error) {
 	var file File
-	err := db.Model(&File{}).Where("public_filename = ?", publicFilename).First(&file).Error
+	err := db.Model(&File{}).Where("public_filename = ? AND is_public=true", publicFilename).First(&file).Error
 	if err != nil {
 		//Check error. Send server error if error is not "not found"
 		if gorm.IsRecordNotFoundError(err) {
@@ -492,4 +492,19 @@ func (file *File) SetUniqueFilename(db *gorm.DB) bool {
 	}
 
 	return false
+}
+
+// GetPublicNameWithExtension return the public name ending with the real
+// file extension
+func (file *File) GetPublicNameWithExtension() string {
+	if !file.IsPublic {
+		return ""
+	}
+
+	if !strings.Contains(file.Name, ".") {
+		return file.PublicFilename.String
+	}
+
+	splitted := strings.Split(file.Name, ".")
+	return file.PublicFilename.String + "." + splitted[len(splitted)-1]
 }
