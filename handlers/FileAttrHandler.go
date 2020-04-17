@@ -11,7 +11,6 @@ import (
 
 //AttributeHandler handler for attributes
 func AttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) {
-
 	// Get vars
 	vars := mux.Vars(r)
 	attributeKind, hasAttribute := vars["attribute"]
@@ -60,7 +59,7 @@ func AttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 
 				// Find instance
 				tag, err := models.FindTag(handlerData.Db, request.Name, namespace, handlerData.User)
-				if tag == nil || err != nil {
+				if tag == nil || LogError(err) {
 					sendResponse(w, models.ResponseError, "Tag not found", nil, 404)
 					return
 				}
