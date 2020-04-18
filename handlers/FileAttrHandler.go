@@ -180,6 +180,13 @@ func AttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 func UserAttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) {
 	// Get groups
 	groups, err := handlerData.User.GetAllGroups(handlerData.Db)
+	var nss []models.Namespace
+	getNamespaces := make(chan error, 1)
+
+	go func() {
+		nss, err = models.FindUserNamespaces(handlerData.Db, handlerData.User)
+		getNamespaces <- err
+	}()
 
 	if LogError(err) {
 		if err == gorm.ErrRecordNotFound {
@@ -217,6 +224,22 @@ func UserAttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r 
 		}
 		response.Namespace[i] = respItem
 		i++
+	}
+
+	err = <-getNamespaces
+	if LogError(err) {
+		sendServerError(w)
+		return
+	}
+
+	// Add namespaces which aren't assigned to any groups
+	for i := range nss {
+		_, ok := nsMap[nss[i].Name]
+		if !ok {
+			response.Namespace = append(response.Namespace, models.Namespaceinfo{
+				Name: nss[i].Name,
+			})
+		}
 	}
 
 	// Send response
