@@ -286,7 +286,7 @@ func ListFilesHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 		loaded = loaded.Preload("Groups")
 	}
 
-	if request.OptionalParams.Verbose > 2 || request.AllNamespaces {
+	if request.OptionalParams.Verbose > 1 || request.AllNamespaces {
 		loaded = loaded.Preload("Namespace")
 	}
 
