@@ -73,7 +73,7 @@ func NamespaceActionHandler(handlerData web.HandlerData, w http.ResponseWriter, 
 				UserID: handlerData.User.ID,
 			}
 
-			err = handlerData.Db.Model(&models.Namespace{}).Create(namespace).Error
+			err = namespace.Create(handlerData.Db)
 		}
 	case "update":
 		{

@@ -1,8 +1,6 @@
 package models
 
 import (
-	"strings"
-
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
 )
@@ -17,7 +15,6 @@ type Namespace struct {
 
 // GetNamespaceFromString return namespace from string
 func GetNamespaceFromString(ns string) *Namespace {
-	ns = strings.ToLower(ns)
 	return &Namespace{
 		Name: ns,
 	}
@@ -30,9 +27,8 @@ func FindNamespace(db *gorm.DB, ns string, user *User) *Namespace {
 
 	var namespace Namespace
 	err := db.Where(&Namespace{
-		Name:   strings.ToLower(ns),
 		UserID: user.ID,
-	}).Limit(1).Find(&namespace).Error
+	}).Where("LOWER(name)=LOWER(?)", ns).Limit(1).Find(&namespace).Error
 
 	if err != nil {
 		log.Error(err)
@@ -66,4 +62,9 @@ func FindUserNamespaces(db *gorm.DB, user *User) ([]Namespace, error) {
 //IsValid return true if namespace is valid
 func (namespace *Namespace) IsValid() bool {
 	return (namespace != nil && namespace.ID > 0)
+}
+
+// Create a namespace
+func (namespace *Namespace) Create(db *gorm.DB) error {
+	return db.Model(&Namespace{}).Create(namespace).Error
 }
