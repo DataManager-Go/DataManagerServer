@@ -241,12 +241,17 @@ func (requestType requestType) validate(handlerData *web.HandlerData, r *http.Re
 		{
 			authHandler := NewAuthHandler(r)
 			if len(authHandler.GetBearer()) != 64 {
+				log.Error("Invalid token len %d", len(authHandler.GetBearer()))
 				sendResponse(w, models.ResponseError, "Invalid token", http.StatusUnauthorized)
 				return false
 			}
 
 			user, err := models.GetUserFromSession(handlerData.Db, authHandler.GetBearer())
-			if err != nil || user == nil {
+			if LogError(err) || user == nil {
+				if user == nil && err == nil {
+					log.Error("Can't get user")
+				}
+
 				sendResponse(w, models.ResponseError, "Invalid token", http.StatusUnauthorized)
 				return false
 			}

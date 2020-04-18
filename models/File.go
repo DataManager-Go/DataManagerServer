@@ -122,7 +122,7 @@ func (file File) IsInGroupList(groups []string) bool {
 	return false
 }
 
-//FindFiles finds file
+// FindFiles finds file
 func FindFiles(db *gorm.DB, file File) ([]File, error) {
 	var files []File
 	a := db.Model(&File{})
@@ -142,7 +142,7 @@ func FindFiles(db *gorm.DB, file File) ([]File, error) {
 		a = a.Where("namespace_id = ? AND uploader = ?", file.Namespace.ID, file.Namespace.UserID)
 	}
 
-	//Get file to delete
+	// Get file to delete
 	err := a.
 		Preload("Namespace").
 		Preload("Namespace.User").
@@ -156,16 +156,16 @@ func FindFiles(db *gorm.DB, file File) ([]File, error) {
 	return files, nil
 }
 
-//FindFile finds file
+// FindFile finds a file
 func FindFile(db *gorm.DB, fileID, userID uint) (*File, error) {
 	a := db.Model(&File{}).Where("uploader = ?", userID)
 
-	//Include ID if set. Otherwise use namespace
+	// Include ID if set. Otherwise use namespace
 	if fileID != 0 {
 		a = a.Where("id = ?", fileID)
 	}
 
-	//Get file
+	// Get file
 	var file File
 	err := a.Preload("Namespace").First(&file).Error
 	if err != nil {
@@ -175,7 +175,7 @@ func FindFile(db *gorm.DB, fileID, userID uint) (*File, error) {
 	return &file, nil
 }
 
-//HasTag return true if file is in group
+// HasTag return true if file is in group
 func (file File) HasTag(sTag string) bool {
 	for _, tag := range file.Tags {
 		if tag.Name == sTag {
@@ -185,7 +185,7 @@ func (file File) HasTag(sTag string) bool {
 	return false
 }
 
-//HasGroup return true if file is in group
+// HasGroup return true if file is in group
 func (file File) HasGroup(sGroup string) bool {
 	for _, group := range file.Groups {
 		if group.Name == sGroup {

@@ -7,7 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-//Namespace a namespace for files
+// Namespace a namespace for files
 type Namespace struct {
 	gorm.Model
 	Name   string `gorm:"not null"`
@@ -15,7 +15,7 @@ type Namespace struct {
 	User   *User  `gorm:"association_autoupdate:false;association_autocreate:false"`
 }
 
-//GetNamespaceFromString return namespace from string
+// GetNamespaceFromString return namespace from string
 func GetNamespaceFromString(ns string) *Namespace {
 	ns = strings.ToLower(ns)
 	return &Namespace{
@@ -23,7 +23,7 @@ func GetNamespaceFromString(ns string) *Namespace {
 	}
 }
 
-//FindNamespace find namespace in DB
+// FindNamespace find namespace in DB
 func FindNamespace(db *gorm.DB, ns string, user *User) *Namespace {
 	// Add username prefix if not provided
 	ns = user.GetNamespaceName(ns)
@@ -32,7 +32,7 @@ func FindNamespace(db *gorm.DB, ns string, user *User) *Namespace {
 	err := db.Where(&Namespace{
 		Name:   strings.ToLower(ns),
 		UserID: user.ID,
-	}).Limit(1).Preload("User").Find(&namespace).Error
+	}).Limit(1).Find(&namespace).Error
 
 	if err != nil {
 		log.Error(err)
@@ -42,7 +42,7 @@ func FindNamespace(db *gorm.DB, ns string, user *User) *Namespace {
 	return &namespace
 }
 
-//IsOwnedBy returns true if namespace is users
+// IsOwnedBy returns true if namespace is users
 func (namespace *Namespace) IsOwnedBy(user *User) bool {
 	if user == nil || namespace == nil {
 		return false
@@ -51,7 +51,7 @@ func (namespace *Namespace) IsOwnedBy(user *User) bool {
 	return namespace.UserID == user.ID
 }
 
-//FindUserNamespaces get all namespaces for user
+// FindUserNamespaces get all namespaces for user
 func FindUserNamespaces(db *gorm.DB, user *User) ([]Namespace, error) {
 	var namespaces []Namespace
 
