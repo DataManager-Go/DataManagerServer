@@ -130,7 +130,7 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 		}
 	}
 
-	// Handle namespace errors (not found || no access)
+	// Check if namespace is valid and user has access to it
 	if !handleNamespaceErorrs(namespace, handlerData.User, w) {
 		return
 	}

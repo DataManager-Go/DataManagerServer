@@ -30,7 +30,9 @@ func FindNamespace(db *gorm.DB, ns string, user *User) *Namespace {
 
 	var namespace Namespace
 	err := db.Where(&Namespace{
-		Name: strings.ToLower(ns),
+		Name:   strings.ToLower(ns),
+		User:   user,
+		UserID: user.ID,
 	}).Limit(1).Preload("User").Find(&namespace).Error
 
 	if err != nil {

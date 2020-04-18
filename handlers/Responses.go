@@ -30,7 +30,7 @@ func handleNamespaceErorrs(namespace *models.Namespace, user *models.User, w htt
 
 	// Check if user can access this namespace
 	if !user.HasAccess(namespace) {
-		fmt.Println(user.ID, namespace.UserID)
+		fmt.Println("no access", user.ID, namespace.UserID)
 		sendResponse(w, models.ResponseError, "Write permission denied for this namespace", nil, http.StatusForbidden)
 		return false
 	}
