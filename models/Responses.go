@@ -129,3 +129,14 @@ type CountResponse struct {
 type IDsResponse struct {
 	IDs []uint `json:"ids"`
 }
+
+// UserAttributeDataResponse response for userattribute data
+type UserAttributeDataResponse struct {
+	Namespace []Namespaceinfo `json:"nsData"`
+}
+
+// Namespaceinfo info for namespace
+type Namespaceinfo struct {
+	Name   string   `json:"ns"`
+	Groups []string `json:"groups"`
+}

@@ -144,3 +144,14 @@ func (user *User) GetNamespaceName(namespace string) string {
 
 	return user.GetUsername() + "_" + namespace
 }
+
+// GetAllGroups gets all groups for an user
+func (user *User) GetAllGroups(db *gorm.DB) ([]Group, error) {
+	var groups []Group
+
+	err := db.Where(&Group{
+		UserID: user.ID,
+	}).Preload("Namespace").Find(&groups).Error
+
+	return groups, err
+}

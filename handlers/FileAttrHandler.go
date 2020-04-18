@@ -7,6 +7,7 @@ import (
 	"github.com/DataManager-Go/DataManagerServer/models"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/gorilla/mux"
+	"github.com/jinzhu/gorm"
 )
 
 //AttributeHandler handler for attributes
@@ -173,4 +174,51 @@ func AttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 	}
 
 	sendResponse(w, models.ResponseSuccess, "", nil)
+}
+
+// UserAttributeHandler handler for getting user attribute informations
+func UserAttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) {
+	// Get groups
+	groups, err := handlerData.User.GetAllGroups(handlerData.Db)
+
+	if LogError(err) {
+		if err == gorm.ErrRecordNotFound {
+			sendResponse(w, models.ResponseError, "nothing found", nil, http.StatusNotFound)
+			return
+		}
+
+		sendServerError(w)
+		return
+	}
+
+	// create map
+	nsMap := make(map[string][]models.Group)
+
+	// Create map with namespace as key
+	for i := range groups {
+		t, ok := nsMap[groups[i].Namespace.Name]
+		if !ok {
+			t = []models.Group{}
+		}
+
+		nsMap[groups[i].Namespace.Name] = append(t, groups[i])
+	}
+
+	var response models.UserAttributeDataResponse
+	response.Namespace = make([]models.Namespaceinfo, len(nsMap))
+
+	i := 0
+	// Loop map and build response
+	for ns, groups := range nsMap {
+		respItem := models.Namespaceinfo{Name: ns}
+		respItem.Groups = make([]string, len(groups))
+		for i := range groups {
+			respItem.Groups[i] = groups[i].Name
+		}
+		response.Namespace[i] = respItem
+		i++
+	}
+
+	// Send response
+	sendResponse(w, models.ResponseSuccess, "", response)
 }

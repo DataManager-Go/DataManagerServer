@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/DataManager-Go/DataManagerServer/handlers/web"
 	"github.com/DataManager-Go/DataManagerServer/models"
@@ -79,9 +80,10 @@ func NamespaceActionHandler(handlerData web.HandlerData, w http.ResponseWriter, 
 		{
 			newName := handlerData.User.GetNamespaceName(request.NewName)
 
-			// Check if namespace already exists
+			// Check if namespace already exists. If the name is equal no the newname (ignoring case), accept new name since it can
+			// have different casing
 			newNS := models.FindNamespace(handlerData.Db, newName, handlerData.User)
-			if newNS != nil {
+			if newNS != nil && strings.ToLower(request.NewName) != strings.ToLower(request.Namespace) {
 				sendResponse(w, models.ResponseError, "namespace already exists", nil, http.StatusBadRequest)
 				return
 			}
