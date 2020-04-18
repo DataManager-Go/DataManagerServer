@@ -24,10 +24,6 @@ func (tag *Tag) Insert(db *gorm.DB, user *User) error {
 
 //GetNamespace return namespace of tag
 func (tag Tag) GetNamespace() *Namespace {
-	if tag.Namespace == nil {
-		return &DefaultNamespace
-	}
-
 	return tag.Namespace
 }
 

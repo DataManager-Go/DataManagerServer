@@ -24,9 +24,8 @@ type FileRequest struct {
 
 // NamespaceRequest namespace action request
 type NamespaceRequest struct {
-	Namespace string        `json:"ns"`
-	NewName   string        `json:"newName,omitempty"`
-	Type      NamespaceType `json:"nstype"`
+	Namespace string `json:"ns"`
+	NewName   string `json:"newName,omitempty"`
 }
 
 // FileUpdateItem lists changes to a file

@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/JojiiOfficial/gaw"
 	"github.com/jinzhu/gorm"
@@ -69,8 +70,8 @@ func (user User) Register(db *gorm.DB, config *Config) error {
 	}
 
 	user = User{
-		Password: gaw.SHA512(user.Username + user.Password),
-		Username: user.Username,
+		Password: gaw.SHA512(user.GetUsername() + user.Password),
+		Username: user.GetUsername(),
 		RoleID:   config.GetDefaultRole().ID,
 		Role:     config.GetDefaultRole(),
 	}
@@ -85,12 +86,13 @@ func (user User) Register(db *gorm.DB, config *Config) error {
 	return err
 }
 
-//Has return true if user exists
+// Has return true if user exists
 func (user *User) Has(db *gorm.DB, checkPass bool) (bool, error) {
 	pass := ""
 	if checkPass {
 		pass = user.Password
 	}
+
 	//Check if user exists
 	if err := db.Where(&User{
 		Username: user.Username,
@@ -102,19 +104,24 @@ func (user *User) Has(db *gorm.DB, checkPass bool) (bool, error) {
 	return true, nil
 }
 
-//GetDefaultNamespaceName return the name of the default namespace for a user
-func (user *User) GetDefaultNamespaceName() string {
-	return user.Username + "_default"
+// GetUsername Gets username of user
+func (user *User) GetUsername() string {
+	return strings.ToLower(user.Username)
 }
 
-//CreateDefaultNamespace creates user namespace
+// GetDefaultNamespaceName return the name of the default namespace for a user
+func (user *User) GetDefaultNamespaceName() string {
+	return user.GetNamespaceName("default")
+}
+
+// CreateDefaultNamespace creates user namespace
 func (user *User) CreateDefaultNamespace(db *gorm.DB) (*Namespace, error) {
 	namespace := Namespace{
 		Name: user.GetDefaultNamespaceName(),
 		User: user,
 	}
 
-	//Crreate
+	// Create
 	err := db.Create(&namespace).Error
 	if err != nil {
 		return nil, err
@@ -123,8 +130,17 @@ func (user *User) CreateDefaultNamespace(db *gorm.DB) (*Namespace, error) {
 	return &namespace, nil
 }
 
-//HasAccess return true if user has access to the given namespace
+// HasAccess return true if user has access to the given namespace
 func (user *User) HasAccess(namespace *Namespace) bool {
 	// User has access if it's his namespace or if he can write others
 	return namespace.IsOwnedBy(user) || user.CanWriteForeignNamespace()
+}
+
+// GetNamespaceName gets the namespace for an user
+func (user *User) GetNamespaceName(namespace string) string {
+	if strings.HasPrefix(namespace, user.GetUsername()+"_") {
+		return namespace
+	}
+
+	return user.GetUsername() + "_" + namespace
 }

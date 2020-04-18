@@ -4,18 +4,7 @@ import (
 	"strings"
 
 	"github.com/jinzhu/gorm"
-)
-
-//DefaultNamespace defalut namespace
-var DefaultNamespace Namespace
-
-//NamespaceType type of namespace
-type NamespaceType uint8
-
-//Namespace types
-const (
-	UserNamespaceType NamespaceType = iota
-	CustomNamespaceType
+	log "github.com/sirupsen/logrus"
 )
 
 //Namespace a namespace for files
@@ -28,10 +17,7 @@ type Namespace struct {
 
 //GetNamespaceFromString return namespace from string
 func GetNamespaceFromString(ns string) *Namespace {
-	if len(ns) == 0 || strings.ToLower(ns) == "default" {
-		return &DefaultNamespace
-	}
-
+	ns = strings.ToLower(ns)
 	return &Namespace{
 		Name: ns,
 	}
@@ -39,19 +25,20 @@ func GetNamespaceFromString(ns string) *Namespace {
 
 //FindNamespace find namespace in DB
 func FindNamespace(db *gorm.DB, ns string, user *User) *Namespace {
-	namespace := GetNamespaceFromString(ns)
-	if namespace.ID != 0 {
-		return namespace
+	// Add username prefix if not provided
+	ns = user.GetNamespaceName(ns)
+
+	var namespace Namespace
+	err := db.Where(&Namespace{
+		Name: strings.ToLower(ns),
+	}).Limit(1).Preload("User").Find(&namespace).Error
+
+	if err != nil {
+		log.Error(err)
+		return nil
 	}
 
-	db.Where(&namespace).Preload("User").Find(&namespace)
-
-	if (namespace == nil || namespace.ID == 0) && !strings.HasPrefix(ns, user.Username+"_") {
-		namespace.Name = UserNamespaceName(namespace.Name, user)
-		db.Where(&namespace).Preload("User").Find(&namespace)
-	}
-
-	return namespace
+	return &namespace
 }
 
 //IsOwnedBy returns true if namespace is users
@@ -59,6 +46,7 @@ func (namespace *Namespace) IsOwnedBy(user *User) bool {
 	if user == nil || namespace == nil {
 		return false
 	}
+
 	return namespace.UserID == user.ID
 }
 
@@ -72,14 +60,6 @@ func FindUserNamespaces(db *gorm.DB, user *User) ([]Namespace, error) {
 	}
 
 	return namespaces, nil
-}
-
-//UserNamespaceName get name of usernamespace
-func UserNamespaceName(namespaceName string, user *User) string {
-	if strings.HasPrefix(namespaceName, user.Username+"_") {
-		return namespaceName
-	}
-	return user.Username + "_" + namespaceName
 }
 
 //IsValid return true if namespace is valid

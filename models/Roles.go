@@ -8,8 +8,7 @@ type Role struct {
 	AccesForeignNamespaces Permission `gorm:"type:smallint"`
 	MaxURLcontentSize      int64
 	MaxUploadFileSize      int64
-	CreateCustomNamespaces bool
-	CreateUserNamespaces   bool
+	CreateNamespaces       bool
 }
 
 //Permission permission for roles
@@ -47,12 +46,7 @@ func (user User) CanReadForeignNamespace() bool {
 	return user.Role.AccesForeignNamespaces&ReadPermission == ReadPermission
 }
 
-//CanCreateCustomNamespaces return true if user can create custom namespaces
-func (user User) CanCreateCustomNamespaces() bool {
-	return user.Role.CreateCustomNamespaces
-}
-
-//CanCreateUserNamespaces return true if user can create user namespaces
-func (user User) CanCreateUserNamespaces() bool {
-	return user.Role.CreateUserNamespaces
+//CanCreateNamespaces return true if user can create user namespaces
+func (user User) CanCreateNamespaces() bool {
+	return user.Role.CreateNamespaces
 }

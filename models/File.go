@@ -95,9 +95,6 @@ func (file *File) Insert(db *gorm.DB, user *User) error {
 
 //GetNamespace return namespace of file
 func (file File) GetNamespace() *Namespace {
-	if file.Namespace == nil {
-		return &DefaultNamespace
-	}
 	return file.Namespace
 }
 

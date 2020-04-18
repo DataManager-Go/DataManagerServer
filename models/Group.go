@@ -24,10 +24,6 @@ func (group *Group) Insert(db *gorm.DB, user *User) error {
 
 //GetNamespace return namespace of group
 func (group Group) GetNamespace() *Namespace {
-	if group.Namespace == nil {
-		return &DefaultNamespace
-	}
-
 	return group.Namespace
 }
 

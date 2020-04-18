@@ -39,7 +39,7 @@ func ConnectToDatabase(config *models.Config) (*gorm.DB, error) {
 	createRoles(db, config)
 
 	//Create default namespace
-	return db, createDefaultNamespace(db)
+	return db, nil
 }
 
 func createRoles(db *gorm.DB, config *models.Config) {
@@ -56,15 +56,4 @@ func createRoles(db *gorm.DB, config *models.Config) {
 func CheckConnection(db *gorm.DB) (bool, error) {
 	err := db.Exec("SELECT version();").Error
 	return err == nil, err
-}
-
-func createDefaultNamespace(db *gorm.DB) error {
-	db.Where("name = ?", "default").Find(&models.DefaultNamespace)
-	if models.DefaultNamespace.ID == 0 {
-		models.DefaultNamespace = models.Namespace{
-			Name: "default",
-		}
-		return db.Create(&models.DefaultNamespace).Error
-	}
-	return nil
 }

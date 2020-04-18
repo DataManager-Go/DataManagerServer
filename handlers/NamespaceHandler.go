@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/DataManager-Go/DataManagerServer/handlers/web"
 	"github.com/DataManager-Go/DataManagerServer/models"
@@ -10,13 +9,12 @@ import (
 	"github.com/gorilla/mux"
 )
 
-//NamespaceActionHandler handler for namespace actions (create/update/delete)
+// NamespaceActionHandler handler for namespace actions (create/update/delete)
 func NamespaceActionHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) {
-	//Get vars
 	vars := mux.Vars(r)
 	action, hasAction := vars["action"]
 
-	//validate action and attribute kind
+	// validate action and attribute kind
 	if !hasAction || !gaw.IsInStringArray(action, []string{"update", "delete", "create"}) {
 		sendResponse(w, models.ResponseError, "Bad request", nil, http.StatusBadRequest)
 		return
@@ -27,56 +25,38 @@ func NamespaceActionHandler(handlerData web.HandlerData, w http.ResponseWriter, 
 		return
 	}
 
-	//Check for empty field
+	// Check for empty field
 	if gaw.HasEmptyString(request.Namespace) {
 		sendResponse(w, models.ResponseError, "Bad request", nil, http.StatusBadRequest)
 		return
 	}
 
-	namespaceName := request.Namespace
-
 	// Check permissions
-	switch request.Type {
-	case models.UserNamespaceType:
-		{
-			if !handlerData.User.CanCreateUserNamespaces() {
-				sendResponse(w, models.ResponseError, "Not allowed to create user namespaces", nil, http.StatusForbidden)
-				return
-			}
-
-			//Set namespace name to usernamespace name if action is create
-			if action == "create" && !strings.HasPrefix(namespaceName, handlerData.User.Username+"_") {
-				namespaceName = handlerData.User.Username + "_" + namespaceName
-			}
-
-		}
-	case models.CustomNamespaceType:
-		{
-			if !handlerData.User.CanCreateCustomNamespaces() {
-				sendResponse(w, models.ResponseError, "Not allowed to create custom namespaces", nil, http.StatusForbidden)
-				return
-			}
-		}
-	default:
-		{
-			sendResponse(w, models.ResponseError, "Invalid Type", nil, http.StatusBadRequest)
-			return
-		}
+	if !handlerData.User.CanCreateNamespaces() {
+		sendResponse(w, models.ResponseError, "Not allowed to create user namespaces", nil, http.StatusForbidden)
+		return
 	}
 
-	//Find namespace
-	namespace := models.FindNamespace(handlerData.Db, namespaceName, handlerData.User)
+	// Find namespace
+	namespace := models.FindNamespace(handlerData.Db, request.Namespace, handlerData.User)
 
+	// Do action type related checks
 	if action == "create" {
-		//Check if namespace already exists
-		if namespace.ID != 0 {
+		// Check if namespace already exists
+		if namespace != nil && namespace.ID != 0 {
 			sendResponse(w, models.ResponseError, "namespace already exists", nil, http.StatusBadRequest)
 			return
 		}
 	} else {
-		//Error if namespace not found
-		if namespace.ID == 0 {
+		// Error if namespace not found/valid
+		if !namespace.IsValid() {
 			sendResponse(w, models.ResponseError, "namespace not found", nil, http.StatusNotFound)
+			return
+		}
+
+		// on update, check if new name is not empty
+		if action == "update" && len(request.NewName) == 0 {
+			sendResponse(w, models.ResponseError, "no new name provided", nil, http.StatusUnprocessableEntity)
 			return
 		}
 	}
@@ -86,17 +66,28 @@ func NamespaceActionHandler(handlerData web.HandlerData, w http.ResponseWriter, 
 	switch action {
 	case "create":
 		{
-			// Create namespaceo
-			err = handlerData.Db.Model(&models.Namespace{}).Create(&models.Namespace{
-				Name:   namespaceName,
+			// Create and insert namespaceo
+			namespace = &models.Namespace{
+				Name:   handlerData.User.GetNamespaceName(request.Namespace),
 				User:   handlerData.User,
 				UserID: handlerData.User.ID,
-			}).Error
+			}
+
+			err = handlerData.Db.Model(&models.Namespace{}).Create(namespace).Error
 		}
 	case "update":
 		{
+			newName := handlerData.User.GetNamespaceName(request.NewName)
+
+			// Check if namespace already exists
+			newNS := models.FindNamespace(handlerData.Db, newName, handlerData.User)
+			if newNS != nil {
+				sendResponse(w, models.ResponseError, "namespace already exists", nil, http.StatusBadRequest)
+				return
+			}
+
 			// Update namespace
-			namespace.Name = request.NewName
+			namespace.Name = newName
 			err = handlerData.Db.Model(&models.Namespace{}).Save(namespace).Error
 		}
 	case "delete":
@@ -109,18 +100,19 @@ func NamespaceActionHandler(handlerData web.HandlerData, w http.ResponseWriter, 
 		}
 	}
 
+	// On any errors
 	if LogError(err) {
 		sendServerError(w)
 		return
 	}
 
-	//Send success
+	// Send success
 	sendResponse(w, models.ResponseSuccess, "", models.StringResponse{
-		String: namespaceName,
+		String: namespace.Name,
 	})
 }
 
-//NamespaceListHandler lists namespaces
+// NamespaceListHandler lists namespaces
 func NamespaceListHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) {
 	namespaces, err := models.FindUserNamespaces(handlerData.Db, handlerData.User)
 	if LogError(err) {
