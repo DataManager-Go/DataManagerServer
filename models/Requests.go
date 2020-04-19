@@ -73,6 +73,12 @@ type UploadRequest struct {
 	Size        int64          `json:"s"`
 }
 
+// UserAttributesRequest request for getting
+// namespaces and groups
+type UserAttributesRequest struct {
+	Mode uint `json:"m"`
+}
+
 //UploadType type of upload
 type UploadType uint8
 

@@ -18,7 +18,11 @@ func AttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 	action, hasAction := vars["action"]
 
 	// Validate action and attribute kind
-	if !hasAttribute || !hasAction || !gaw.IsInStringArray(action, []string{"update", "delete", "get"}) || !gaw.IsInStringArray(attributeKind, []string{"tag", "group"}) {
+	if !hasAttribute ||
+		!hasAction ||
+		!gaw.IsInStringArray(action, []string{"update", "delete", "get", "create"}) ||
+		!gaw.IsInStringArray(attributeKind, []string{"tag", "group"}) {
+
 		sendResponse(w, models.ResponseError, "Bad request", nil, http.StatusBadRequest)
 		return
 	}
@@ -108,6 +112,30 @@ func AttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 				sendResponse(w, models.ResponseSuccess, "", models.TagArrToStringArr(tags))
 				return
 			}
+		case "create":
+			{
+				// Check if tag already exists
+				tag, err := models.FindTag(handlerData.Db, request.Name, namespace, handlerData.User)
+				if err == nil && tag != nil && tag.ID > 0 {
+					sendResponse(w, models.ResponseError, "Tag already exists", nil, http.StatusBadRequest)
+					return
+				}
+
+				tag = &models.Tag{
+					NamespaceID: namespace.ID,
+					Name:        request.Name,
+					UserID:      handlerData.User.ID,
+				}
+
+				// Save tag
+				err = tag.Insert(handlerData.Db, handlerData.User)
+				if LogError(err) {
+					sendServerError(w)
+					return
+				}
+
+				sendResponse(w, models.ResponseSuccess, "", nil)
+			}
 		}
 	} else if attributeKind == "group" {
 		switch action {
@@ -169,6 +197,30 @@ func AttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 
 				sendResponse(w, models.ResponseSuccess, "", models.GroupArrToStringArr(groups))
 				return
+			}
+		case "create":
+			{
+				// Check if tag already exists
+				group, err := models.FindGroup(handlerData.Db, request.Name, namespace, handlerData.User)
+				if err == nil && group != nil && group.ID > 0 {
+					sendResponse(w, models.ResponseError, "Group already exists", nil, http.StatusBadRequest)
+					return
+				}
+
+				group = &models.Group{
+					NamespaceID: namespace.ID,
+					Name:        request.Name,
+					UserID:      handlerData.User.ID,
+				}
+
+				// Save tag
+				err = group.Insert(handlerData.Db, handlerData.User)
+				if LogError(err) {
+					sendServerError(w)
+					return
+				}
+
+				sendResponse(w, models.ResponseSuccess, "", nil)
 			}
 		}
 	}

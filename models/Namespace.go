@@ -2,7 +2,6 @@ package models
 
 import (
 	"github.com/jinzhu/gorm"
-	log "github.com/sirupsen/logrus"
 )
 
 // Namespace a namespace for files
@@ -31,7 +30,6 @@ func FindNamespace(db *gorm.DB, ns string, user *User) *Namespace {
 	}).Where("LOWER(name)=LOWER(?)", ns).Limit(1).Find(&namespace).Error
 
 	if err != nil {
-		log.Error(err)
 		return nil
 	}
 
