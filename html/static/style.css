@@ -77,9 +77,12 @@ main {
   text-decoration: none;
   filter: grayscale(100%) opacity(0.7);
   transition: var(--transition-speed);
+  
+  overflow-x: hidden;
 }
 
 .nav-link:hover {
+  overflow-x: hidden;
   filter: grayscale(0%) opacity(1);
   background: var(--bg-secondary);
   color: var(--text-secondary);
@@ -141,15 +144,17 @@ main {
 /* Small screens */
 @media only screen and (max-width: 600px) {
   .navbar {
-    bottom: 0;
+    bottom: -1rem;
     width: 100vw;
     height: 5rem;
+
+    overflow-y: hidden !important;
   }
 
-
-.navbar-nav {
-  width: auto;
-}
+  .navbar-nav {
+    width: auto;
+    bottom: 0;
+  }
 
   .logo {
     display: none;
@@ -161,6 +166,15 @@ main {
 
   .nav-link {
     justify-content: center;
+  }
+
+  .nav-item:last-child {
+    margin-top: 0.3em;
+  }
+
+  ::-webkit-scrollbar {
+    width: 0.25rem;
+    height: 0.25rem;
   }
 
   main {
@@ -181,7 +195,6 @@ main {
     margin-left: 1.5rem;
   }
 
-
   .navbar-nav {
     width: 100%;
   }
@@ -192,6 +205,7 @@ main {
 
   .navbar:hover .link-text {
     display: inline;
+    overflow-x: unset;
   }
 
   .navbar:hover .logo svg
@@ -214,7 +228,7 @@ main {
   --emptyCircle: #e1e1e1;
 }
 
-.light {
+.solar {
   padding-left: 1;
   --text-primary: #000000;
   --text-secondary: #000000;
@@ -223,12 +237,21 @@ main {
   --emptyCircle: #3d3d3d;
 }
 
-.solar {
+.light {
   --text-primary: #b6b6b6;
-  --text-secondary: #020202;
+  --text-secondary: #ececec;
   --bg-primary: #FEE715FF;
   --bg-secondary: #101820FF;
-  -emptyCircle: #e1e1e1;
+  --emptyCircle: #e1e1e1;
+}
+
+.light .header1, .light h3, .light span{
+  text-align: center;
+  color: #101820FF;
+}
+
+.light .logo-text {
+  color: #ececec;
 }
 
 
