@@ -15,7 +15,7 @@ import (
 
 //Static files
 const (
-	NotFoundFile = "404.html"
+	NotFoundFile = "index.html"
 	IndexFile    = "index.html"
 	PreviewFile  = "Preview.html"
 	FavIconFile  = "favicon.ico"
