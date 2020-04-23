@@ -1,0 +1,62 @@
+/* Themes */
+.dark {
+    --text-primary: #b6b6b6;
+    --text-secondary: #ececec;
+    --bg-primary: #23232e;
+    --bg-secondary: #141418;
+    --emptyCircle: #e1e1e1;
+  }
+  
+  .solar {
+    padding-left: 1;
+    --text-primary: #000000;
+    --text-secondary: #000000;
+    --bg-primary: #ffffff;
+    --bg-secondary: #e4e4e4;
+    --emptyCircle: #3d3d3d;
+  }
+  
+  .light {
+    --text-primary: #b6b6b6;
+    --text-secondary: #ececec;
+    --bg-primary: #FEE715FF;
+    --bg-secondary: #101820FF;
+    --emptyCircle: #e1e1e1;
+  }
+  
+  .light h1, .light header, .light span{
+    text-align: center;
+    color: #101820FF;
+  }
+
+  .light .nav-link:hover span{
+    color: white;
+  }
+
+  .light h3 {
+      color: #101820FF;
+  }
+
+  .light .logo-text {
+    color: #ececec;
+  }
+  
+  
+  /* General stuff */
+  
+  .theme-icon {
+    display: none;
+  }
+  
+  .dark #darkIcon {
+    display: block;
+  }
+  
+  .light #lightIcon {
+    display: block;
+  }
+  
+  .solar #solarIcon {
+    display: block;
+  }
+  

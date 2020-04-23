@@ -1,0 +1,244 @@
+/* Overall adjustments */
+
+:root {
+  font-size: 16px;
+  font-family: 'Open Sans';
+  --text-primary: #b6b6b6;
+  --text-secondary: #ececec;
+  --bg-primary: #23232e;
+  --bg-secondary: #141418;
+  --emptyCircle: #e1e1e1;
+  --transition-speed: 600ms;
+}
+
+body {
+  color: black;
+  background-color: var(--bg-secondary);
+  margin: 0;
+  padding: 0;
+} 
+
+p {
+  text-align: center;
+  color: var(--text-primary)
+}
+
+/* Scroll bar */ 
+::-webkit-scrollbar {
+  width: 0.25rem;
+}
+
+::-webkit-scrollbar-track {
+  background: #1e1e24;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #6649b8;
+}
+
+main {
+  background-color: var(--bg-secondary);
+  margin-left: 6rem;
+  padding: 1rem;
+}
+
+/* Main page */
+
+.header {
+  text-align: center;
+  color: var(--text-primary)
+}
+
+h1 {
+  text-align: center;
+  color: var(--text-secondary)
+}
+
+/* Body adjustments on small displays */
+@media only screen and (max-width: 600px) {
+  .header {
+    text-align: center;
+    color: var(--text-primary);
+    font-size: 0.8rem;
+  }
+  
+  h1 {
+    font-size: 2.5em;
+    line-height: 1em;
+    color: var(--text-secondary);
+  }
+
+  .clock {
+    width: 100%
+  }
+
+  .dec {
+    width: 100%;
+  }
+
+  .dec * {
+    font-size: 8vh;
+  }
+
+  .container-fluid  {
+    margin-left: -10%;
+    width: 120%;
+  }
+
+  html, body {
+    overflow: hidden;
+  }
+}
+
+/* Body adjustments on bigger displays */
+@media only screen and (min-width: 600px) {
+  .header {
+    text-align: center;
+    color: var(--text-primary);
+    font-size: 1.5em;
+  }
+  
+  h1 {
+    font-size: 4em;
+    line-height: 1em;
+    color: var(--text-secondary);
+  }
+
+  .clock {
+    width: 90%;
+  }
+
+  .dec {
+    width: 90%;
+  }
+
+  .dec * {
+    font-size: 10vh;
+  }
+}
+
+/* Clock specific css */
+
+.clock {
+  height: 50%;
+  margin: auto;
+}
+
+.dec {
+  margin-left: auto;
+  margin-right: auto;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  font-size: 7.0vw;
+}
+
+.mainHead {
+  background-color: var(--bg-primary);
+}
+
+.hour1 {
+  padding-right: 0.75%;
+}
+
+.hour2 {
+  padding-left: 0.75%;
+}
+
+.minute1 {
+  padding-right: 0.75%;
+}
+
+.minute2 {
+  padding-left: 0.75%;
+}
+
+.second1 {
+  padding-right: 0.75%;
+}
+
+.second2 {
+  padding-left: 0.75%;
+}
+
+.dec-hour1 {
+  padding-right: 0.75%;
+  text-align: center;
+}
+
+.dec-hour2 {
+  padding-left: 0.75%;
+  text-align: center;
+}
+
+.dec-minute1 {
+  padding-right: 0.75%;
+  text-align: center;
+}
+
+.dec-minute2 {
+  padding-left: 0.75%;
+  text-align: center;
+}
+
+.dec-second1 {
+  padding-right: 0.75%;
+  text-align: center;
+}
+
+.dec-second2 {
+  padding-left: 0.75%;
+  text-align: center;
+}
+
+.modal-body {
+  font-family:'Open Sans', sans-serif;
+  font-size: 14px;
+}
+
+.modal-content {
+  padding-left: 10%;
+  padding-right: 10%;
+  padding-top: 5%;
+  padding-bottom: 5%;
+}
+
+.circle {
+  border-radius: 50%;
+  width: 100%;
+  padding-top: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Small screen circles*/
+@media only screen and (max-width: 600px) {
+  .circle {
+    margin-top: 6%;
+    margin-bottom: 6%;
+  }
+}
+
+/* Large screen circles */
+@media only screen and (min-width: 600px) {
+  .circle {
+    margin-top: 3%;
+    margin-bottom: 3%;
+  }
+}
+
+.inactive {
+  background-color: transparent;
+  border: solid 0px transparent;
+}
+
+.active {
+  border: solid 0px;
+}
+
+.on {
+  background-color: var(--text-secondary);
+}
+
+.off {
+  background-color: var(--emptyCircle);
+  opacity: 0.2;
+}

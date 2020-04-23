@@ -1,3 +1,5 @@
+/* This js handles the theme changes */
+
 const themeMap = {
   dark: "light",
   light: "solar",
@@ -16,15 +18,13 @@ function toggleTheme() {
   const current = localStorage.getItem('theme');
   const next = themeMap[current];
 
-  bodyClass.replace(current, next);
-  localStorage.setItem('theme', next);
-
   // Body
   const currentBody = localStorage.getItem('theme');
   const nextBody = themeMap[currentBody];
 
-  document.body.replace(currentBody, nextBody);
-  localStorage.setItem('theme', nextBody);
+  // Prepare next element
+  bodyClass.replace(current, next);
+  localStorage.setItem('theme', next);
 }
 
 document.getElementById('themeButton').onclick = toggleTheme;

@@ -1,5 +1,7 @@
 var startTime = new Date().getTime();
 
+/* this JS handles the binary clock */
+
 var main = function() {
 
     window.setInterval(function() {clock()}, 1000);
