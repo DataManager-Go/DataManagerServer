@@ -15,6 +15,6 @@ require (
 	github.com/h2non/filetype v1.0.12
 	github.com/jinzhu/gorm v1.9.12
 	github.com/sbani/go-humanizer v0.3.1
-	github.com/sirupsen/logrus v1.5.0
+	github.com/sirupsen/logrus v1.6.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 )
