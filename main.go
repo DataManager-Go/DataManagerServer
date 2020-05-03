@@ -18,7 +18,7 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-const version = "v3.11.15"
+const version = "v3.12.0"
 
 var (
 	app         = kingpin.New("dmserver", "The data manager server")
