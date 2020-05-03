@@ -55,7 +55,7 @@ h1 {
 }
 
 /* Body adjustments on small displays */
-@media only screen and (max-width: 600px) {
+@media only screen and (max-width: 700px) {
   .header {
     text-align: center;
     color: var(--text-primary);
@@ -91,7 +91,7 @@ h1 {
 }
 
 /* Body adjustments on bigger displays */
-@media only screen and (min-width: 600px) {
+@media only screen and (min-width: 700px) {
   .header {
     text-align: center;
     color: var(--text-primary);
@@ -210,7 +210,7 @@ h1 {
 }
 
 /* Small screen circles*/
-@media only screen and (max-width: 600px) {
+@media only screen and (max-width: 650px) {
   .circle {
     margin-top: 6%;
     margin-bottom: 6%;
@@ -218,7 +218,7 @@ h1 {
 }
 
 /* Large screen circles */
-@media only screen and (min-width: 600px) {
+@media only screen and (min-width: 650px) {
   .circle {
     margin-top: 3%;
     margin-bottom: 3%;

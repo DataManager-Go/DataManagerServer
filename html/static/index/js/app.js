@@ -1,6 +1,8 @@
-var startTime = new Date().getTime();
+// Prevent text marking on this page
+onselectstart = (e) => {e.preventDefault()}
 
 /* this JS handles the binary clock */
+var startTime = new Date().getTime();
 
 var main = function() {
 
