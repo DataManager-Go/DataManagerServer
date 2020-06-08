@@ -12,7 +12,7 @@ require (
 	github.com/fatih/color v1.9.0
 	github.com/gabriel-vasile/mimetype v1.1.0
 	github.com/gorilla/mux v1.7.4
-	github.com/h2non/filetype v1.0.12
+	github.com/h2non/filetype v1.1.0
 	github.com/jinzhu/gorm v1.9.12
 	github.com/sbani/go-humanizer v0.3.1
 	github.com/sirupsen/logrus v1.6.0
