@@ -12,10 +12,14 @@ github.com/DataManager-Go/libdatamanager v1.2.1 h1:lTF8eNiaSyhPzdsHzPrSM/xKQskrK
 github.com/DataManager-Go/libdatamanager v1.2.1/go.mod h1:s2ywdIZpWEfgxJ7iMtCOdLCNaHVnO8dr7e9cE2NzgL4=
 github.com/DataManager-Go/libdatamanager v1.2.4 h1:K5AHX32XPLO4RyU3WrE0tBSYVDAaWWrwuuKBMq5RMVs=
 github.com/DataManager-Go/libdatamanager v1.2.4/go.mod h1:s2ywdIZpWEfgxJ7iMtCOdLCNaHVnO8dr7e9cE2NzgL4=
+github.com/DataManager-Go/libdatamanager v1.2.7 h1:qwHmroP5vW4qZu7NX1tM80sYv4puNt/X9GtghQFmUOQ=
+github.com/DataManager-Go/libdatamanager v1.2.7/go.mod h1:QHVsduLyGDmvSh+OG5XUgijhjTBfWV+nP9zocWY7zt0=
 github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28 h1:nYoIExG+Z/gSLS9Jbpu6lnrh+m6e9gTxQfGhanTsExE=
 github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28/go.mod h1:j1kHFoYWAbLRPE5nyAAtODwUc0xwd2+ifPZ3uCAgv/g=
 github.com/JojiiOfficial/gaw v1.2.1 h1:zwVLf5TQrXQF+pwI+/sVsfxTxmAZbZ5BjVT/nKxb2Ck=
 github.com/JojiiOfficial/gaw v1.2.1/go.mod h1:Y0hrpN0iX0L5bBf/8+kIER7R/m4GTNuKkifXisMG4S4=
+github.com/JojiiOfficial/gaw v1.2.5 h1:wbguzCqNaCBMYH1a9D6EHW2aIG21uo6CS6qaHLi5I3s=
+github.com/JojiiOfficial/gaw v1.2.5/go.mod h1:Y0hrpN0iX0L5bBf/8+kIER7R/m4GTNuKkifXisMG4S4=
 github.com/JojiiOfficial/shred v1.2.1 h1:658CFVTqcAkYVg815vW+guYnyJTLOIoS15tMyPTYhNo=
 github.com/JojiiOfficial/shred v1.2.1/go.mod h1:/OAxd6eYOhrXb3KW+2wmDog2BiFlUld8oJEKa+xblxU=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 h1:JYp7IbQjafoB+tBA3gMyHYHrpOtNuDiK/uB5uXxq5wM=
