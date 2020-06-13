@@ -7,7 +7,7 @@ import (
 	"github.com/DataManager-Go/DataManagerServer/models"
 )
 
-//Ping handles ping request
+// Ping handles ping request
 func Ping(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) {
 	var request models.PingRequest
 	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {

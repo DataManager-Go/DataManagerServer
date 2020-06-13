@@ -10,7 +10,9 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-//AttributeHandler handler for attributes
+// AttributeHandler handler for file attributes.
+// Implements update, delete, get and create functions
+// for tags and groups
 func AttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) {
 	// Get vars
 	vars := mux.Vars(r)
@@ -250,7 +252,6 @@ func UserAttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r 
 		return
 	}
 
-	// create map
 	nsMap := make(map[string][]models.Group)
 
 	// Create map with namespace as key

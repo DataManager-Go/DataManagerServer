@@ -405,6 +405,7 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 		},
 		Name:      request.Name,
 		Namespace: namespace,
+		// TODO add group/tag filter
 	})
 
 	if LogError(err) {

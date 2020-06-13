@@ -108,7 +108,6 @@ func NamespaceActionHandler(handlerData web.HandlerData, w http.ResponseWriter, 
 		return
 	}
 
-	// Send success
 	sendResponse(w, models.ResponseSuccess, "", models.StringResponse{
 		String: namespace.Name,
 	})

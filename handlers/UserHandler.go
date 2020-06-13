@@ -9,8 +9,7 @@ import (
 	"github.com/JojiiOfficial/gaw"
 )
 
-//Login login handler
-//-> /user/login
+// Login login handler
 func Login(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) {
 	var request models.CredentialsRequest
 
@@ -44,8 +43,7 @@ func Login(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-//Register register handler
-//-> /user/create
+// Register register handler
 func Register(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) {
 	if !handlerData.Config.Server.AllowRegistration {
 		sendResponse(w, models.ResponseError, "Server doesn't accept registrations", nil, http.StatusForbidden)

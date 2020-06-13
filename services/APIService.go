@@ -37,6 +37,8 @@ func NewAPIService(config *models.Config, db *gorm.DB) *APIService {
 			WriteTimeout:      config.Webserver.WriteTimeout,
 			IdleTimeout:       0 * time.Second,
 		}
+
+		httpServer.SetKeepAlivesEnabled(false)
 	}
 
 	//Init https server
@@ -48,6 +50,8 @@ func NewAPIService(config *models.Config, db *gorm.DB) *APIService {
 			WriteTimeout: config.Webserver.WriteTimeout,
 			IdleTimeout:  0 * time.Second,
 		}
+
+		httpsServer.SetKeepAlivesEnabled(false)
 	}
 
 	apiService := &APIService{
@@ -60,9 +64,9 @@ func NewAPIService(config *models.Config, db *gorm.DB) *APIService {
 	return apiService
 }
 
-//Start the API service
+// Start the API service
 func (service *APIService) Start() {
-	//Start HTTPS if enabled
+	// Start HTTPS if enabled
 	if service.HTTPTLSServer != nil {
 		log.Infof("Server started TLS on port (%s)\n", service.config.Webserver.HTTPS.ListenAddress)
 		go (func() {
@@ -74,7 +78,7 @@ func (service *APIService) Start() {
 		})()
 	}
 
-	//Start HTTP if enabled
+	// Start HTTP if enabled
 	if service.HTTPServer != nil {
 		log.Infof("Server started HTTP on port (%s)\n", service.config.Webserver.HTTP.ListenAddress)
 		go (func() {
@@ -86,20 +90,3 @@ func (service *APIService) Start() {
 		})()
 	}
 }
-
-// ConnContext: func(ctx context.Context, c net.Conn) context.Context {
-// 	connectionCancel, cancelWriteTimeout := context.WithCancel(ctx)
-// 	go func() {
-// 		defer cancelWriteTimeout()
-// 		_ = <-connectionCancel.Done()
-// 		if err := connectionCancel.Err(); err == context.DeadlineExceeded {
-// 			fmt.Println("a")
-// 			c.Close()
-// 		}
-// 	}()
-// 	return context.WithValue(ctx, ctx.Value(http.ServerContextKey), cancelWriteTimeout)
-// },
-// if f, ok := ctx.Value(ctx.Value(http.ServerContextKey)).(context.CancelFunc); ok {
-// 							f()
-// 						}
-// 						// sendResponse(w, models.ResponseError, "timeout", nil, http.StatusRequestTimeout)

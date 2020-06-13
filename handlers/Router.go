@@ -3,7 +3,6 @@ package handlers
 import (
 	"fmt"
 	"net/http"
-	"net/http/pprof"
 	"time"
 
 	"github.com/DataManager-Go/DataManagerServer/handlers/web"
@@ -16,7 +15,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-//Route for REST
+// Route for REST
 type Route struct {
 	Name        string
 	Method      HTTPMethod
@@ -25,10 +24,10 @@ type Route struct {
 	HandlerType requestType
 }
 
-//HTTPMethod http method. GET, POST, DELETE, HEADER, etc...
+// HTTPMethod http method. GET, POST, DELETE, HEADER, etc...
 type HTTPMethod string
 
-//HTTP methods
+// HTTP methods
 const (
 	GetMethod    HTTPMethod = "GET"
 	POSTMethod   HTTPMethod = "POST"
@@ -44,13 +43,13 @@ const (
 	optionalTokenRequest
 )
 
-//Routes all REST routes
+// Routes all REST routes
 type Routes []Route
 
-//RouteFunction function for handling a route
+// RouteFunction function for handling a route
 type RouteFunction func(web.HandlerData, http.ResponseWriter, *http.Request)
 
-//Routes
+// Routes
 var (
 	routes = Routes{
 		// Ping
@@ -147,10 +146,11 @@ var (
 			HandlerFunc: NamespaceListHandler,
 			HandlerType: sessionRequest,
 		},
+		// TODO add stats
 	}
 )
 
-//NewRouter create new router
+// NewRouter create new router and its required components
 func NewRouter(config *models.Config, db *gorm.DB) *mux.Router {
 	handlerData := web.HandlerData{
 		Config: config,
@@ -166,30 +166,13 @@ func NewRouter(config *models.Config, db *gorm.DB) *mux.Router {
 			Handler(RouteHandler(route.HandlerType, &handlerData, route.HandlerFunc, route.Name))
 	}
 
-	//Adding custom routes
+	// Adding custom routes
 	addCustomRoutes(router, &handlerData)
-
-	// Add profiler func if profiling is enabled
-	if config.Webserver.Profiling {
-		addProfilerFuncs(router)
-	}
 
 	return router
 }
 
-// add pprof funcs
-func addProfilerFuncs(router *mux.Router) {
-	router.HandleFunc("/debug/pprof/", pprof.Index)
-	router.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
-	router.HandleFunc("/debug/pprof/profile", pprof.Profile)
-	router.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
-	router.Handle("/debug/pprof/heap", pprof.Handler("heap"))
-	router.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
-	router.Handle("/debug/pprof/block", pprof.Handler("block"))
-	router.Handle("/debug/pprof/threadcreate", pprof.Handler("threadcreate"))
-}
-
-//Add custom web-routes
+// Add custom web-routes
 func addCustomRoutes(router *mux.Router, handlerData *web.HandlerData) {
 	// 404 Handler
 	router.NotFoundHandler = RouteHandler(defaultRequest, handlerData, web.NotFoundHandler, "not found")
@@ -204,18 +187,17 @@ func addCustomRoutes(router *mux.Router, handlerData *web.HandlerData) {
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./html/static"))))
 }
 
-//RouteHandler logs stuff
+// RouteHandler logs stuff
 func RouteHandler(requestType requestType, handlerData *web.HandlerData, inner RouteFunction, name string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
-			err := r.Body.Close()
-			if err != nil {
+			if err := r.Body.Close(); err != nil {
 				log.Info(err)
 			}
 		}()
 
+		// Only debug routes which have a names
 		needDebug := len(name) > 0
-
 		if needDebug {
 			log.Infof("[%s] %s\n", r.Method, name)
 		}
@@ -226,33 +208,41 @@ func RouteHandler(requestType requestType, handlerData *web.HandlerData, inner R
 			return
 		}
 
-		//Validate request by requestType
+		// Validate request by requestType
 		if !requestType.validate(handlerData, r, w) {
 			return
 		}
 
-		//Process request
+		// Process request
 		inner(*handlerData, w, r)
 
-		//Print duration of processing
+		// Print duration of processing
 		if needDebug {
 			printProcessingDuration(start)
 		}
 	})
 }
 
-//Return false on error
+// Validate the given request based on its requestType
+// if validate returns false, the request has to abort
 func (requestType requestType) validate(handlerData *web.HandlerData, r *http.Request, w http.ResponseWriter) bool {
 	switch requestType {
 	case sessionRequest:
 		{
+			// SessionRequest requires a valid session token
+			// which identifies a specific user
+
+			// Create an AuthHandler using r
 			authHandler := NewAuthHandler(r)
+
+			// Check Token validity by its length
 			if len(authHandler.GetBearer()) != 64 {
 				log.Error("Invalid token len %d", len(authHandler.GetBearer()))
 				sendResponse(w, models.ResponseError, "Invalid token", http.StatusUnauthorized)
 				return false
 			}
 
+			// Try to retrieve the user by the requestToken
 			user, err := models.GetUserFromSession(handlerData.Db, authHandler.GetBearer())
 			if LogError(err) || user == nil {
 				if user == nil && err == nil {
@@ -263,6 +253,8 @@ func (requestType requestType) validate(handlerData *web.HandlerData, r *http.Re
 				return false
 			}
 
+			// Set the handlerData.User which is
+			// required by all endpoint functions
 			handlerData.User = user
 		}
 	}
@@ -270,7 +262,7 @@ func (requestType requestType) validate(handlerData *web.HandlerData, r *http.Re
 	return true
 }
 
-//Prints the duration of handling the function
+// Prints the duration of handling the function
 func printProcessingDuration(startTime time.Time) {
 	dur := time.Since(startTime)
 
@@ -281,13 +273,13 @@ func printProcessingDuration(startTime time.Time) {
 	}
 }
 
-//Return true on error
+// Return true on error
 func validateHeader(config *models.Config, w http.ResponseWriter, r *http.Request) bool {
 	headerSize := gaw.GetHeaderSize(r.Header)
 
-	//Send error if header are too big. MaxHeaderLength is stored in b
+	// Send error if header are too big. MaxHeaderLength is stored in b
 	if headerSize > uint32(config.Webserver.MaxHeaderLength) {
-		//Send error response
+		// Send error response
 		w.WriteHeader(http.StatusRequestEntityTooLarge)
 		fmt.Fprint(w, "413 request too large")
 

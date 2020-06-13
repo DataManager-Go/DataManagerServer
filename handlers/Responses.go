@@ -12,6 +12,7 @@ func handleAndSendError(err error, w http.ResponseWriter, message string, status
 	if !LogError(err) {
 		return false
 	}
+
 	sendResponse(w, models.ResponseError, message, nil, statusCode)
 	return true
 }
