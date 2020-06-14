@@ -54,19 +54,19 @@ func NewRequestError(msg string, code int) *RequestError {
 }
 
 // Prepend text to the error
-func (re *RequestError) Prepend(txt string) *RequestError {
+func (re RequestError) Prepend(txt string) *RequestError {
 	// Check if space has to be added
 	if strings.HasSuffix(txt, " ") || strings.HasPrefix(re.Message, " ") {
 		re.Message = txt + re.Message
 	} else {
-		re.Message = txt + "  " + re.Message
+		re.Message = txt + " " + re.Message
 	}
 
-	return re
+	return &re
 }
 
 // Append text to the error
-func (re *RequestError) Append(txt string) *RequestError {
+func (re RequestError) Append(txt string) *RequestError {
 	// Check if space has to be added
 	if strings.HasSuffix(re.Message, " ") || strings.HasPrefix(txt, " ") {
 		re.Message += txt
@@ -74,13 +74,13 @@ func (re *RequestError) Append(txt string) *RequestError {
 		re.Message += " " + txt
 	}
 
-	return re
+	return &re
 }
 
 // WithCode uses a different HTTP responsecode
-func (re *RequestError) WithCode(code int) *RequestError {
+func (re RequestError) WithCode(code int) *RequestError {
 	re.ResponseCode = code
-	return re
+	return &re
 }
 
 // Implement String for error

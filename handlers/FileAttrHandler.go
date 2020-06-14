@@ -62,7 +62,7 @@ func AttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 
 				// Find instance
 				tag, err := models.FindTag(handlerData.Db, request.Name, namespace, handlerData.User)
-				if tag == nil || LogError(err) {
+				if tag == nil && err != nil {
 					return RErrNotFound.Prepend("Tag")
 				}
 
@@ -73,9 +73,8 @@ func AttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 						tag.Name = request.NewName
 						err := handlerData.Db.Save(tag).Error
 
-						if LogError(err) {
-							sendServerError(w)
-							return nil
+						if err != nil {
+							return err
 						}
 					}
 				case "delete":
@@ -96,7 +95,6 @@ func AttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 			}
 		case "get":
 			{
-
 				var tags []models.Tag
 				err := handlerData.Db.Model(&models.Tag{}).Where("namespace_id=?", namespace.ID).Find(&tags).Error
 				if err != nil {
@@ -175,7 +173,6 @@ func AttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 			}
 		case "get":
 			{
-
 				var groups []models.Group
 				err := handlerData.Db.Model(&models.Group{}).Where("namespace_id=?", namespace.ID).Find(&groups).Error
 				if err != nil {

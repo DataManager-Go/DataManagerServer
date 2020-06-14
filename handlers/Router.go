@@ -215,7 +215,7 @@ func RouteHandler(requestType requestType, handlerData *web.HandlerData, inner R
 
 		// Process request and handle its error
 		if err := inner(*handlerData, w, r); err != nil {
-			if e, ok := err.(RequestError); ok {
+			if e, ok := err.(*RequestError); ok {
 				// Send error response to user
 				sendResponse(w, models.ResponseError, e.String(), "", e.ResponseCode)
 
