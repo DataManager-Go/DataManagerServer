@@ -1,5 +1,5 @@
 # DataManager
-A data storing and sharing solution for you or your business. Upload files to this server using the [Client](https://github.com/Yukaru-san/DataManager_Client). This stores it and allows sharing via a preview html page.
+A data storing and sharing solution for you or your business. Upload files to this server using the [CLI Client](https://github.com/Yukaru-san/DataManager_Client) or the [GUI Client](https://github.com/DataManager-Go/DataManagerGUI). This stores it and allows sharing via a preview html page.
 
 # Basic concept
 - There are namespaces
