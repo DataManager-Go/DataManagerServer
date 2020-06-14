@@ -8,14 +8,16 @@ import (
 )
 
 //NotFoundHandler 404 not found handler
-func NotFoundHandler(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
+func NotFoundHandler(handlerData HandlerData, w http.ResponseWriter, r *http.Request) error {
 	log.Info("Not found: ", r.URL.Path)
 
 	err := serveStaticFile(handlerData.Config, NotFoundFile, w)
 	if err != nil {
 		if os.IsNotExist(err) {
 			log.Error("Can't find 404.html!")
-			return
+			return nil
 		}
 	}
+
+	return nil
 }

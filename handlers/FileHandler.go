@@ -22,34 +22,30 @@ import (
 )
 
 //UploadfileHandler handler for uploading files
-func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) {
+func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) error {
 	var request models.UploadRequest
 
 	// Get data from header
 	requestData := r.Header.Get(models.HeaderRequest)
 	if len(requestData) == 0 {
-		sendResponse(w, models.ResponseError, "Bad request", nil, http.StatusBadRequest)
-		return
+		return RErrBadRequest
 	}
 
 	// Decode header base64
 	rBaseBytes, err := base64.StdEncoding.DecodeString(requestData)
 	if err != nil {
-		sendResponse(w, models.ResponseError, "Bad request", nil, http.StatusBadRequest)
-		return
+		return RErrBadRequest
 	}
 
 	// Parse json from request header
 	err = json.Unmarshal(rBaseBytes, &request)
-	if LogError(err) {
-		sendResponse(w, models.ResponseError, "Bad request", nil, http.StatusBadRequest)
-		return
+	if err != nil {
+		return RErrBadRequest
 	}
 
 	// Check requested encryption type
 	if len(request.Encryption) > 0 && !libdm.IsValidCipher(request.Encryption) {
-		sendResponse(w, models.ResponseError, "Encryption not supported", nil, http.StatusUnprocessableEntity)
-		return
+		return RErrNotSupported.Prepend("Encryption")
 	}
 
 	// Validating request, for desired upload Type
@@ -58,29 +54,25 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 		{
 			// Check if user is allowed to upload files
 			if !handlerData.User.CanUploadFiles() {
-				sendResponse(w, models.ResponseError, "not allowed to upload files", nil, http.StatusForbidden)
-				return
+				return RErrNotAllowed.Append("to upload files")
 			}
 		}
 	case models.URLUploadType:
 		{
 			// Check if user is allowed to upload URLs
 			if !handlerData.User.AllowedToUploadURLs() {
-				sendResponse(w, models.ResponseError, "not allowed to upload urls", nil, http.StatusForbidden)
-				return
+				return RErrNotAllowed.Append("to upload URLs")
 			}
 
 			// Check if url is set and valid
 			if len(request.URL) == 0 || !isValidHTTPURL(request.URL) {
-				sendResponse(w, models.ResponseError, "missing or malformed url", nil, http.StatusUnprocessableEntity)
-				return
+				return RErrMissing.Append("or malformed URL")
 			}
 		}
 	default:
 		{
 			// Send error if UploadType was not found
-			sendResponse(w, models.ResponseError, "invalid upload type", nil, http.StatusUnprocessableEntity)
-			return
+			return RErrInvalid.Append("upload type")
 		}
 	}
 
@@ -93,14 +85,8 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 
 		// Find file
 		file, err = models.FindFile(handlerData.Db, request.ReplaceFile, handlerData.User.ID)
-		if LogError(err) {
-			sendResponse(w, models.ResponseError, "File not found", nil, http.StatusNotFound)
-			return
-		}
-
-		if file == nil || file.Namespace == nil {
-			sendServerError(w)
-			return
+		if err != nil || file == nil || file.Namespace == nil {
+			return RErrNotFound.Prepend("File")
 		}
 
 		// Use new name if set
@@ -124,15 +110,16 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 			Name:      request.Name,
 		}
 
+		// Pick a random, not already used name for file
 		if !file.SetUniqueFilename(handlerData.Db) {
 			sendServerError(w)
-			return
+			return nil
 		}
 	}
 
 	// Check if namespace is valid and user has access to it
 	if !handleNamespaceErorrs(namespace, handlerData.User, w) {
-		return
+		return nil
 	}
 
 	// Set Tags, Groups and encryption
@@ -161,17 +148,15 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 		// Check if public name already exists
 		_, found, _ := models.GetPublicFile(handlerData.Db, publicName)
 		if found {
-			sendResponse(w, models.ResponseError, "public name already exists", nil)
-			return
+			return RErrAlreadyExists.Prepend("public name")
 		}
 	}
 
 	// Create local file
 	localFile := handlerData.Config.GetStorageFile(file.LocalName)
 	f, err := os.Create(localFile)
-	if LogError(err) {
-		sendServerError(w)
-		return
+	if err != nil {
+		return err
 	}
 
 	// Read from the desired source (file/url)
@@ -189,21 +174,15 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 			if err != nil {
 				// Only shredder file if not in replace mode
 				if request.ReplaceFile == 0 {
-					go func() {
-						models.ShredderFile(localFile, -1)
-					}()
+					go models.ShredderFile(localFile, -1)
 				}
 
-				if LogError(err) {
-					// If error is a timeout error, send timeout error and close connectio
-					if err == http.ErrHandlerTimeout {
-						sendResponse(w, models.ResponseError, "timeout", nil, http.StatusRequestTimeout)
-					} else {
-						sendServerError(w)
-					}
+				// If error is a timeout error, send timeout error and close connectio
+				if err == http.ErrHandlerTimeout {
+					err = RErrTimeout
 				}
 
-				return
+				return err
 			}
 
 			file.FileSize = size
@@ -214,14 +193,12 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 			// Read from HTTP request
 			status, err := downloadHTTP(handlerData.User, request.URL, f, file)
 			if err != nil {
-				sendResponse(w, models.ResponseError, err.Error(), nil, http.StatusBadRequest)
-				return
+				return RErrBadRequest.Prepend(err.Error())
 			}
 
 			// Check statuscode
 			if status > 299 || status < 200 {
-				sendResponse(w, models.ResponseError, "Non ok response: "+strconv.Itoa(status), nil, http.StatusBadRequest)
-				return
+				return NewRequestError("Non HTTP OK response: "+strconv.Itoa(status), http.StatusBadRequest)
 			}
 		}
 	}
@@ -242,25 +219,27 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 		err = file.Insert(handlerData.Db, handlerData.User)
 	}
 
-	if !LogError(err) {
-		sendResponse(w, models.ResponseSuccess, "", models.UploadResponse{
-			FileID:         file.ID,
-			Filename:       file.Name,
-			PublicFilename: file.PublicFilename.String,
-			Checksum:       file.Checksum,
-			FileSize:       file.FileSize,
-			Namespace:      namespace.Name,
-		})
-	} else {
-		sendServerError(w)
+	if err != nil {
+		return err
 	}
+
+	sendResponse(w, models.ResponseSuccess, "", models.UploadResponse{
+		FileID:         file.ID,
+		Filename:       file.Name,
+		PublicFilename: file.PublicFilename.String,
+		Checksum:       file.Checksum,
+		FileSize:       file.FileSize,
+		Namespace:      namespace.Name,
+	})
+
+	return nil
 }
 
 // ListFilesHandler handler for listing files
-func ListFilesHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) {
+func ListFilesHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) error {
 	var request models.FileListRequest
 	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
-		return
+		return nil
 	}
 
 	var namespace *models.Namespace
@@ -271,7 +250,7 @@ func ListFilesHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 
 		// Handle namespace errors (not found || no access)
 		if !handleNamespaceErorrs(namespace, handlerData.User, w) {
-			return
+			return nil
 		}
 	}
 
@@ -306,9 +285,8 @@ func ListFilesHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 
 	// Search
 	err := loaded.Find(&foundFiles).Error
-	if LogError(err) {
-		sendServerError(w)
-		return
+	if err != nil {
+		return err
 	}
 
 	// Convert to ResponseFile
@@ -350,33 +328,32 @@ func ListFilesHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 	sendResponse(w, models.ResponseSuccess, "", models.ListFileResponse{
 		Files: retFiles,
 	})
+
+	return nil
 }
 
 // FileHandler handler for updating files
-func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) {
+func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) error {
 	var request models.FileRequest
 	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
-		return
+		return nil
 	}
 
 	// Validate input
 	if len(request.Name) == 0 && request.FileID <= 0 {
-		sendResponse(w, models.ResponseError, "Bad request", nil, http.StatusBadRequest)
-		return
+		return RErrBadRequest
 	}
 
 	// Get action
 	vars := mux.Vars(r)
 	action, has := vars["action"]
 	if !has {
-		sendResponse(w, models.ResponseError, "missing action", nil)
-		return
+		return RErrBadRequest
 	}
 
 	// Getting all files is not allowed
 	if request.All && action == "get" {
-		sendResponse(w, models.ResponseError, "Illegal request", nil)
-		return
+		return RErrBadRequest
 	}
 
 	var namespace *models.Namespace
@@ -388,14 +365,13 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 
 		// Handle namespace errors (not found || no access)
 		if !handleNamespaceErorrs(namespace, handlerData.User, w) {
-			return
+			return nil
 		}
 	}
 
 	// Check if action is valid
 	if !gaw.IsInStringArray(action, []string{"delete", "update", "get", "publish"}) {
-		sendResponse(w, models.ResponseError, "invalid action", nil)
-		return
+		return RErrInvalid.Append("action")
 	}
 
 	// Find files
@@ -408,29 +384,25 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 		// TODO add group/tag filter
 	})
 
-	if LogError(err) {
-		sendServerError(w)
-		return
+	if err != nil {
+		return err
 	}
 
 	// Exit if no file was found
 	if len(files) == 0 {
-		sendResponse(w, models.ResponseError, "Nothing found", nil)
-		return
+		return RErrNotFound
 	}
 
 	// Check if files are more than requested
 	if len(files) > 1 && !request.All {
-		sendResponse(w, models.ResponseError, "found multiple files with same name", nil)
-		return
+		return NewRequestError("found multiple files with same name", http.StatusConflict)
 	}
 
 	// If namespace was not set, use the namespace of the returned file
 	if namespace == nil {
 		namespace = files[0].Namespace
 		if !handlerData.User.HasAccess(namespace) {
-			sendResponse(w, models.ResponseError, "Write permission denied for this namespaces", nil, http.StatusForbidden)
-			return
+			return RErrPermissionDenied.Append("for this namespace")
 		}
 	}
 
@@ -445,8 +417,8 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 			for _, file := range files {
 				// Delete each file
 				err = file.Delete(handlerData.Db, handlerData.Config)
-				if LogError(err) {
-					break
+				if err != nil {
+					return err
 				}
 				ids = append(ids, file.ID)
 			}
@@ -469,21 +441,18 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 					// Get new namespace
 					newNamespace := models.FindNamespace(handlerData.Db, update.NewNamespace, handlerData.User)
 					if newNamespace == nil || namespace.ID == 0 {
-						sendResponse(w, models.ResponseError, "New namespace not found", nil, http.StatusNotFound)
-						return
+						return RErrNotFound.Prepend("New namespace")
 					}
 
 					// Check if user can access this new namespace
 					if !newNamespace.IsOwnedBy(handlerData.User) && !handlerData.User.CanWriteForeignNamespace() {
-						sendResponse(w, models.ResponseError, "Write permission denied for foreign namespaces", nil, http.StatusForbidden)
-						return
+						return RErrPermissionDenied.Append("for this namespace")
 					}
 
 					// Update files namespace
 					err := file.UpdateNamespace(handlerData.Db, newNamespace, handlerData.User)
-					if LogError(err) {
-						sendServerError(w)
-						return
+					if err != nil {
+						return err
 					}
 
 					didUpdate = true
@@ -491,29 +460,26 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 
 				// Rename file
 				if len(update.NewName) > 0 {
-					if LogError(file.Rename(handlerData.Db, update.NewName)) {
-						sendServerError(w)
-						return
+					if err = file.Rename(handlerData.Db, update.NewName); err != nil {
+						return err
 					}
+
 					didUpdate = true
 				}
 
 				// Set public/private
 				if len(update.IsPublic) > 0 {
 					if !file.PublicFilename.Valid {
-						sendResponse(w, models.ResponseError, "You need to share this file first", nil)
-						return
+						return NewRequestError("You need to share this file first", http.StatusBadRequest)
 					}
 
 					newVisibility, err := strconv.ParseBool(update.IsPublic)
 					if err != nil {
-						sendResponse(w, models.ResponseError, "isPublic must be a bool", nil, http.StatusUnprocessableEntity)
-						return
+						return NewRequestError("isPublic must be a bool", http.StatusUnprocessableEntity)
 					}
 
-					if LogError(file.SetVilibility(handlerData.Db, newVisibility)) {
-						sendServerError(w)
-						return
+					if err = file.SetVilibility(handlerData.Db, newVisibility); err != nil {
+						return err
 					}
 					didUpdate = true
 				}
@@ -521,40 +487,40 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 				// Add tags
 				if len(update.AddTags) > 0 {
 					currLenTags := len(file.Tags)
-					if LogError(file.AddTags(handlerData.Db, update.AddTags, handlerData.User)) {
-						sendServerError(w)
-						return
+					if err = file.AddTags(handlerData.Db, update.AddTags, handlerData.User); err != nil {
+						return err
 					}
+
 					didUpdate = len(file.Tags) > currLenTags
 				}
 
 				// Remove tags
 				if len(update.RemoveTags) > 0 {
 					currLenTags := len(file.Tags)
-					if LogError(file.RemoveTags(handlerData.Db, update.RemoveTags)) {
-						sendServerError(w)
-						return
+					if err = file.RemoveTags(handlerData.Db, update.RemoveTags); err != nil {
+						return err
 					}
+
 					didUpdate = len(file.Tags) < currLenTags
 				}
 
 				// Add Groups
 				if len(update.AddGroups) > 0 {
 					currLenGroups := len(file.Groups)
-					if LogError(file.AddGroups(handlerData.Db, update.AddGroups, handlerData.User)) {
-						sendServerError(w)
-						return
+					if err = file.AddGroups(handlerData.Db, update.AddGroups, handlerData.User); err != nil {
+						return err
 					}
+
 					didUpdate = len(file.Groups) > currLenGroups
 				}
 
 				// Remove Groups
 				if len(update.RemoveGroups) > 0 {
 					currLenGroups := len(file.Groups)
-					if LogError(file.RemoveGroups(handlerData.Db, update.RemoveGroups)) {
-						sendServerError(w)
-						return
+					if err = file.RemoveGroups(handlerData.Db, update.RemoveGroups); err != nil {
+						return err
 					}
+
 					didUpdate = len(file.Groups) < currLenGroups
 				}
 
@@ -579,12 +545,10 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 			f, err := os.Open(handlerData.Config.GetStorageFile(file.LocalName))
 			if LogError(err) {
 				if os.IsNotExist(err) {
-					sendResponse(w, models.ResponseError, "File not found on server", nil, 404)
-					return
+					return RErrNotFound.Prepend("File").Append("on server")
 				}
 
-				sendServerError(w)
-				return
+				return err
 			}
 
 			// Set ContentType header
@@ -612,9 +576,8 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 			// Write contents to responsewriter
 			buff := make([]byte, 10*1024)
 			_, err = io.CopyBuffer(w, f, buff)
-			if LogError(err) {
-				sendServerError(w)
-				return
+			if err != nil {
+				return err
 			}
 
 			// Close file
@@ -631,20 +594,19 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 				if file.IsPublic {
 					// Send error if publishing only one file
 					if len(files) == 1 {
-						sendResponse(w, models.ResponseError, "Already public", nil, http.StatusConflict)
-						return
+						return NewRequestError("Already public", http.StatusConflict)
 					}
+
 					continue
 				}
 
 				nameTaken, err := file.Publish(handlerData.Db, request.PublicName)
 				if err != nil {
-					sendServerError(w)
-					return
+					return err
 				}
+
 				if nameTaken {
-					sendResponse(w, models.ResponseError, "public name already exists", nil)
-					return
+					return RErrAlreadyExists.Prepend("Public name")
 				}
 
 				// Use bulk response if requested "all"
@@ -670,4 +632,6 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 			}
 		}
 	}
+
+	return nil
 }

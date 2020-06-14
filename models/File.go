@@ -16,7 +16,7 @@ import (
 
 var shredder = shred.Shredder{}
 
-//File a file uploaded to the db
+// File a file uploaded to the db
 type File struct {
 	gorm.Model
 	Name           string `gorm:"not null"`
@@ -35,14 +35,14 @@ type File struct {
 	Checksum       string
 }
 
-//FileAttributes attributes for a file
+// FileAttributes attributes for a file
 type FileAttributes struct {
 	Tags      []string `json:"tags,omitempty"`
 	Groups    []string `json:"groups,omitempty"`
 	Namespace string   `json:"ns"`
 }
 
-//GetAttributes get file attributes
+// GetAttributes get file attributes
 func (file File) GetAttributes() FileAttributes {
 	return FileAttributes{
 		Groups:    GroupArrToStringArr(file.Groups),
@@ -51,9 +51,9 @@ func (file File) GetAttributes() FileAttributes {
 	}
 }
 
-//Insert inserts file into DB
+// Insert inserts file into DB
 func (file *File) Insert(db *gorm.DB, user *User) error {
-	//Create groups
+	// Create groups
 	for i := range file.Groups {
 		if file.Groups[i].ID == 0 {
 			if err := db.Where(&Group{
@@ -67,7 +67,7 @@ func (file *File) Insert(db *gorm.DB, user *User) error {
 		}
 	}
 
-	//Create tags
+	// Create tags
 	for i := range file.Tags {
 		if file.Tags[i].ID == 0 {
 			if err := db.Where(&Tag{
@@ -81,11 +81,11 @@ func (file *File) Insert(db *gorm.DB, user *User) error {
 		}
 	}
 
-	//Use default namespace if not specified
+	// Use default namespace if not specified
 	file.Namespace = file.GetNamespace()
 	file.User = user
 
-	//Create file
+	// Create file
 	if err := db.Create(file).Error; err != nil {
 		return err
 	}
@@ -93,12 +93,12 @@ func (file *File) Insert(db *gorm.DB, user *User) error {
 	return nil
 }
 
-//GetNamespace return namespace of file
+// GetNamespace return namespace of file
 func (file File) GetNamespace() *Namespace {
 	return file.Namespace
 }
 
-//IsInTagList return true if file has one of the specified tags
+// IsInTagList return true if file has one of the specified tags
 func (file File) IsInTagList(tags []string) bool {
 	for _, tag := range file.Tags {
 		for _, t1 := range tags {
@@ -110,7 +110,7 @@ func (file File) IsInTagList(tags []string) bool {
 	return false
 }
 
-//IsInGroupList return true if file is in one of the specified groups
+// IsInGroupList return true if file is in one of the specified groups
 func (file File) IsInGroupList(groups []string) bool {
 	for _, group := range file.Groups {
 		for _, t1 := range groups {
@@ -281,10 +281,11 @@ func (file *File) AddTags(db *gorm.DB, tagsToAdd []string, user *User) error {
 		tag := GetTag(db, sTag, file.Namespace, user)
 		file.Tags = append(file.Tags, *tag)
 	}
+
 	return file.Save(db)
 }
 
-//RemoveTags remove tags to file
+// RemoveTags remove tags to file
 func (file *File) RemoveTags(db *gorm.DB, tagsToRemove []string) error {
 	if len(file.Tags) == 0 {
 		return nil
@@ -307,7 +308,7 @@ func (file *File) RemoveTags(db *gorm.DB, tagsToRemove []string) error {
 	return nil
 }
 
-//AddGroups adds groups to file
+// AddGroups adds groups to file
 func (file *File) AddGroups(db *gorm.DB, groupsToAdd []string, user *User) error {
 	for _, sGroup := range groupsToAdd {
 		if file.HasGroup(sGroup) {
@@ -317,10 +318,11 @@ func (file *File) AddGroups(db *gorm.DB, groupsToAdd []string, user *User) error
 		group := GetGroup(db, sGroup, file.Namespace, user)
 		file.Groups = append(file.Groups, *group)
 	}
+
 	return file.Save(db)
 }
 
-//RemoveGroups remove groups from file
+// RemoveGroups remove groups from file
 func (file *File) RemoveGroups(db *gorm.DB, groupsToRemove []string) error {
 	if len(file.Groups) == 0 {
 		return nil
@@ -333,21 +335,22 @@ func (file *File) RemoveGroups(db *gorm.DB, groupsToRemove []string) error {
 		}
 	}
 
-	//Only save if at least one group was removed
+	// Only save if at least one group was removed
 	if len(newGroups) < len(file.Groups) {
 		db.Model(&file).Association("Groups").Clear()
 		file.Groups = newGroups
 		return file.Save(db)
 	}
+
 	return file.Save(db)
 }
 
-//Save saves a file in DB
+// Save saves a file in DB
 func (file *File) Save(db *gorm.DB) error {
 	return db.Save(file).Error
 }
 
-//GetCount get count if file
+// GetCount get count if file
 func (file File) GetCount(db *gorm.DB, fileID uint) (uint, error) {
 	var c uint
 
@@ -355,111 +358,112 @@ func (file File) GetCount(db *gorm.DB, fileID uint) (uint, error) {
 		Model: file.Model,
 	}
 
-	//Include namespace in search if not nil
+	// Include namespace in search if not nil
 	if file.Namespace != nil {
 		fileFilter.NamespaceID = file.NamespaceID
 	}
 
-	//Create count statement
+	// Create count statement
 	del := db.Model(&File{}).Where(&fileFilter).Where("deleted_at is NULL")
 
 	if len(file.Name) > 0 {
-		//Allow searching for wildcards
+		// Allow searching for wildcards
 		if strings.HasSuffix(file.Name, "%") || strings.HasPrefix(file.Name, "%") {
-			//Apply wildcard
+			// Apply wildcard
 			del = del.Where("name like ?", file.Name)
 		} else {
 			del = del.Where("name = ?", file.Name)
 		}
 	}
 
-	//Also use fileID if set
+	// Also use fileID if set
 	if fileID > 0 {
 		del = del.Where("id = ?", fileID)
 	}
 
-	//Execute statement
+	// Execute statement
 	err := del.Count(&c).Error
 
 	return c, err
 }
 
-//GetPublicFile returns a file which is public
+// GetPublicFile returns a file which is public
 func GetPublicFile(db *gorm.DB, publicFilename string) (*File, bool, error) {
 	var file File
 	err := db.Model(&File{}).Where("public_filename = ? AND is_public=true", publicFilename).First(&file).Error
 	if err != nil {
-		//Check error. Send server error if error is not "not found"
+		// Check error. Send server error if error is not "not found"
 		if gorm.IsRecordNotFoundError(err) {
 			return nil, false, nil
 		}
+
 		return nil, false, err
 	}
 
 	return &file, true, nil
 }
 
-//UpdateNamespace updates namespace for file
+// UpdateNamespace updates namespace for file
 func (file *File) UpdateNamespace(db *gorm.DB, newNamespace *Namespace, user *User) error {
-	//Set new namespace
+	// Set new namespace
 	file.Namespace = newNamespace
 	file.NamespaceID = newNamespace.ID
 
-	//Update/move tags if available
+	// Update/move tags if available
 	if len(file.Tags) > 0 {
 		var newTags []Tag
 		for _, tag := range file.Tags {
 			newTag := GetTag(db, tag.Name, newNamespace, user)
 			newTags = append(newTags, *newTag)
 		}
-		//remove old tags
+		// remove old tags
 		db.Model(&file).Association("Tags").Clear()
-		//Set new tags
+		// Set new tags
 		file.Tags = newTags
 	}
 
-	//Update/move groups if available
+	// Update/move groups if available
 	if len(file.Groups) > 0 {
 		var newGroups []Group
 		for _, group := range file.Groups {
 			newGroup := GetGroup(db, group.Name, newNamespace, user)
 			newGroups = append(newGroups, *newGroup)
 		}
-		//remove old groups
+		// remove old groups
 		db.Model(&file).Association("Groups").Clear()
-		//Set new groups
+		// Set new groups
 		file.Groups = newGroups
 	}
 
-	//Save file
+	// Save file
 	return db.Save(&file).Error
 }
 
-//Publish publis a file
+// Publish publis a file
 func (file *File) Publish(db *gorm.DB, publicName string) (bool, error) {
-	//Determine public name
+	// Determine public name
 	if len(publicName) == 0 {
 		publicName = gaw.RandString(25)
 	}
 
-	//Set file public name
+	// Set file public name
 	file.PublicFilename = sql.NullString{
 		String: publicName,
 		Valid:  true,
 	}
 	file.IsPublic = true
 
-	//Check if public name already exists
+	// Check if public name already exists
 	_, found, _ := GetPublicFile(db, publicName)
 	if found {
 		return true, nil
 	}
 
-	//Save new file
+	// Save new file
 	return false, file.Save(db)
 }
 
-//SetEncryption set encryption
+// SetEncryption set encryption
 func (file *File) SetEncryption(encription string) *File {
 	e := sql.NullInt32{
 		Valid: false,
@@ -473,9 +477,10 @@ func (file *File) SetEncryption(encription string) *File {
 	return file
 }
 
-//SetUniqueFilename sets unique filename
+// SetUniqueFilename sets unique filename
 func (file *File) SetUniqueFilename(db *gorm.DB) bool {
 	var localName string
+
 	for i := 0; i < 5; i++ {
 		localName = gaw.RandString(40)
 		var c int

@@ -11,7 +11,7 @@ import (
 )
 
 // RawFileHandler handler for previews
-func RawFileHandler(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
+func RawFileHandler(handlerData HandlerData, w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
 	fileID := vars["fileID"]
 
@@ -19,7 +19,7 @@ func RawFileHandler(handlerData HandlerData, w http.ResponseWriter, r *http.Requ
 	file, found, err := models.GetPublicFile(handlerData.Db, fileID)
 	if !found {
 		NotFoundHandler(handlerData, w, r)
-		return
+		return nil
 	}
 
 	w.Header().Set("content-disposition", "attachment; filename=\""+file.GetPublicNameWithExtension()+"\"")
@@ -28,13 +28,13 @@ func RawFileHandler(handlerData HandlerData, w http.ResponseWriter, r *http.Requ
 	// Send error
 	if LogError(err) {
 		http.Error(w, "Server error", http.StatusInternalServerError)
-		return
+		return nil
 	}
 
 	// Send not found if not public
 	if !file.IsPublic {
 		NotFoundHandler(handlerData, w, r)
-		return
+		return nil
 	}
 
 	// Set content type header if available and valid
@@ -48,12 +48,14 @@ func RawFileHandler(handlerData HandlerData, w http.ResponseWriter, r *http.Requ
 	if LogError(err) {
 		if os.IsNotExist(err) {
 			NotFoundHandler(handlerData, w, r)
-			return
+			return nil
 		}
 
 		http.Error(w, "Server error", http.StatusInternalServerError)
-		return
+		return nil
 	}
 
 	serveFileStream(handlerData.Config, f, w)
+
+	return nil
 }

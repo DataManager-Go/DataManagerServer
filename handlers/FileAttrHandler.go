@@ -13,7 +13,7 @@ import (
 // AttributeHandler handler for file attributes.
 // Implements update, delete, get and create functions
 // for tags and groups
-func AttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) {
+func AttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) error {
 	// Get vars
 	vars := mux.Vars(r)
 	attributeKind, hasAttribute := vars["attribute"]
@@ -25,32 +25,29 @@ func AttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 		!gaw.IsInStringArray(action, []string{"update", "delete", "get", "create"}) ||
 		!gaw.IsInStringArray(attributeKind, []string{"tag", "group"}) {
 
-		sendResponse(w, models.ResponseError, "Bad request", nil, http.StatusBadRequest)
-		return
+		return RErrBadRequest
 	}
 
 	// Read request body
 	var request models.UpdateAttributeRequest
 	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
-		return
+		return nil
 	}
 
 	// Check for empty field
 	if gaw.HasEmptyString(request.Namespace) {
-		sendResponse(w, models.ResponseError, "Bad request", nil, http.StatusBadRequest)
-		return
+		return RErrBadRequest
 	}
 
 	// Find namespace and handle namespace errors (not found || no access)
 	namespace := models.FindNamespace(handlerData.Db, request.Namespace, handlerData.User)
 	if !handleNamespaceErorrs(namespace, handlerData.User, w) {
-		return
+		return nil
 	}
 
 	// check newName availability
 	if action == "update" && len(request.NewName) == 0 {
-		sendResponse(w, models.ResponseError, "Bad request", nil, http.StatusBadRequest)
-		return
+		return RErrBadRequest
 	}
 
 	if attributeKind == "tag" {
@@ -60,15 +57,13 @@ func AttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 			{
 				// Check required field availability
 				if len(request.Name) == 0 {
-					sendResponse(w, models.ResponseError, "Bad request", nil, http.StatusBadRequest)
-					return
+					return RErrBadRequest
 				}
 
 				// Find instance
 				tag, err := models.FindTag(handlerData.Db, request.Name, namespace, handlerData.User)
 				if tag == nil || LogError(err) {
-					sendResponse(w, models.ResponseError, "Tag not found", nil, 404)
-					return
+					return RErrNotFound.Prepend("Tag")
 				}
 
 				switch action {
@@ -80,23 +75,21 @@ func AttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 
 						if LogError(err) {
 							sendServerError(w)
-							return
+							return nil
 						}
 					}
 				case "delete":
 					{
 						// Delete relations
 						err = handlerData.Db.Unscoped().Table("files_tags").Where("tag_id=?", tag.ID).Delete(models.Tag{}).Error
-						if LogError(err) {
-							sendServerError(w)
-							return
+						if err != nil {
+							return err
 						}
 
 						// Delete tags
 						err = handlerData.Db.Delete(tag).Error
-						if LogError(err) {
-							sendServerError(w)
-							return
+						if err != nil {
+							return err
 						}
 					}
 				}
@@ -107,20 +100,18 @@ func AttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 				var tags []models.Tag
 				err := handlerData.Db.Model(&models.Tag{}).Where("namespace_id=?", namespace.ID).Find(&tags).Error
 				if err != nil {
-					sendServerError(w)
-					return
+					return err
 				}
 
 				sendResponse(w, models.ResponseSuccess, "", models.TagArrToStringArr(tags))
-				return
+				return nil
 			}
 		case "create":
 			{
 				// Check if tag already exists
 				tag, err := models.FindTag(handlerData.Db, request.Name, namespace, handlerData.User)
 				if err == nil && tag != nil && tag.ID > 0 {
-					sendResponse(w, models.ResponseError, "Tag already exists", nil, http.StatusBadRequest)
-					return
+					return RErrAlreadyExists.Prepend("Tag")
 				}
 
 				tag = &models.Tag{
@@ -131,12 +122,12 @@ func AttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 
 				// Save tag
 				err = tag.Insert(handlerData.Db, handlerData.User)
-				if LogError(err) {
-					sendServerError(w)
-					return
+				if err != nil {
+					return err
 				}
 
 				sendResponse(w, models.ResponseSuccess, "", nil)
+				return nil
 			}
 		}
 	} else if attributeKind == "group" {
@@ -145,15 +136,13 @@ func AttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 			{
 				// Check required field availability
 				if len(request.Name) == 0 {
-					sendResponse(w, models.ResponseError, "Bad request", nil, http.StatusBadRequest)
-					return
+					return RErrBadRequest
 				}
 
 				// Find instance
 				group, err := models.FindGroup(handlerData.Db, request.Name, namespace, handlerData.User)
 				if group == nil || err != nil {
-					sendResponse(w, models.ResponseError, "Group not found", nil, 404)
-					return
+					return RErrNotFound.Prepend("Group")
 				}
 
 				// Do desired action
@@ -163,16 +152,14 @@ func AttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 
 						// Delete relations
 						err = handlerData.Db.Unscoped().Table("files_groups").Where("group_id=?", group.ID).Delete(models.Group{}).Error
-						if LogError(err) {
-							sendServerError(w)
-							return
+						if err != nil {
+							return err
 						}
 
 						// Delete tags
 						err = handlerData.Db.Delete(group).Error
-						if LogError(err) {
-							sendServerError(w)
-							return
+						if err != nil {
+							return err
 						}
 					}
 				case "update":
@@ -180,9 +167,8 @@ func AttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 						// Update groups name
 						group.Name = request.NewName
 						err := handlerData.Db.Save(group).Error
-						if LogError(err) {
-							sendServerError(w)
-							return
+						if err != nil {
+							return err
 						}
 					}
 				}
@@ -193,20 +179,18 @@ func AttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 				var groups []models.Group
 				err := handlerData.Db.Model(&models.Group{}).Where("namespace_id=?", namespace.ID).Find(&groups).Error
 				if err != nil {
-					sendServerError(w)
-					return
+					return err
 				}
 
 				sendResponse(w, models.ResponseSuccess, "", models.GroupArrToStringArr(groups))
-				return
+				return nil
 			}
 		case "create":
 			{
 				// Check if tag already exists
 				group, err := models.FindGroup(handlerData.Db, request.Name, namespace, handlerData.User)
 				if err == nil && group != nil && group.ID > 0 {
-					sendResponse(w, models.ResponseError, "Group already exists", nil, http.StatusBadRequest)
-					return
+					return RErrAlreadyExists.Prepend("Group")
 				}
 
 				group = &models.Group{
@@ -217,21 +201,19 @@ func AttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 
 				// Save tag
 				err = group.Insert(handlerData.Db, handlerData.User)
-				if LogError(err) {
-					sendServerError(w)
-					return
+				if err != nil {
+					return err
 				}
-
-				sendResponse(w, models.ResponseSuccess, "", nil)
 			}
 		}
 	}
 
 	sendResponse(w, models.ResponseSuccess, "", nil)
+	return nil
 }
 
 // UserAttributeHandler handler for getting user attribute informations
-func UserAttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) {
+func UserAttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) error {
 	// Get groups
 	groups, err := handlerData.User.GetAllGroups(handlerData.Db)
 	var nss []models.Namespace
@@ -242,14 +224,12 @@ func UserAttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r 
 		getNamespaces <- err
 	}()
 
-	if LogError(err) {
+	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			sendResponse(w, models.ResponseError, "nothing found", nil, http.StatusNotFound)
-			return
+			return RErrNotFound
 		}
 
-		sendServerError(w)
-		return
+		return err
 	}
 
 	nsMap := make(map[string][]models.Group)
@@ -275,14 +255,14 @@ func UserAttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r 
 		for i := range groups {
 			respItem.Groups[i] = groups[i].Name
 		}
+
 		response.Namespace[i] = respItem
 		i++
 	}
 
 	err = <-getNamespaces
-	if LogError(err) {
-		sendServerError(w)
-		return
+	if err != nil {
+		return err
 	}
 
 	// Add namespaces which aren't assigned to any groups
@@ -297,4 +277,5 @@ func UserAttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r 
 
 	// Send response
 	sendResponse(w, models.ResponseSuccess, "", response)
+	return nil
 }

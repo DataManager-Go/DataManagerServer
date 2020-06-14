@@ -11,31 +11,28 @@ import (
 )
 
 // NamespaceActionHandler handler for namespace actions (create/update/delete)
-func NamespaceActionHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) {
+func NamespaceActionHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
 	action, hasAction := vars["action"]
 
 	// validate action and attribute kind
 	if !hasAction || !gaw.IsInStringArray(action, []string{"update", "delete", "create"}) {
-		sendResponse(w, models.ResponseError, "Bad request", nil, http.StatusBadRequest)
-		return
+		return RErrBadRequest
 	}
 
 	var request models.NamespaceRequest
 	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
-		return
+		return nil
 	}
 
 	// Check for empty field
 	if gaw.HasEmptyString(request.Namespace) {
-		sendResponse(w, models.ResponseError, "Bad request", nil, http.StatusBadRequest)
-		return
+		return RErrBadRequest
 	}
 
 	// Check permissions
 	if !handlerData.User.CanCreateNamespaces() {
-		sendResponse(w, models.ResponseError, "Not allowed to create user namespaces", nil, http.StatusForbidden)
-		return
+		return RErrNotAllowed.Append("to create user namespaces")
 	}
 
 	// Find namespace
@@ -45,20 +42,17 @@ func NamespaceActionHandler(handlerData web.HandlerData, w http.ResponseWriter, 
 	if action == "create" {
 		// Check if namespace already exists
 		if namespace != nil && namespace.ID != 0 {
-			sendResponse(w, models.ResponseError, "namespace already exists", nil, http.StatusBadRequest)
-			return
+			return RErrAlreadyExists.Prepend("Namespace")
 		}
 	} else {
 		// Error if namespace not found/valid
 		if !namespace.IsValid() {
-			sendResponse(w, models.ResponseError, "namespace not found", nil, http.StatusNotFound)
-			return
+			return RErrNotFound.Prepend("Namespace")
 		}
 
 		// on update, check if new name is not empty
 		if action == "update" && len(request.NewName) == 0 {
-			sendResponse(w, models.ResponseError, "no new name provided", nil, http.StatusUnprocessableEntity)
-			return
+			return NewRequestError("no new name provided", http.StatusUnprocessableEntity)
 		}
 	}
 
@@ -84,8 +78,7 @@ func NamespaceActionHandler(handlerData web.HandlerData, w http.ResponseWriter, 
 			// have different casing
 			newNS := models.FindNamespace(handlerData.Db, newName, handlerData.User)
 			if newNS != nil && strings.ToLower(request.NewName) != strings.ToLower(request.Namespace) {
-				sendResponse(w, models.ResponseError, "namespace already exists", nil, http.StatusBadRequest)
-				return
+				return RErrAlreadyExists.Prepend("Namespace")
 			}
 
 			// Update namespace
@@ -103,22 +96,22 @@ func NamespaceActionHandler(handlerData web.HandlerData, w http.ResponseWriter, 
 	}
 
 	// On any errors
-	if LogError(err) {
-		sendServerError(w)
-		return
+	if err != nil {
+		return err
 	}
 
 	sendResponse(w, models.ResponseSuccess, "", models.StringResponse{
 		String: namespace.Name,
 	})
+
+	return nil
 }
 
 // NamespaceListHandler lists namespaces
-func NamespaceListHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) {
+func NamespaceListHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) error {
 	namespaces, err := models.FindUserNamespaces(handlerData.Db, handlerData.User)
-	if LogError(err) {
-		sendServerError(w)
-		return
+	if err != nil {
+		return err
 	}
 
 	var snamespaces []string
@@ -129,4 +122,6 @@ func NamespaceListHandler(handlerData web.HandlerData, w http.ResponseWriter, r 
 	sendResponse(w, models.ResponseSuccess, "", models.StringSliceResponse{
 		Slice: snamespaces,
 	})
+
+	return nil
 }

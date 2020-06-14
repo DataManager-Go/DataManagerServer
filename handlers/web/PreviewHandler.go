@@ -23,11 +23,11 @@ const (
 )
 
 //PrevievFileHandler handler for previews
-func PrevievFileHandler(handlerData HandlerData, w http.ResponseWriter, r *http.Request) {
+func PrevievFileHandler(handlerData HandlerData, w http.ResponseWriter, r *http.Request) error {
 	//Return raw file if useragent in the list of raw useragents
 	if handlerData.Config.IsRawUseragent(strings.ToLower(r.UserAgent())) {
 		RawFileHandler(handlerData, w, r)
-		return
+		return nil
 	}
 
 	vars := mux.Vars(r)
@@ -37,19 +37,19 @@ func PrevievFileHandler(handlerData HandlerData, w http.ResponseWriter, r *http.
 	file, found, err := models.GetPublicFile(handlerData.Db, fileID)
 	if !found {
 		NotFoundHandler(handlerData, w, r)
-		return
+		return nil
 	}
 
 	//Send error
 	if LogError(err) {
 		http.Error(w, "Server error", http.StatusInternalServerError)
-		return
+		return nil
 	}
 
 	//Send not found if not public
 	if !file.IsPublic {
 		NotFoundHandler(handlerData, w, r)
-		return
+		return nil
 	}
 
 	templateData := models.PreviewTemplate{
@@ -64,6 +64,7 @@ func PrevievFileHandler(handlerData HandlerData, w http.ResponseWriter, r *http.
 
 	//Serve preview
 	LogError(servePreviewTemplate(handlerData.Config, w, templateData))
+	return nil
 }
 
 func servePreviewTemplate(config *models.Config, w http.ResponseWriter, data interface{}) error {

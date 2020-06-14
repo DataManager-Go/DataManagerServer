@@ -47,7 +47,7 @@ const (
 type Routes []Route
 
 // RouteFunction function for handling a route
-type RouteFunction func(web.HandlerData, http.ResponseWriter, *http.Request)
+type RouteFunction func(web.HandlerData, http.ResponseWriter, *http.Request) error
 
 // Routes
 var (
@@ -213,8 +213,21 @@ func RouteHandler(requestType requestType, handlerData *web.HandlerData, inner R
 			return
 		}
 
-		// Process request
-		inner(*handlerData, w, r)
+		// Process request and handle its error
+		if err := inner(*handlerData, w, r); err != nil {
+			if e, ok := err.(RequestError); ok {
+				// Send error response to user
+				sendResponse(w, models.ResponseError, e.String(), "", e.ResponseCode)
+
+				// Log user errors on debugmode
+				if log.GetLevel() == log.DebugLevel {
+					LogError(err)
+				}
+			} else {
+				sendServerError(w)
+				log.Error(err)
+			}
+		}
 
 		// Print duration of processing
 		if needDebug {

@@ -25,7 +25,7 @@ func readRequestLimited(w http.ResponseWriter, r *http.Request, p interface{}, l
 	return readRequestBody(w, io.LimitReader(r.Body, limit), p)
 }
 
-//parseUserInput tries to read the body and parse it into p. Returns true on success
+// Read the request body
 func readRequestBody(w http.ResponseWriter, r io.Reader, p interface{}) bool {
 	body, err := ioutil.ReadAll(r)
 
@@ -36,7 +36,7 @@ func readRequestBody(w http.ResponseWriter, r io.Reader, p interface{}) bool {
 	return !handleAndSendError(json.Unmarshal(body, p), w, models.WrongInputFormatError, http.StatusUnprocessableEntity)
 }
 
-//LogError returns true on error
+// LogError returns true on error
 func LogError(err error, context ...map[string]interface{}) bool {
 	if err == nil {
 		return false
@@ -50,7 +50,7 @@ func LogError(err error, context ...map[string]interface{}) bool {
 	return true
 }
 
-//AllowedSchemes schemes that are allowed in urls
+// AllowedSchemes schemes that are allowed in urls
 var AllowedSchemes = []string{"http", "https"}
 
 func isValidHTTPURL(inp string) bool {
@@ -119,29 +119,29 @@ func downloadHTTP(user *models.User, url string, f *os.File, file *models.File) 
 		return 0, err
 	}
 
-	//Don't read content on http error
+	// Don't read content on http error
 	if res.StatusCode < 200 || res.StatusCode > 299 {
 		return res.StatusCode, nil
 	}
 
-	//Check if file is too large
+	// Check if file is too large
 	if user.HasUploadLimit() && res.ContentLength > user.Role.MaxURLcontentSize {
 		return res.StatusCode, errors.New("File too large")
 	}
 
-	//read response
+	// Read response
 	var reader io.Reader
 	if user.HasUploadLimit() {
-		//Use limited reader if user has limited download content size
+		// Use limited reader if user has limited download content size
 		reader = io.LimitReader(res.Body, user.Role.MaxURLcontentSize)
 	} else {
-		//use body as reader to read everything
+		// use body as reader to read everything
 		reader = res.Body
 	}
 
 	hash := crc32.NewIEEE()
 
-	//Save body in file
+	// Save body in file
 	size, err := io.Copy(io.MultiWriter(f, hash), reader)
 	if LogError(err) {
 		return 0, err

@@ -10,16 +10,15 @@ import (
 )
 
 // Login login handler
-func Login(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) {
+func Login(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) error {
 	var request models.CredentialsRequest
 
 	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
-		return
+		return nil
 	}
 
 	if len(request.Password) == 0 || len(request.Username) == 0 {
-		sendResponse(w, models.ResponseError, "input missing", nil, http.StatusUnprocessableEntity)
-		return
+		return RErrMissing.Prepend("Input")
 	}
 
 	user := models.User{
@@ -29,8 +28,7 @@ func Login(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) 
 
 	session, err := user.Login(handlerData.Db, request.MachineID)
 	if err != nil {
-		sendResponse(w, models.ResponseError, "Invalid credentials", nil)
-		return
+		return RErrInvalid.Append("credentials")
 	}
 
 	if session != nil {
@@ -39,26 +37,27 @@ func Login(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) 
 			Namespace: user.GetDefaultNamespaceName(),
 		})
 	} else {
-		sendResponse(w, models.ResponseError, "Error logging in", nil, http.StatusUnauthorized)
+		return NewRequestError("Error logging in", http.StatusUnauthorized)
 	}
+
+	return nil
 }
 
 // Register register handler
-func Register(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) {
+func Register(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) error {
 	if !handlerData.Config.Server.AllowRegistration {
 		sendResponse(w, models.ResponseError, "Server doesn't accept registrations", nil, http.StatusForbidden)
-		return
+		return nil
 	}
 
 	var request models.CredentialsRequest
 
 	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
-		return
+		return nil
 	}
 
 	if len(request.Password) == 0 || len(request.Username) == 0 {
-		sendResponse(w, models.ResponseError, "input missing", nil, http.StatusUnprocessableEntity)
-		return
+		return RErrMissing.Prepend("Input")
 	}
 
 	user := models.User{
@@ -68,10 +67,12 @@ func Register(handlerData web.HandlerData, w http.ResponseWriter, r *http.Reques
 
 	err := user.Register(handlerData.Db, handlerData.Config)
 	if err == models.ErrorUserAlreadyExists {
-		sendResponse(w, models.ResponseError, "User already exists", nil)
+		return RErrAlreadyExists.Prepend("User")
 	} else if err != nil {
-		return
+		return err
 	}
 
 	sendResponse(w, models.ResponseSuccess, "success", nil, http.StatusOK)
+
+	return nil
 }
