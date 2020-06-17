@@ -1,7 +1,30 @@
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
+<<<<<<< HEAD
 github.com/DataManager-Go/libdatamanager v1.3.2 h1:WMQfi9Uq412G/n1ZaoRjAMvd5lXFhDdspyyxRf8RCV8=
 github.com/DataManager-Go/libdatamanager v1.3.2/go.mod h1:OwF4DArBjLIwqLGZ9L1OA5sYJ1y1ijiYnIZSiACmIgA=
+=======
+github.com/DataManager-Go/libdatamanager v1.1.14 h1:Mric8SgGRISSp6N+Gl7AvpzLEfSeaAVyL+YnAqOr4d0=
+github.com/DataManager-Go/libdatamanager v1.1.14/go.mod h1:s2ywdIZpWEfgxJ7iMtCOdLCNaHVnO8dr7e9cE2NzgL4=
+github.com/DataManager-Go/libdatamanager v1.1.16 h1:HIHQQJeQRAoxyJGCb0kRRdD3FqZNyNFTneW6NxXma9M=
+github.com/DataManager-Go/libdatamanager v1.1.16/go.mod h1:s2ywdIZpWEfgxJ7iMtCOdLCNaHVnO8dr7e9cE2NzgL4=
+github.com/DataManager-Go/libdatamanager v1.1.18 h1:GZsgMas8Tx4q9buU/z0b5VDMIV0tOVKGDo1cbkS7msM=
+github.com/DataManager-Go/libdatamanager v1.1.18/go.mod h1:s2ywdIZpWEfgxJ7iMtCOdLCNaHVnO8dr7e9cE2NzgL4=
+github.com/DataManager-Go/libdatamanager v1.2.0 h1:rzl0CUXe+2kIF6cJT3R9pjA8wI2Z3HHceZZZrvTeyvE=
+github.com/DataManager-Go/libdatamanager v1.2.0/go.mod h1:s2ywdIZpWEfgxJ7iMtCOdLCNaHVnO8dr7e9cE2NzgL4=
+github.com/DataManager-Go/libdatamanager v1.2.1 h1:lTF8eNiaSyhPzdsHzPrSM/xKQskrK71uT/2ixhOF+Nc=
+github.com/DataManager-Go/libdatamanager v1.2.1/go.mod h1:s2ywdIZpWEfgxJ7iMtCOdLCNaHVnO8dr7e9cE2NzgL4=
+github.com/DataManager-Go/libdatamanager v1.2.4 h1:K5AHX32XPLO4RyU3WrE0tBSYVDAaWWrwuuKBMq5RMVs=
+github.com/DataManager-Go/libdatamanager v1.2.4/go.mod h1:s2ywdIZpWEfgxJ7iMtCOdLCNaHVnO8dr7e9cE2NzgL4=
+github.com/DataManager-Go/libdatamanager v1.2.7 h1:qwHmroP5vW4qZu7NX1tM80sYv4puNt/X9GtghQFmUOQ=
+github.com/DataManager-Go/libdatamanager v1.2.7/go.mod h1:QHVsduLyGDmvSh+OG5XUgijhjTBfWV+nP9zocWY7zt0=
+github.com/DataManager-Go/libdatamanager v1.2.9 h1:zdQbhJ5Qoq9qq2NlP3FzFreo7O4IpFFTX49gdvBgk3k=
+github.com/DataManager-Go/libdatamanager v1.2.9/go.mod h1:q3Nxbk8mvaiT9HRgRd0QkAPuh5mtAVrki7sTTaIbxCY=
+github.com/DataManager-Go/libdatamanager v1.3.0 h1:0WvHBwPgzX5GFsKYvMoF8WRgQJfr0+lBwI4e0CU+Exc=
+github.com/DataManager-Go/libdatamanager v1.3.0/go.mod h1:8QzTM9YaJte35gQJ6xZNgQdoyYwBKK6KUtdibrqDXiM=
+github.com/DataManager-Go/libdatamanager v1.3.1 h1:LIv3nVE7uaDovmHHMcbjTTEiBEkUWnN44IrleYKi2cc=
+github.com/DataManager-Go/libdatamanager v1.3.1/go.mod h1:OwF4DArBjLIwqLGZ9L1OA5sYJ1y1ijiYnIZSiACmIgA=
+>>>>>>> a93fe9d73cb1786529a0cd69ac5b68c346e7e6f3
 github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28 h1:nYoIExG+Z/gSLS9Jbpu6lnrh+m6e9gTxQfGhanTsExE=
 github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28/go.mod h1:j1kHFoYWAbLRPE5nyAAtODwUc0xwd2+ifPZ3uCAgv/g=
 github.com/JojiiOfficial/gaw v1.2.8 h1:crLd2hrRvTlCClZDtwqnr8AoVKs3uQAk8B2AdOfUCsg=
@@ -23,7 +46,12 @@ github.com/fatih/color v1.9.0 h1:8xPHl4/q1VyqGIPif1F+1V3Y3lSmrq01EabUW3CoW5s=
 github.com/fatih/color v1.9.0/go.mod h1:eQcE1qtQxscV5RaZvpXrrb8Drkc3/DdQ+uUYCNjL+zU=
 github.com/gabriel-vasile/mimetype v1.1.0 h1:+ahX+MvQPFve4kO9Qjjxf3j49i0ACdV236kJlOCRAnU=
 github.com/gabriel-vasile/mimetype v1.1.0/go.mod h1:6CDPel/o/3/s4+bp6kIbsWATq8pmgOisOPG40CJa6To=
+<<<<<<< HEAD
 github.com/go-sql-driver/mysql v1.5.0 h1:ozyZYNQW3x3HtqT1jira07DN2PArx2v7/mN66gGcHOs=
+=======
+github.com/go-sql-driver/mysql v1.4.1 h1:g24URVg0OFbNUTx9qqY1IRZ9D9z3iPyi5zKhQZpNwpA=
+github.com/go-sql-driver/mysql v1.4.1/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=
+>>>>>>> a93fe9d73cb1786529a0cd69ac5b68c346e7e6f3
 github.com/go-sql-driver/mysql v1.5.0/go.mod h1:DCzpHaOWr8IXmIStZouvnhqoel9Qv2LBy8hT2VhHyBg=
 github.com/golang-sql/civil v0.0.0-20190719163853-cb61b32ac6fe h1:lXe2qZdvpiX5WZkZR4hgp4KJVfY3nMkvmwbVkpv1rVY=
 github.com/golang-sql/civil v0.0.0-20190719163853-cb61b32ac6fe/go.mod h1:8vg3r2VgvsThLBIFL93Qb5yWzgyZWhEmBwUJWevAkK0=
@@ -31,6 +59,11 @@ github.com/gorilla/mux v1.7.4 h1:VuZ8uybHlWmqV03+zRzdwKL4tUnIp1MAQtp1mIFE1bc=
 github.com/gorilla/mux v1.7.4/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
 github.com/h2non/filetype v1.1.0 h1:Or/gjocJrJRNK/Cri/TDEKFjAR+cfG6eK65NGYB6gBA=
 github.com/h2non/filetype v1.1.0/go.mod h1:319b3zT68BvV+WRj7cwy856M2ehB3HqNOt6sy1HndBY=
+<<<<<<< HEAD
+=======
+github.com/jinzhu/gorm v1.9.12 h1:Drgk1clyWT9t9ERbzHza6Mj/8FY/CqMyVzOiHviMo6Q=
+github.com/jinzhu/gorm v1.9.12/go.mod h1:vhTjlKSJUTWNtcbQtrMBFCxy7eXTzeCAzfL5fBZT/Qs=
+>>>>>>> a93fe9d73cb1786529a0cd69ac5b68c346e7e6f3
 github.com/jinzhu/gorm v1.9.13 h1:fcdacwmUcoyon8XHkQrdPJZ7pnHAYclHZ6iLYER5nX4=
 github.com/jinzhu/gorm v1.9.13/go.mod h1:C0zfmO9z9J61PGrs46nfRkfsq0/8ErGTKBxyudR2KvI=
 github.com/jinzhu/inflection v1.0.0 h1:K317FqzuhWc8YvSVlFMCCUb36O/S9MCKRDI7QkRKD/E=
