@@ -4,8 +4,9 @@ import (
 	"fmt"
 
 	"github.com/DataManager-Go/DataManagerServer/models"
-	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 //ConnectToDatabase connects to database
@@ -15,13 +16,15 @@ func ConnectToDatabase(config *models.Config) (*gorm.DB, error) {
 		sslMode = "sslmode='" + config.Server.Database.SSLMode + "'"
 	}
 
-	db, err := gorm.Open("postgres", fmt.Sprintf("host='%s' port='%d' user='%s' dbname='%s' password='%s' %s", config.Server.Database.Host, config.Server.Database.DatabasePort, config.Server.Database.Username, config.Server.Database.Database, config.Server.Database.Pass, sslMode))
+	db, err := gorm.Open(postgres.Open(fmt.Sprintf("host='%s' port='%d' user='%s' dbname='%s' password='%s' %s", config.Server.Database.Host, config.Server.Database.DatabasePort, config.Server.Database.Username, config.Server.Database.Database, config.Server.Database.Pass, sslMode)), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
 
+	db = db.Debug()
+
 	//Automigration
-	err = db.AutoMigrate(
+	db.AutoMigrate(
 		&models.Role{},
 		&models.Namespace{},
 		&models.Tag{},
@@ -29,7 +32,7 @@ func ConnectToDatabase(config *models.Config) (*gorm.DB, error) {
 		&models.Group{},
 		&models.User{},
 		&models.LoginSession{},
-	).Error
+	)
 
 	//Return error if automigration fails
 	if err != nil {

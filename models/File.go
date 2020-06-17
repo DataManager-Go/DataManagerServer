@@ -10,8 +10,8 @@ import (
 
 	"github.com/JojiiOfficial/gaw"
 	"github.com/JojiiOfficial/shred"
-	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
 var shredder = shred.Shredder{}
@@ -352,7 +352,7 @@ func (file *File) Save(db *gorm.DB) error {
 
 // GetCount get count if file
 func (file File) GetCount(db *gorm.DB, fileID uint) (uint, error) {
-	var c uint
+	var c int64
 
 	fileFilter := File{
 		Model: file.Model,
@@ -384,7 +384,7 @@ func (file File) GetCount(db *gorm.DB, fileID uint) (uint, error) {
 	// Execute statement
 	err := del.Count(&c).Error
 
-	return c, err
+	return uint(c), err
 }
 
 // GetPublicFile returns a file which is public
@@ -393,7 +393,7 @@ func GetPublicFile(db *gorm.DB, publicFilename string) (*File, bool, error) {
 	err := db.Model(&File{}).Where("public_filename = ? AND is_public=true", publicFilename).First(&file).Error
 	if err != nil {
 		// Check error. Send server error if error is not "not found"
-		if gorm.IsRecordNotFoundError(err) {
+		if err == gorm.ErrRecordNotFound {
 			return nil, false, nil
 		}
 
@@ -483,7 +483,7 @@ func (file *File) SetUniqueFilename(db *gorm.DB) bool {
 
 	for i := 0; i < 5; i++ {
 		localName = gaw.RandString(40)
-		var c int
+		var c int64
 		db.Model(&File{}).Where(&File{LocalName: localName}).Count(&c)
 		if c == 0 {
 			file.LocalName = localName

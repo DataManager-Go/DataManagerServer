@@ -9,8 +9,8 @@ import (
 
 	"github.com/DataManager-Go/DataManagerServer/models"
 	"github.com/JojiiOfficial/gaw"
-	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
 //HandlerData handlerData for web
