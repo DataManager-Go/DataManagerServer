@@ -14,8 +14,8 @@ import (
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/alecthomas/kingpin"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
-	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 const version = "v3.12.0"

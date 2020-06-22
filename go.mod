@@ -17,5 +17,5 @@ require (
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
 	github.com/sbani/go-humanizer v0.3.1
 	github.com/sirupsen/logrus v1.6.0
-	gopkg.in/alecthomas/kingpin.v2 v2.2.6
+	github.com/alecthomas/kingpin v0.0.0-20200323085623-b6657d9477a6
 )
