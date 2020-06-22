@@ -41,6 +41,7 @@ type configServer struct {
 	Roles                     roleConfig
 	AllowRegistration         bool          `default:"false"`
 	DeleteUnusedSessionsAfter time.Duration `default:"10m"`
+	SearchInOtherNamespaces   bool
 }
 
 type roleConfig struct {
@@ -125,6 +126,7 @@ func InitConfig(confFile string, createMode bool) (*Config, bool) {
 				},
 				AllowRegistration:         false,
 				DeleteUnusedSessionsAfter: 10 * time.Minute,
+				SearchInOtherNamespaces:   true,
 				Roles: roleConfig{
 					DefaultRole: 1,
 					Roles: []Role{

@@ -123,7 +123,7 @@ func (file File) IsInGroupList(groups []string) bool {
 }
 
 // FindFiles finds file
-func FindFiles(db *gorm.DB, file File) ([]File, error) {
+func FindFiles(db *gorm.DB, config *Config, file File, ignoreNamespace ...bool) ([]File, error) {
 	var files []File
 	a := db.Model(&File{})
 
@@ -139,7 +139,11 @@ func FindFiles(db *gorm.DB, file File) ([]File, error) {
 
 	// Filter by namespace ID and uploader
 	if file.Namespace != nil {
-		a = a.Where("namespace_id = ? AND uploader = ?", file.Namespace.ID, file.Namespace.UserID)
+		a = a.Where("uploader = ?", file.Namespace.UserID)
+
+		if len(ignoreNamespace) == 0 {
+			a = a.Where("namespace_id = ?", file.Namespace.ID)
+		}
 	}
 
 	// Get file to delete
@@ -153,6 +157,14 @@ func FindFiles(db *gorm.DB, file File) ([]File, error) {
 		return nil, err
 	}
 
+	// Try to find file without filtering for namespace
+	if config.Server.SearchInOtherNamespaces &&
+		len(files) == 0 &&
+		len(ignoreNamespace) == 0 {
+
+		return FindFiles(db, config, file, true)
+	}
+
 	return files, nil
 }
 
@@ -160,7 +172,7 @@ func FindFiles(db *gorm.DB, file File) ([]File, error) {
 func FindFile(db *gorm.DB, fileID, userID uint) (*File, error) {
 	a := db.Model(&File{}).Where("uploader = ?", userID)
 
-	// Include ID if set. Otherwise use namespace
+	// Include ID if set
 	if fileID != 0 {
 		a = a.Where("id = ?", fileID)
 	}

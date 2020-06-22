@@ -375,7 +375,7 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 	}
 
 	// Find files
-	files, err := models.FindFiles(handlerData.Db, models.File{
+	files, err := models.FindFiles(handlerData.Db, handlerData.Config, models.File{
 		Model: gorm.Model{
 			ID: request.FileID,
 		},
