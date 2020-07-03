@@ -4,6 +4,8 @@ github.com/DataManager-Go/libdatamanager v1.3.2 h1:WMQfi9Uq412G/n1ZaoRjAMvd5lXFh
 github.com/DataManager-Go/libdatamanager v1.3.2/go.mod h1:OwF4DArBjLIwqLGZ9L1OA5sYJ1y1ijiYnIZSiACmIgA=
 github.com/DataManager-Go/libdatamanager v1.3.3 h1:mLRWu8j1GdCgdUXJUpqJOowEhsfKQghsA++gNQzPqgs=
 github.com/DataManager-Go/libdatamanager v1.3.3/go.mod h1:IVnf+kpO0W+qkA4xa0bm/7o2RGS7vsTUt4BmTfKqVDY=
+github.com/DataManager-Go/libdatamanager v1.3.4 h1:CeMakPA+ntlWKuqNe6WFimiFG3FKUoNzDsR3Eex6WOM=
+github.com/DataManager-Go/libdatamanager v1.3.4/go.mod h1:DjxzXo2LkUjUWk6ihkRpdnGkm3jmKC31oNO0KqmgrTc=
 github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28 h1:nYoIExG+Z/gSLS9Jbpu6lnrh+m6e9gTxQfGhanTsExE=
 github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28/go.mod h1:j1kHFoYWAbLRPE5nyAAtODwUc0xwd2+ifPZ3uCAgv/g=
 github.com/JojiiOfficial/gaw v1.2.8 h1:crLd2hrRvTlCClZDtwqnr8AoVKs3uQAk8B2AdOfUCsg=
@@ -45,6 +47,8 @@ github.com/jinzhu/inflection v1.0.0/go.mod h1:h+uFLlag+Qp1Va5pdKtLDYj+kHp5pxUVkr
 github.com/jinzhu/now v1.0.1/go.mod h1:d3SSVoowX0Lcu0IBviAWJpolVfI5UJVZZ7cO71lE/z8=
 github.com/klauspost/compress v1.10.8 h1:eLeJ3dr/Y9+XRfJT4l+8ZjmtB5RPJhucH2HeCV5+IZY=
 github.com/klauspost/compress v1.10.8/go.mod h1:aoV0uJVorq1K+umq18yTdKaF57EivdYsUV+/s2qKfXs=
+github.com/klauspost/compress v1.10.10 h1:a/y8CglcM7gLGYmlbP/stPE5sR3hbhFRUjCBfd/0B3I=
+github.com/klauspost/compress v1.10.10/go.mod h1:aoV0uJVorq1K+umq18yTdKaF57EivdYsUV+/s2qKfXs=
 github.com/klauspost/pgzip v1.2.4 h1:TQ7CNpYKovDOmqzRHKxJh0BeaBI7UdQZYc6p7pMQh1A=
 github.com/klauspost/pgzip v1.2.4/go.mod h1:Ch1tH69qFZu15pkjo5kYi6mth2Zzwzt50oCQKQE9RUs=
 github.com/konsorten/go-windows-terminal-sequences v1.0.3/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
