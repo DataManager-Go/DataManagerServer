@@ -1,10 +1,10 @@
 package web
 
 import (
+	"html/template"
 	"net/http"
 	"path"
 	"strings"
-	"text/template"
 
 	"github.com/DataManager-Go/DataManagerServer/models"
 	libdm "github.com/DataManager-Go/libdatamanager"
