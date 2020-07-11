@@ -108,7 +108,7 @@ func (sce *sessionCacheEntry) update() bool {
 	return true
 }
 
-// Allow 60s cache
+// Allow 10s cache
 const (
 	maxCacheValidTime     = int64(10)
 	maxRequestsUntilCheck = uint32(10)
