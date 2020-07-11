@@ -641,3 +641,8 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 
 	return nil
 }
+
+// Stats for user
+func Stats(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) error {
+	return nil
+}

@@ -75,6 +75,13 @@ var (
 			HandlerFunc: Register,
 			HandlerType: defaultRequest,
 		},
+		Route{
+			Name:        "stats",
+			Pattern:     "/user/stats",
+			Method:      GetMethod,
+			HandlerFunc: Stats,
+			HandlerType: sessionRequest,
+		},
 
 		// Files
 		Route{
@@ -146,7 +153,6 @@ var (
 			HandlerFunc: NamespaceListHandler,
 			HandlerType: sessionRequest,
 		},
-		// TODO add stats
 	}
 )
 
