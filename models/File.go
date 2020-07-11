@@ -493,7 +493,7 @@ func (file *File) SetEncryption(encription string) *File {
 func (file *File) SetUniqueFilename(db *gorm.DB) bool {
 	var localName string
 
-	for i := 0; i < 5; i++ {
+	for i := 0; i < 7; i++ {
 		localName = gaw.RandString(40)
 		var c int
 		db.Model(&File{}).Where(&File{LocalName: localName}).Count(&c)

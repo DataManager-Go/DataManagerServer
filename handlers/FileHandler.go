@@ -95,7 +95,13 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 		}
 
 		// Select namespace
-		namespace = file.Namespace
+		if len(request.Attributes.Namespace) > 0 {
+			// Find namespace specified by client
+			namespace = models.FindNamespace(handlerData.Db, request.Attributes.Namespace, handlerData.User)
+			file.Namespace = namespace
+		} else {
+			namespace = file.Namespace
+		}
 	} else {
 		if len(request.Name) == 0 {
 			request.Name = gaw.RandString(25)

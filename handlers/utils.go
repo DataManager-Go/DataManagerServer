@@ -163,7 +163,7 @@ var (
 )
 
 const (
-	bufferSize = 1024
+	bufferSize = 1024 * 1024
 	boundary   = "MachliJalKiRaniHaiJeevanUskaPaaniHai"
 )
 
