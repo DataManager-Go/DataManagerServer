@@ -5,11 +5,12 @@ import (
 
 	"github.com/DataManager-Go/DataManagerServer/handlers/web"
 	"github.com/DataManager-Go/DataManagerServer/models"
+	libdm "github.com/DataManager-Go/libdatamanager"
 )
 
 // Ping handles ping request
 func Ping(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) error {
-	var request models.PingRequest
+	var request libdm.PingRequest
 	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
 		return nil
 	}

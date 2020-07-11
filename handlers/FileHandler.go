@@ -23,7 +23,7 @@ import (
 
 //UploadfileHandler handler for uploading files
 func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) error {
-	var request models.UploadRequest
+	var request libdm.UploadRequestStruct
 
 	// Get data from header
 	requestData := r.Header.Get(models.HeaderRequest)
@@ -50,14 +50,14 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 
 	// Validating request, for desired upload Type
 	switch request.UploadType {
-	case models.FileUploadType:
+	case libdm.FileUploadType:
 		{
 			// Check if user is allowed to upload files
 			if !handlerData.User.CanUploadFiles() {
 				return RErrNotAllowed.Append("to upload files")
 			}
 		}
-	case models.URLUploadType:
+	case libdm.URLUploadType:
 		{
 			// Check if user is allowed to upload URLs
 			if !handlerData.User.AllowedToUploadURLs() {
@@ -167,7 +167,7 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 
 	// Read from the desired source (file/url)
 	switch request.UploadType {
-	case models.FileUploadType:
+	case libdm.FileUploadType:
 		{
 			// Read requestd file
 			size, checksum, err := readMultipartToFile(f, r.Body, w)
@@ -194,7 +194,7 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 			file.FileSize = size
 			file.Checksum = checksum
 		}
-	case models.URLUploadType:
+	case libdm.URLUploadType:
 		{
 			// Read from HTTP request
 			status, err := downloadHTTP(handlerData.User, request.URL, f, file)
@@ -243,7 +243,7 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 
 // ListFilesHandler handler for listing files
 func ListFilesHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) error {
-	var request models.FileListRequest
+	var request libdm.FileListRequest
 	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
 		return nil
 	}
@@ -340,7 +340,7 @@ func ListFilesHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 
 // FileHandler handler for updating files
 func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) error {
-	var request models.FileRequest
+	var request libdm.FileRequest
 	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
 		return nil
 	}

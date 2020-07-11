@@ -5,6 +5,7 @@ import (
 
 	"github.com/DataManager-Go/DataManagerServer/handlers/web"
 	"github.com/DataManager-Go/DataManagerServer/models"
+	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/gorilla/mux"
 	"gorm.io/gorm"
@@ -29,7 +30,7 @@ func AttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 	}
 
 	// Read request body
-	var request models.UpdateAttributeRequest
+	var request libdm.UpdateAttributeRequest
 	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
 		return nil
 	}

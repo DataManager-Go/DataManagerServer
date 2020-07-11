@@ -6,6 +6,7 @@ import (
 
 	"github.com/DataManager-Go/DataManagerServer/handlers/web"
 	"github.com/DataManager-Go/DataManagerServer/models"
+	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/gorilla/mux"
 )
@@ -20,7 +21,7 @@ func NamespaceActionHandler(handlerData web.HandlerData, w http.ResponseWriter, 
 		return RErrBadRequest
 	}
 
-	var request models.NamespaceRequest
+	var request libdm.NamespaceRequest
 	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
 		return nil
 	}
