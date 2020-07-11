@@ -21,6 +21,8 @@ func ConnectToDatabase(config *models.Config) (*gorm.DB, error) {
 		return nil, err
 	}
 
+	//	db = db.Debug()
+
 	//Automigration
 	db.AutoMigrate(
 		&models.Role{},

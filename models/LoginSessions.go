@@ -1,6 +1,8 @@
 package models
 
 import (
+	"sync"
+
 	"github.com/JojiiOfficial/gaw"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -14,6 +16,8 @@ type LoginSession struct {
 	Token     string
 	Requests  int64
 	MachineID string
+
+	mx sync.Mutex `gorm:"-"`
 }
 
 // SessionTokenLength length of session token
@@ -21,23 +25,49 @@ const SessionTokenLength = 64
 
 //GetUserFromSession return user from session
 func GetUserFromSession(db *gorm.DB, token string) (*User, error) {
-	var session LoginSession
+	var err error
+
+	// Try to get session from cache
+	session := sessionCache.getSession(token)
+	if session == nil {
+		// Load from DB if not cached
+		session, err = loadSession(token, db)
+		if err != nil {
+			return nil, err
+		}
+
+		// Add token to cache
+		sessionCache.addSession(session, db)
+	}
+
+	// Increase request counter
+	go func() {
+		session.mx.Lock()
+		defer session.mx.Unlock()
+
+		session.Requests++
+		err = db.Model(&LoginSession{}).Save(session).Error
+		if err != nil {
+			log.Error(err)
+		}
+	}()
+
+	return session.User, nil
+}
+
+func loadSession(token string, db *gorm.DB) (*LoginSession, error) {
+	var ss LoginSession
+
+	// load session from db
 	err := db.Model(&LoginSession{}).Where(&LoginSession{
 		Token: token,
-	}).Preload("User").Preload("User.Role").Find(&session).Error
+	}).Preload("User").Preload("User.Role").Find(&ss).Error
 
 	if err != nil {
 		return nil, err
 	}
 
-	// Increase request counter
-	session.Requests++
-	err = db.Save(&session).Error
-	if err != nil {
-		log.Error(err)
-	}
-
-	return session.User, nil
+	return &ss, nil
 }
 
 // NewSession create new login session
