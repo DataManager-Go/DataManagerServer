@@ -43,10 +43,12 @@ func GroupsFromStringArr(arr []string, namespace Namespace, user *User) []Group 
 
 // GroupArrToStringArr return string arr from group
 func GroupArrToStringArr(groups []Group) []string {
-	var str []string
-	for _, group := range groups {
-		str = append(str, group.Name)
+	str := make([]string, len(groups))
+
+	for i := range groups {
+		str[i] = groups[i].Name
 	}
+
 	return str
 }
 

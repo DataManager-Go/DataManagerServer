@@ -9,6 +9,9 @@ import (
 	"gorm.io/gorm"
 )
 
+// ErrorUserAlreadyExists error if user exists
+var ErrorUserAlreadyExists = errors.New("user already exists")
+
 // User user in db
 type User struct {
 	gorm.Model

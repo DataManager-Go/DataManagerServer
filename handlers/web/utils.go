@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/DataManager-Go/DataManagerServer/models"
+	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/JojiiOfficial/gaw"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -43,7 +44,7 @@ func autoSetContentType(w http.ResponseWriter, file string) {
 
 //Set Content-Type
 func setContentType(w http.ResponseWriter, contentType string) {
-	w.Header().Set(models.HeaderContentType, fmt.Sprintf("%s; charset=utf-8", contentType))
+	w.Header().Set(libdm.HeaderContentType, fmt.Sprintf("%s; charset=utf-8", contentType))
 }
 
 //Serve static file
@@ -59,7 +60,7 @@ func serveStaticFile(config *models.Config, file string, w http.ResponseWriter, 
 	if len(contentType) == 0 || len(contentType[0]) == 0 {
 		autoSetContentType(w, file)
 	} else {
-		w.Header().Set(models.HeaderContentType, contentType[0])
+		w.Header().Set(libdm.HeaderContentType, contentType[0])
 	}
 
 	serveFileStream(config, f, w)

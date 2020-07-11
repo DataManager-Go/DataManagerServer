@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/DataManager-Go/DataManagerServer/handlers/web"
-	"github.com/DataManager-Go/DataManagerServer/models"
 	libdm "github.com/DataManager-Go/libdatamanager"
 )
 
@@ -22,10 +21,10 @@ func Ping(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) e
 		payload = "Authorized pong"
 	}
 
-	response := models.StringResponse{
+	response := libdm.StringResponse{
 		String: payload,
 	}
-	sendResponse(w, models.ResponseSuccess, "", response)
+	sendResponse(w, libdm.ResponseSuccess, "", response)
 
 	return nil
 }

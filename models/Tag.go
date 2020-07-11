@@ -50,10 +50,12 @@ func FindTags(db *gorm.DB, sTags []string, namespace *Namespace) []Tag {
 
 // TagArrToStringArr return string arr from tags
 func TagArrToStringArr(tags []Tag) []string {
-	var str []string
-	for _, tag := range tags {
-		str = append(str, tag.Name)
+	str := make([]string, len(tags))
+
+	for i := range tags {
+		str[i] = tags[i].Name
 	}
+
 	return str
 }
 

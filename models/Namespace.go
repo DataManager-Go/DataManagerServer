@@ -57,7 +57,7 @@ func FindUserNamespaces(db *gorm.DB, user *User) ([]Namespace, error) {
 	return namespaces, nil
 }
 
-//IsValid return true if namespace is valid
+// IsValid return true if namespace is valid
 func (namespace *Namespace) IsValid() bool {
 	return (namespace != nil && namespace.ID > 0)
 }

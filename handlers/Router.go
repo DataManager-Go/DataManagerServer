@@ -7,6 +7,8 @@ import (
 
 	"github.com/DataManager-Go/DataManagerServer/handlers/web"
 	"github.com/DataManager-Go/DataManagerServer/models"
+	"github.com/DataManager-Go/libdatamanager"
+	libdm "github.com/DataManager-Go/libdatamanager"
 
 	"github.com/JojiiOfficial/gaw"
 	"gorm.io/gorm"
@@ -223,7 +225,7 @@ func RouteHandler(requestType requestType, handlerData *web.HandlerData, inner R
 		if err := inner(*handlerData, w, r); err != nil {
 			if e, ok := err.(*RequestError); ok {
 				// Send error response to user
-				sendResponse(w, models.ResponseError, e.String(), "", e.ResponseCode)
+				sendResponse(w, libdatamanager.ResponseError, e.String(), "", e.ResponseCode)
 
 				// Log user errors on debugmode
 				if log.GetLevel() == log.DebugLevel {
@@ -257,7 +259,7 @@ func (requestType requestType) validate(handlerData *web.HandlerData, r *http.Re
 			// Check Token validity by its length
 			if len(authHandler.GetBearer()) != 64 {
 				log.Error("Invalid token len %d", len(authHandler.GetBearer()))
-				sendResponse(w, models.ResponseError, "Invalid token", http.StatusUnauthorized)
+				sendResponse(w, libdm.ResponseError, "Invalid token", http.StatusUnauthorized)
 				return false
 			}
 
@@ -268,7 +270,7 @@ func (requestType requestType) validate(handlerData *web.HandlerData, r *http.Re
 					log.Error("Can't get user")
 				}
 
-				sendResponse(w, models.ResponseError, "Invalid token", http.StatusUnauthorized)
+				sendResponse(w, libdm.ResponseError, "Invalid token", http.StatusUnauthorized)
 				return false
 			}
 

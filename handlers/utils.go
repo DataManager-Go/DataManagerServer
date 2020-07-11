@@ -33,7 +33,7 @@ func readRequestBody(w http.ResponseWriter, r io.Reader, p interface{}) bool {
 		return false
 	}
 
-	return !handleAndSendError(json.Unmarshal(body, p), w, models.WrongInputFormatError, http.StatusUnprocessableEntity)
+	return !handleAndSendError(json.Unmarshal(body, p), w, WrongInputFormatError, http.StatusUnprocessableEntity)
 }
 
 // LogError returns true on error

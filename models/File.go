@@ -35,16 +35,9 @@ type File struct {
 	Checksum       string
 }
 
-// FileAttributes attributes for a file
-type FileAttributes struct {
-	Tags      []string `json:"tags,omitempty"`
-	Groups    []string `json:"groups,omitempty"`
-	Namespace string   `json:"ns"`
-}
-
 // GetAttributes get file attributes
-func (file File) GetAttributes() FileAttributes {
-	return FileAttributes{
+func (file File) GetAttributes() libdm.FileAttributes {
+	return libdm.FileAttributes{
 		Groups:    GroupArrToStringArr(file.Groups),
 		Tags:      TagArrToStringArr(file.Tags),
 		Namespace: file.GetNamespace().Name,

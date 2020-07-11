@@ -14,7 +14,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-//Config config for the server
+// Config config for the server
 type Config struct {
 	Server    configServer
 	Webserver webserverConf
@@ -62,7 +62,7 @@ type configDBstruct struct {
 	SSLMode      string
 }
 
-//Config for HTTPS
+// Config for HTTPS
 type configTLSStruct struct {
 	Enabled       bool   `default:"false"`
 	ListenAddress string `default:":443"`
@@ -70,19 +70,19 @@ type configTLSStruct struct {
 	KeyFile       string
 }
 
-//Config for HTTP
+// Config for HTTP
 type configHTTPstruct struct {
 	Enabled       bool   `default:"false"`
 	ListenAddress string `default:":80"`
 }
 
-//GetDefaultConfig gets the default config path
+// GetDefaultConfig gets the default config path
 func GetDefaultConfig() string {
 	return path.Join(constants.DataDir, constants.DefaultConfigFile)
 }
 
-//InitConfig inits the config
-//Returns true if system should exit
+// InitConfig inits the config
+// Returns true if system should exit
 func InitConfig(confFile string, createMode bool) (*Config, bool) {
 	var config Config
 	if len(confFile) == 0 {
@@ -197,7 +197,7 @@ func InitConfig(confFile string, createMode bool) (*Config, bool) {
 	return &config, false
 }
 
-//Check check the config file of logical errors
+// Check check the config file of logical errors
 func (config *Config) Check() bool {
 	if !config.Webserver.HTTP.Enabled && !config.Webserver.HTTPS.Enabled {
 		log.Error("You must at least enable one of the server protocols!")
@@ -220,13 +220,13 @@ func (config *Config) Check() bool {
 		}
 	}
 
-	//Check DB port
+	// Check DB port
 	if config.Server.Database.DatabasePort < 1 || config.Server.Database.DatabasePort > 65535 {
 		log.Errorf("Invalid port for database %d\n", config.Server.Database.DatabasePort)
 		return false
 	}
 
-	//Check file exists file storage dir
+	// Check file exists file storage dir
 	if !DirExists(config.Server.PathConfig.FileStore) {
 		err := os.Mkdir(config.Server.PathConfig.FileStore, 0700)
 		if err != nil {
@@ -236,7 +236,7 @@ func (config *Config) Check() bool {
 		log.Infof("Filestorage path '%s' created", config.Server.PathConfig.FileStore)
 	}
 
-	//Check default role
+	// Check default role
 	if config.GetDefaultRole() == nil {
 		log.Fatalln("Can't find default role. You need to specify the ID of the role to use as default")
 		return false
@@ -253,33 +253,33 @@ func (config *Config) Check() bool {
 	return true
 }
 
-//IsRawUseragent return true if file should be raw depending on useragent
+// IsRawUseragent return true if file should be raw depending on useragent
 func (config Config) IsRawUseragent(agent string) bool {
 	agent = strings.ToLower(agent)
 	return gaw.IsInStringArrayContains(agent, config.Webserver.UserAgentsRawfile)
 }
 
-//GetStorageFile return the path and file for an uploaded file
+// GetStorageFile return the path and file for an uploaded file
 func (config Config) GetStorageFile(fileName string) string {
 	return path.Join(config.Server.PathConfig.FileStore, fileName)
 }
 
-//GetHTMLFile return path of html file
+// GetHTMLFile return path of html file
 func (config Config) GetHTMLFile(fileName string) string {
 	return path.Join(config.Webserver.HTMLFiles, fileName)
 }
 
-//GetStaticFile return path of html file
+// GetStaticFile return path of html file
 func (config Config) GetStaticFile(fileName string) string {
 	return path.Join(config.Webserver.HTMLFiles, "static", fileName)
 }
 
-//GetTemplateFile return path of html file
+// GetTemplateFile return path of html file
 func (config Config) GetTemplateFile(fileName string) string {
 	return path.Join(config.Webserver.HTMLFiles, "templates", fileName)
 }
 
-//GetDefaultRole return the path and file for an uploaded file
+// GetDefaultRole return the path and file for an uploaded file
 func (config Config) GetDefaultRole() *Role {
 	for rI, role := range config.Server.Roles.Roles {
 		if role.ID == config.Server.Roles.DefaultRole {
@@ -290,14 +290,8 @@ func (config Config) GetDefaultRole() *Role {
 	return nil
 }
 
-// DirExists return true if dir exists
+// DirExists returns true if dir exists
 func DirExists(path string) bool {
 	s, err := os.Stat(path)
-	if err == nil {
-		return s.IsDir()
-	}
-	if os.IsNotExist(err) {
-		return false
-	}
-	return false
+	return err == nil && s != nil && s.IsDir()
 }

@@ -97,12 +97,12 @@ func AttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 		case "get":
 			{
 				var tags []models.Tag
-				err := handlerData.Db.Model(&models.Tag{}).Where("namespace_id=?", namespace.ID).Find(&tags).Error
+				err := handlerData.Db.Model(&models.Tag{}).Distinct("Name").Where("namespace_id=?", namespace.ID).Find(&tags).Error
 				if err != nil {
 					return err
 				}
 
-				sendResponse(w, models.ResponseSuccess, "", models.TagArrToStringArr(tags))
+				sendResponse(w, libdm.ResponseSuccess, "", models.TagArrToStringArr(tags))
 				return nil
 			}
 		case "create":
@@ -125,7 +125,7 @@ func AttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 					return err
 				}
 
-				sendResponse(w, models.ResponseSuccess, "", nil)
+				sendResponse(w, libdm.ResponseSuccess, "", nil)
 				return nil
 			}
 		}
@@ -175,12 +175,12 @@ func AttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 		case "get":
 			{
 				var groups []models.Group
-				err := handlerData.Db.Model(&models.Group{}).Where("namespace_id=?", namespace.ID).Find(&groups).Error
+				err := handlerData.Db.Model(&models.Group{}).Distinct("Name").Where("namespace_id=?", namespace.ID).Find(&groups).Error
 				if err != nil {
 					return err
 				}
 
-				sendResponse(w, models.ResponseSuccess, "", models.GroupArrToStringArr(groups))
+				sendResponse(w, libdm.ResponseSuccess, "", models.GroupArrToStringArr(groups))
 				return nil
 			}
 		case "create":
@@ -206,7 +206,7 @@ func AttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 		}
 	}
 
-	sendResponse(w, models.ResponseSuccess, "", nil)
+	sendResponse(w, libdm.ResponseSuccess, "", nil)
 	return nil
 }
 
@@ -242,13 +242,13 @@ func UserAttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r 
 		nsMap[groups[i].Namespace.Name] = append(t, groups[i])
 	}
 
-	var response models.UserAttributeDataResponse
-	response.Namespace = make([]models.Namespaceinfo, len(nsMap))
+	var response libdm.UserAttributeDataResponse
+	response.Namespace = make([]libdm.Namespaceinfo, len(nsMap))
 
-	i := 0
 	// Loop map and build response
+	var i int
 	for ns, groups := range nsMap {
-		respItem := models.Namespaceinfo{Name: ns}
+		respItem := libdm.Namespaceinfo{Name: ns}
 		respItem.Groups = make([]string, len(groups))
 		for i := range groups {
 			respItem.Groups[i] = groups[i].Name
@@ -267,13 +267,13 @@ func UserAttributeHandler(handlerData web.HandlerData, w http.ResponseWriter, r 
 	for i := range nss {
 		_, ok := nsMap[nss[i].Name]
 		if !ok {
-			response.Namespace = append(response.Namespace, models.Namespaceinfo{
+			response.Namespace = append(response.Namespace, libdm.Namespaceinfo{
 				Name: nss[i].Name,
 			})
 		}
 	}
 
 	// Send response
-	sendResponse(w, models.ResponseSuccess, "", response)
+	sendResponse(w, libdm.ResponseSuccess, "", response)
 	return nil
 }

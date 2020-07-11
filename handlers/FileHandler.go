@@ -26,7 +26,7 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 	var request libdm.UploadRequestStruct
 
 	// Get data from header
-	requestData := r.Header.Get(models.HeaderRequest)
+	requestData := r.Header.Get(libdm.HeaderRequest)
 	if len(requestData) == 0 {
 		return RErrBadRequest
 	}
@@ -229,7 +229,7 @@ func UploadfileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *ht
 		return err
 	}
 
-	sendResponse(w, models.ResponseSuccess, "", models.UploadResponse{
+	sendResponse(w, libdm.ResponseSuccess, "", libdm.UploadResponse{
 		FileID:         file.ID,
 		Filename:       file.Name,
 		PublicFilename: file.PublicFilename.String,
@@ -296,13 +296,13 @@ func ListFilesHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 	}
 
 	// Convert to ResponseFile
-	var retFiles []models.FileResponseItem
+	var retFiles []libdm.FileResponseItem
 	for _, file := range foundFiles {
 		// Filter tags
 		if (len(request.Attributes.Tags) == 0 || (len(request.Attributes.Tags) > 0 && file.IsInTagList(request.Attributes.Tags))) &&
 			// Filter groups
 			(len(request.Attributes.Groups) == 0 || (len(request.Attributes.Groups) > 0 && file.IsInGroupList(request.Attributes.Groups))) {
-			respItem := models.FileResponseItem{
+			respItem := libdm.FileResponseItem{
 				ID:           file.ID,
 				Name:         file.Name,
 				CreationDate: file.CreatedAt,
@@ -331,7 +331,7 @@ func ListFilesHandler(handlerData web.HandlerData, w http.ResponseWriter, r *htt
 		}
 	}
 
-	sendResponse(w, models.ResponseSuccess, "", models.ListFileResponse{
+	sendResponse(w, libdm.ResponseSuccess, "", libdm.FileListResponse{
 		Files: retFiles,
 	})
 
@@ -430,7 +430,7 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 			}
 
 			// Send response
-			sendResponse(w, models.ResponseSuccess, "", models.IDsResponse{
+			sendResponse(w, libdm.ResponseSuccess, "", libdm.IDsResponse{
 				IDs: ids,
 			})
 		}
@@ -537,7 +537,7 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 			}
 
 			// Send response
-			sendResponse(w, models.ResponseSuccess, "", models.CountResponse{
+			sendResponse(w, libdm.ResponseSuccess, "", libdm.CountResponse{
 				Count: count,
 			})
 		}
@@ -559,24 +559,24 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 
 			// Set ContentType header
 			if len(file.FileType) > 0 && filetype.IsMIMESupported(file.FileType) {
-				w.Header().Set(models.HeaderContentType, file.FileType)
+				w.Header().Set(libdm.HeaderContentType, file.FileType)
 			}
 
 			// Set filename header
-			w.Header().Set(models.HeaderFileName, file.Name)
+			w.Header().Set(libdm.HeaderFileName, file.Name)
 
 			// Set checksum header
-			w.Header().Set(models.HeaderChecksum, file.Checksum)
+			w.Header().Set(libdm.HeaderChecksum, file.Checksum)
 
 			// Set fileID header
-			w.Header().Set(models.HeaderFileID, strconv.FormatUint(uint64(file.ID), 10))
+			w.Header().Set(libdm.HeaderFileID, strconv.FormatUint(uint64(file.ID), 10))
 
 			// Set ContentLength header
-			w.Header().Set(models.HeaderContentLength, strconv.FormatInt(file.FileSize, 10))
+			w.Header().Set(libdm.HeaderContentLength, strconv.FormatInt(file.FileSize, 10))
 
 			// Set encryption cipher header
 			if file.Encryption.Valid {
-				w.Header().Set(models.HeaderEncryption, libdm.ChiperToString(file.Encryption.Int32))
+				w.Header().Set(libdm.HeaderEncryption, libdm.ChiperToString(file.Encryption.Int32))
 			}
 
 			// Write contents to responsewriter
@@ -592,8 +592,8 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 	// Publish a file
 	case "publish":
 		{
-			publishResponse := models.PublishResponse{}
-			bulkPublishResponse := models.BulkPublishResponse{}
+			publishResponse := libdm.PublishResponse{}
+			bulkPublishResponse := libdm.BulkPublishResponse{}
 
 			for _, file := range files {
 				// Ignore if already public
@@ -617,14 +617,14 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 
 				// Use bulk response if requested "all"
 				if request.All {
-					bulkPublishResponse.Files = append(bulkPublishResponse.Files, models.UploadResponse{
+					bulkPublishResponse.Files = append(bulkPublishResponse.Files, libdm.UploadResponse{
 						FileID:         file.ID,
 						Filename:       file.Name,
 						PublicFilename: file.PublicFilename.String,
 					})
 				} else {
 					// Otherwise respond with a single item
-					publishResponse = models.PublishResponse{
+					publishResponse = libdm.PublishResponse{
 						PublicFilename: file.PublicFilename.String,
 					}
 				}
@@ -632,9 +632,9 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 
 			// Send success
 			if request.All {
-				sendResponse(w, models.ResponseSuccess, "", bulkPublishResponse)
+				sendResponse(w, libdm.ResponseSuccess, "", bulkPublishResponse)
 			} else {
-				sendResponse(w, models.ResponseSuccess, "", publishResponse)
+				sendResponse(w, libdm.ResponseSuccess, "", publishResponse)
 			}
 		}
 	}

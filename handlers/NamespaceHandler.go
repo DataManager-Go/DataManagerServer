@@ -101,7 +101,7 @@ func NamespaceActionHandler(handlerData web.HandlerData, w http.ResponseWriter, 
 		return err
 	}
 
-	sendResponse(w, models.ResponseSuccess, "", models.StringResponse{
+	sendResponse(w, libdm.ResponseSuccess, "", libdm.StringResponse{
 		String: namespace.Name,
 	})
 
@@ -120,7 +120,7 @@ func NamespaceListHandler(handlerData web.HandlerData, w http.ResponseWriter, r 
 		snamespaces = append(snamespaces, namespace.Name)
 	}
 
-	sendResponse(w, models.ResponseSuccess, "", models.StringSliceResponse{
+	sendResponse(w, libdm.ResponseSuccess, "", libdm.StringSliceResponse{
 		Slice: snamespaces,
 	})
 

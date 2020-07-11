@@ -7,14 +7,12 @@ import (
 )
 
 /*
-	The AuthHandler is a wrapper for supported Authorization mechanisms. Currently
-	Only Bearer token are supported which are provided by an "Authorization" header inside the request
+	A wrapper for supported Authorization mechanisms. Currently Only Bearer token
+	are supported which are provided by an "Authorization" header inside the request
 */
 
-var (
-	// ErrorTokenInvalid error if token is invalid
-	ErrorTokenInvalid error = errors.New("Token invalid")
-)
+// ErrorTokenInvalid error if token is invalid
+var ErrorTokenInvalid error = errors.New("Token invalid")
 
 // AuthHandler handler for http auth
 type AuthHandler struct {

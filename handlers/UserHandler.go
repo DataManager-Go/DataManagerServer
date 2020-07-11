@@ -33,7 +33,7 @@ func Login(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) 
 	}
 
 	if session != nil {
-		sendResponse(w, models.ResponseSuccess, "", models.LoginResponse{
+		sendResponse(w, libdm.ResponseSuccess, "", libdm.LoginResponse{
 			Token:     session.Token,
 			Namespace: user.GetDefaultNamespaceName(),
 		})
@@ -47,7 +47,7 @@ func Login(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) 
 // Register register handler
 func Register(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) error {
 	if !handlerData.Config.Server.AllowRegistration {
-		sendResponse(w, models.ResponseError, "Server doesn't accept registrations", nil, http.StatusForbidden)
+		sendResponse(w, libdm.ResponseError, "Server doesn't accept registrations", nil, http.StatusForbidden)
 		return nil
 	}
 
@@ -73,7 +73,7 @@ func Register(handlerData web.HandlerData, w http.ResponseWriter, r *http.Reques
 		return err
 	}
 
-	sendResponse(w, models.ResponseSuccess, "success", nil, http.StatusOK)
+	sendResponse(w, libdm.ResponseSuccess, "success", nil, http.StatusOK)
 
 	return nil
 }
