@@ -11,11 +11,11 @@ import (
 	"github.com/DataManager-Go/DataManagerServer/models"
 	"github.com/DataManager-Go/DataManagerServer/storage"
 
-	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 
 	"github.com/alecthomas/kingpin"
-	_ "github.com/jinzhu/gorm/dialects/postgres"
+	_ "gorm.io/driver/postgres"
 )
 
 const version = "v3.12.0"

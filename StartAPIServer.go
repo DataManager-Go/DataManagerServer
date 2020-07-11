@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/DataManager-Go/DataManagerServer/services"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -71,10 +71,10 @@ func awaitExit(httpServer *services.APIService, db *gorm.DB) {
 
 	// Close db connection
 	if db != nil {
-		err := db.Close()
-		if err != nil {
-			log.Warn(err)
-		}
+		// err := db.Close()
+		// if err != nil {
+		// 	log.Warn(err)
+		// }
 		log.Info("Database shutdown complete")
 	}
 

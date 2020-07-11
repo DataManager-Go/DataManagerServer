@@ -9,7 +9,7 @@ import (
 	"github.com/DataManager-Go/DataManagerServer/models"
 
 	"github.com/JojiiOfficial/gaw"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"

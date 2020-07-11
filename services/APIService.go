@@ -7,7 +7,7 @@ import (
 	"github.com/DataManager-Go/DataManagerServer/handlers"
 	"github.com/DataManager-Go/DataManagerServer/models"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 
 	"github.com/gorilla/mux"
 

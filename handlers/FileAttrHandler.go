@@ -7,7 +7,7 @@ import (
 	"github.com/DataManager-Go/DataManagerServer/models"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/gorilla/mux"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 // AttributeHandler handler for file attributes.
