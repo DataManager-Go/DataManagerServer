@@ -77,3 +77,56 @@ func Register(handlerData web.HandlerData, w http.ResponseWriter, r *http.Reques
 
 	return nil
 }
+
+// Stats for a user
+func Stats(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) error {
+	var request libdm.StatsRequestStruct
+	if !readRequestLimited(w, r, &request, handlerData.Config.Webserver.MaxRequestBodyLength) {
+		return nil
+	}
+
+	// With deleted
+	totalFileCount, err := handlerData.User.GetTotalFileCount(handlerData.Db)
+	if err != nil {
+		return err
+	}
+
+	// Without deleted
+	fileCount, err := handlerData.User.GetFileCount(handlerData.Db)
+	if err != nil {
+		return err
+	}
+
+	totalFileSize, err := handlerData.User.GetTotalFilesize(handlerData.Db)
+	if err != nil {
+		return err
+	}
+
+	namespaceCount, err := handlerData.User.GetNamespaceCount(handlerData.Db)
+	if err != nil {
+		return err
+	}
+
+	tagCount, err := handlerData.User.GetTagCount(handlerData.Db)
+	if err != nil {
+		return err
+	}
+
+	groupCount, err := handlerData.User.GetGroupCount(handlerData.Db)
+	if err != nil {
+		return err
+	}
+
+	respones := libdm.StatsResponse{
+		FilesUploaded:  totalFileCount,
+		FileCount:      fileCount,
+		DeletedFiles:   (totalFileCount - fileCount),
+		NamespaceCount: namespaceCount,
+		GroupCount:     groupCount,
+		TagCount:       tagCount,
+		TotalFileSize:  totalFileSize,
+	}
+
+	sendResponse(w, libdm.ResponseSuccess, "", respones)
+	return nil
+}

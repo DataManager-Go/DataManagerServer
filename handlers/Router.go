@@ -80,7 +80,7 @@ var (
 		Route{
 			Name:        "stats",
 			Pattern:     "/user/stats",
-			Method:      GetMethod,
+			Method:      POSTMethod,
 			HandlerFunc: Stats,
 			HandlerType: sessionRequest,
 		},

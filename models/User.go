@@ -158,3 +158,52 @@ func (user *User) GetAllGroups(db *gorm.DB) ([]Group, error) {
 
 	return groups, err
 }
+
+// GetNamespaceCount return count of users namespaces
+func (user *User) GetNamespaceCount(db *gorm.DB) (int64, error) {
+	var c int64
+	return c, db.Model(Namespace{}).Where(&Namespace{UserID: user.ID}).Count(&c).Error
+}
+
+// GetTotalFileCount return total count of users files (with deletet files)
+func (user *User) GetTotalFileCount(db *gorm.DB) (int64, error) {
+	var c int64
+	return c, db.Unscoped().Model(File{}).Where(&File{UserID: user.ID}).Count(&c).Error
+}
+
+// GetFileCount return count of users files (without deleted files)
+func (user *User) GetFileCount(db *gorm.DB) (int64, error) {
+	var c int64
+	return c, db.Model(File{}).Where(&File{UserID: user.ID}).Count(&c).Error
+}
+
+// GetTotalFilesize return size of all users files
+func (user *User) GetTotalFilesize(db *gorm.DB) (int64, error) {
+	var c int64
+
+	rows, err := db.Table("files").Select("sum(file_size)").Where(&File{UserID: user.ID}).Rows()
+	if err != nil {
+		return 0, err
+	}
+
+	for rows.Next() {
+		err := rows.Scan(&c)
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	return c, nil
+}
+
+// GetTagCount for user
+func (user *User) GetTagCount(db *gorm.DB) (int64, error) {
+	var c int64
+	return c, db.Model(Tag{}).Where(&Tag{UserID: user.ID}).Distinct("Name").Count(&c).Error
+}
+
+// GetGroupCount for user
+func (user *User) GetGroupCount(db *gorm.DB) (int64, error) {
+	var c int64
+	return c, db.Model(Group{}).Where(&Group{UserID: user.ID}).Distinct("Name").Count(&c).Error
+}
