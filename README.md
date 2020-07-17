@@ -19,11 +19,9 @@ The dockerfiles are hosted on https://hub.docker.com/r/jojii/dmanager
 Since the file store path is `/app/files/` you have to map /app/files with a path on the host.<br>For instance `-v $(pwd)/files/:/app/files/`
 
 ### Manual
-```go
-go mod download && go build -o main
-```
 
-To download the dependencies and build the application, GO 1.11+ is required.
+Run: `make`
+(GO 1.11+ is required)
 
 # Configuration
 Create an example config using `./main config create`<br>
