@@ -161,14 +161,30 @@ func FindFiles(db *gorm.DB, config *Config, file File, ignoreNamespace ...bool) 
 	return files, nil
 }
 
-// FindFile finds a file
-func FindFile(db *gorm.DB, fileID, userID uint) (*File, error) {
-	a := db.Model(&File{}).Where("uploader = ?", userID)
+// FilesByName finds a file by ID
+func FilesByName(db *gorm.DB, userID, namespace uint, fileName string) ([]File, error) {
+	a := db.Model(&File{}).Where(&File{
+		Name:        fileName,
+		NamespaceID: namespace,
+		UserID:      userID,
+	})
 
-	// Include ID if set
-	if fileID != 0 {
-		a = a.Where("id = ?", fileID)
+	// Get file
+	var file []File
+	err := a.Find(&file).Error
+	if err != nil {
+		return nil, err
 	}
+
+	return file, nil
+}
+
+// FindFileByID finds a file by ID
+func FindFileByID(db *gorm.DB, fileID, userID uint) (*File, error) {
+	a := db.Debug().Model(&File{}).Where(&File{
+		UserID: userID,
+		Model:  gorm.Model{ID: fileID},
+	})
 
 	// Get file
 	var file File
@@ -178,6 +194,36 @@ func FindFile(db *gorm.DB, fileID, userID uint) (*File, error) {
 	}
 
 	return &file, nil
+}
+
+// ApplyAttributes to file
+func (file *File) ApplyAttributes(groups, tags []string) {
+	if len(groups) > 0 {
+		file.Groups = GroupsFromStringArr(groups, *file.Namespace, file.User)
+	}
+	if len(tags) > 0 {
+		file.Tags = TagsFromStringArr(tags, *file.Namespace, file.User)
+	}
+}
+
+// MakePublic publishes file
+func (file *File) MakePublic(db *gorm.DB, publicName string) bool {
+	// Determine public name
+	if len(publicName) == 0 {
+		publicName = gaw.RandString(25)
+	}
+
+	// Set file public name
+	file.PublicFilename = sql.NullString{
+		String: publicName,
+		Valid:  true,
+	}
+
+	file.IsPublic = true
+
+	// Check if public name already exists
+	_, found, _ := GetPublicFile(db, publicName)
+	return found
 }
 
 // HasTag return true if file is in group
@@ -197,6 +243,7 @@ func (file File) HasGroup(sGroup string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -242,11 +289,11 @@ func ShredderFile(localFile string, size int64) {
 	if size >= 1000000000 {
 		// Size >= 1GB
 		shredConfig = shred.NewShredderConf(&shredder, shred.WriteZeros, 1, true)
-	} else if size >= 10000000 {
-		// Size >= 10MB
+	} else if size >= 100000000 {
+		// Size >= 100MB
 		shredConfig = shred.NewShredderConf(&shredder, shred.WriteZeros|shred.WriteRand, 1, true)
 	} else {
-		// Size < 10MB
+		// Size < 100MB
 		shredConfig = shred.NewShredderConf(&shredder, shred.WriteZeros|shred.WriteRandSecure, 3, true)
 	}
 
@@ -261,6 +308,7 @@ func ShredderFile(localFile string, size int64) {
 			log.Warn(err)
 		}
 	}
+
 	log.Debug("Shredding took ", time.Since(start).String())
 }
 

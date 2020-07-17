@@ -24,6 +24,11 @@ func sendServerError(w http.ResponseWriter) {
 
 //Return true on success
 func handleNamespaceErorrs(namespace *models.Namespace, user *models.User, w http.ResponseWriter) bool {
+	// We already did a check
+	if namespace.Validated {
+		return true
+	}
+
 	// Check if namespace was found
 	if !namespace.IsValid() {
 		sendResponse(w, libdm.ResponseError, "Namespace not found", nil, http.StatusNotFound)
@@ -37,6 +42,7 @@ func handleNamespaceErorrs(namespace *models.Namespace, user *models.User, w htt
 		return false
 	}
 
+	namespace.Validated = true
 	return true
 }
 

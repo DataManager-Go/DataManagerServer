@@ -10,6 +10,8 @@ type Namespace struct {
 	Name   string `gorm:"not null"`
 	UserID uint   `gorm:"column:creator;index"`
 	User   *User  `gorm:"association_autoupdate:false;association_autocreate:false"`
+
+	Validated bool `gorm:"-"`
 }
 
 // GetNamespaceFromString return namespace from string
