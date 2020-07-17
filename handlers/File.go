@@ -41,7 +41,26 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 
 	// Apply group filter
 	if len(request.Attributes.Groups) > 0 {
+		var newFiles []models.File
+		for i := range files {
+			if files[i].IsInGroupList(request.Attributes.Groups) {
+				newFiles = append(newFiles, files[i])
+			}
+		}
 
+		files = newFiles
+	}
+
+	// Apply tag filter
+	if len(request.Attributes.Tags) > 0 {
+		var newFiles []models.File
+		for i := range files {
+			if files[i].IsInTagList(request.Attributes.Tags) {
+				newFiles = append(newFiles, files[i])
+			}
+		}
+
+		files = newFiles
 	}
 
 	// Exit if no file was found

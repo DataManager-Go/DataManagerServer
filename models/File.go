@@ -93,25 +93,27 @@ func (file File) GetNamespace() *Namespace {
 
 // IsInTagList return true if file has one of the specified tags
 func (file File) IsInTagList(tags []string) bool {
-	for _, tag := range file.Tags {
-		for _, t1 := range tags {
-			if tag.Name == t1 {
+	for i := range file.Tags {
+		for j := range tags {
+			if file.Tags[i].Name == tags[j] {
 				return true
 			}
 		}
 	}
+
 	return false
 }
 
 // IsInGroupList return true if file is in one of the specified groups
 func (file File) IsInGroupList(groups []string) bool {
-	for _, group := range file.Groups {
-		for _, t1 := range groups {
-			if group.Name == t1 {
+	for i := range file.Groups {
+		for j := range groups {
+			if file.Groups[i].Name == groups[j] {
 				return true
 			}
 		}
 	}
+
 	return false
 }
 
@@ -171,6 +173,7 @@ func FilesByName(db *gorm.DB, userID, namespace uint, fileName string) ([]File, 
 
 	// Get file
 	var file []File
+
 	err := a.Find(&file).Error
 	if err != nil {
 		return nil, err
