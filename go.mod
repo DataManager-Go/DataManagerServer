@@ -14,6 +14,7 @@ require (
 	github.com/gabriel-vasile/mimetype v1.1.1
 	github.com/gorilla/mux v1.7.4
 	github.com/h2non/filetype v1.1.0
+	github.com/jackc/pgx/v4 v4.7.2 // indirect
 	github.com/lib/pq v1.7.0 // indirect
 	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
@@ -23,5 +24,5 @@ require (
 	golang.org/x/sys v0.0.0-20200625212154-ddb9806d33ae // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 	gorm.io/driver/postgres v0.2.5
-	gorm.io/gorm v0.2.20
+	gorm.io/gorm v0.2.22
 )
