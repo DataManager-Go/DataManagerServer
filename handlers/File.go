@@ -62,9 +62,6 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	// Determine if an update was applied
-	var didUpdate bool
-
 	// Execute action
 	switch action {
 	case "delete":
@@ -89,6 +86,7 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 	case "update":
 		{
 			var count uint32
+			var didUpdate bool
 
 			for _, file := range files {
 				didUpdate, err = updateFile(&file, handlerData, request.Updates)
@@ -108,7 +106,7 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 				Count: count,
 			})
 		}
-	// Get file
+	// Download file
 	case "get":
 		{
 			// Use first file
@@ -117,7 +115,6 @@ func FileHandler(handlerData web.HandlerData, w http.ResponseWriter, r *http.Req
 				return err
 			}
 		}
-	// Publish a file
 	case "publish":
 		{
 			resp, err := publishFiles(files, request.PublicName, request.All, handlerData.Db)
@@ -184,32 +181,29 @@ func serveFile(file models.File, w http.ResponseWriter, handlerData web.HandlerD
 		return err
 	}
 
-	// Set ContentType header
+	// Set required headers
 	if len(file.FileType) > 0 && filetype.IsMIMESupported(file.FileType) {
 		w.Header().Set(libdm.HeaderContentType, file.FileType)
 	}
 
-	// Set filename header
 	w.Header().Set(libdm.HeaderFileName, file.Name)
-
-	// Set checksum header
 	w.Header().Set(libdm.HeaderChecksum, file.Checksum)
-
-	// Set fileID header
 	w.Header().Set(libdm.HeaderFileID, strconv.FormatUint(uint64(file.ID), 10))
-
-	// Set ContentLength header
 	w.Header().Set(libdm.HeaderContentLength, strconv.FormatInt(file.FileSize, 10))
 
-	// Set encryption cipher header
 	if file.Encryption.Valid {
 		w.Header().Set(libdm.HeaderEncryption, libdm.ChiperToString(file.Encryption.Int32))
 	}
 
 	// Write contents to responsewriter
-	buff := make([]byte, 10*1024)
+	buff := make([]byte, 1024*1024)
 	_, err = io.CopyBuffer(w, f, buff)
 	if err != nil {
+		switch err {
+		case io.EOF, io.ErrUnexpectedEOF:
+			return nil
+		}
+
 		return err
 	}
 
@@ -242,7 +236,6 @@ func publishFiles(files []models.File, publicName string, all bool, db *gorm.DB)
 			return nil, RErrAlreadyExists.Prepend("Public name")
 		}
 
-		// Use bulk response if requested "all"
 		if all && len(files) > 1 {
 			bulkPublishResponse.Files = append(bulkPublishResponse.Files, libdm.UploadResponse{
 				FileID:         file.ID,
@@ -250,7 +243,6 @@ func publishFiles(files []models.File, publicName string, all bool, db *gorm.DB)
 				PublicFilename: file.PublicFilename.String,
 			})
 		} else {
-			// Otherwise respond with a single item
 			return libdm.PublishResponse{
 				PublicFilename: file.PublicFilename.String,
 			}, nil
