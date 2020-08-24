@@ -12,7 +12,7 @@ require (
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/fatih/color v1.9.0
 	github.com/gabriel-vasile/mimetype v1.1.1
-	github.com/gorilla/mux v1.7.4
+	github.com/gorilla/mux v1.8.0
 	github.com/h2non/filetype v1.1.0
 	github.com/jackc/pgx/v4 v4.7.2 // indirect
 	github.com/lib/pq v1.7.0 // indirect
