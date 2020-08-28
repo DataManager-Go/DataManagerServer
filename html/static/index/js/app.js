@@ -84,7 +84,7 @@ var main = function() {
       // Current Time
       var d2 = new Date();
       var currentTime = d2.getTime() + (d2.getTimezoneOffset() * 60000) - startTime;
-      
+
       // Convert miliseconds
       var seconds = currentTime / 1000;
       var minutes = seconds / 60;
@@ -93,7 +93,18 @@ var main = function() {
       // Get within current limits
       seconds = Math.floor(seconds % 60);
       minutes = Math.floor(minutes % 60);
-      hours = Math.floor(hours % 24);
+      console.log(Math.floor(hours), " --", Math.floor(hours % 24));
+      if (hours - 24 >= 0) 
+        hours = Math.floor(hours);
+      else
+        hours = Math.floor(hours % 24);
+
+      // Negative time protection
+      if (hours < 0 || minutes < 0 || seconds < 0) {
+        d = new Date();
+        startTime = d.getTime() + d.getTimezoneOffset() * 60000;
+        return;
+      }
 
       // No-Life protection
       if (hours >= 30) {
