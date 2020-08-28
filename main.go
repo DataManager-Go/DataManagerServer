@@ -21,10 +21,12 @@ import (
 const version = "v3.12.0"
 
 var (
-	app         = kingpin.New("dmserver", "The data manager server")
-	appLogLevel = app.Flag("log-level", "Enable debug mode").HintOptions(constants.LogLevels...).Envar(getEnVar(EnVarLogLevel)).Short('l').Default(constants.LogLevels[2]).String()
-	appNoColor  = app.Flag("no-color", "Disable colors").Envar(getEnVar(EnVarNoColor)).Bool()
-	appCfgFile  = app.
+	app          = kingpin.New("dmserver", "The data manager server")
+	appLogLevel  = app.Flag("log-level", "Enable debug mode").HintOptions(constants.LogLevels...).Envar(getEnVar(EnVarLogLevel)).Short('l').Default(constants.LogLevels[2]).String()
+	appNoColor   = app.Flag("no-color", "Disable colors").Envar(getEnVar(EnVarNoColor)).Bool()
+	appNoConfirm = app.Flag("no-confirm", "Disable confirmations. Make it headless").Bool()
+	appDryRun    = app.Flag("dry-run", "Don't perform any action").Short('d').Bool()
+	appCfgFile   = app.
 			Flag("config", "the configuration file for the server").
 			Envar(getEnVar(EnVarConfigFile)).
 			Short('c').String()
@@ -39,6 +41,8 @@ var (
 	configCmd           = app.Command("config", "Commands for the config file")
 	configCmdCreate     = configCmd.Command("create", "Create config file")
 	configCmdCreateName = configCmdCreate.Arg("name", "Config filename").Default(models.GetDefaultConfig()).String()
+
+	syncFilesCmd = app.Command("sync-files", "Delete untracked files from the database and the filesystem")
 )
 
 var (
@@ -134,6 +138,15 @@ func main() {
 		{
 			startAPI()
 		}
+
+	// Tools
+	case syncFilesCmd.FullCommand():
+		{
+			if err := syncFiles(*appDryRun, *appNoConfirm); err != nil {
+				log.Error(err)
+			}
+		}
+
 	// Config --------------------
 	case configCmdCreate.FullCommand():
 		{

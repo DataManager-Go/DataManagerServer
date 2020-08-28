@@ -22,7 +22,7 @@ func ConnectToDatabase(config *models.Config) (*gorm.DB, error) {
 	}
 
 	//Automigration
-	db.AutoMigrate(
+	err = db.AutoMigrate(
 		&models.Role{},
 		&models.Namespace{},
 		&models.Tag{},
