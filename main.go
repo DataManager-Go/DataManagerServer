@@ -18,7 +18,7 @@ import (
 	_ "gorm.io/driver/postgres"
 )
 
-const version = "v3.12.0"
+const version = "v3.12.8"
 
 var (
 	app          = kingpin.New("dmserver", "The data manager server")
