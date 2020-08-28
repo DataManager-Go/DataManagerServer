@@ -105,7 +105,7 @@ var main = function() {
         timeMsg.innerHTML = " > 30 GODDAMNED HOURS!";
 
         var helpMsg = document.createElement("h3");
-        helpMsg.innerHTML = "If you didn't cheat on archiving this amount of time<br> you should really go out and get some help."
+        helpMsg.innerHTML = "If you didn't cheat on achieving this amount of time<br> you should really go out and get some help."
         helpMsg.style.textAlign = "center";
         helpMsg.style.color = "#4f4f66"
 
