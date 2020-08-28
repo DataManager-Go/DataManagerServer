@@ -95,8 +95,6 @@ var main = function() {
       minutes = Math.floor(minutes % 60);
       hours = Math.floor(hours % 24);
 
-      hours = 30;
-
       // No-Life protection
       if (hours >= 30) {
         document.getElementById("clockDIV").innerHTML = "";
