@@ -93,11 +93,7 @@ var main = function() {
       // Get within current limits
       seconds = Math.floor(seconds % 60);
       minutes = Math.floor(minutes % 60);
-      console.log(Math.floor(hours), " --", Math.floor(hours % 24));
-      if (hours - 24 >= 0) 
-        hours = Math.floor(hours);
-      else
-        hours = Math.floor(hours % 24);
+      hours = Math.floor(hours);
 
       // Negative time protection
       if (hours < 0 || minutes < 0 || seconds < 0) {
