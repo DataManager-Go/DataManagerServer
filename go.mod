@@ -23,9 +23,9 @@ require (
 	github.com/sbani/go-humanizer v0.3.1
 	github.com/sirupsen/logrus v1.6.0
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a // indirect
-	golang.org/x/sys v0.0.0-20200828161417-c663848e9a16 // indirect
+	golang.org/x/sys v0.0.0-20200828194041-157a740278f4 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 	gorm.io/driver/postgres v1.0.0
-	gorm.io/gorm v1.9.19
+	gorm.io/gorm v1.20.0
 )
