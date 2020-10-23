@@ -14,7 +14,6 @@ require (
 	github.com/gabriel-vasile/mimetype v1.1.1
 	github.com/gorilla/mux v1.8.0
 	github.com/h2non/filetype v1.1.0
-	github.com/jackc/pgproto3/v2 v2.0.4 // indirect
 	github.com/jinzhu/gorm v1.9.16 // indirect
 	github.com/klauspost/compress v1.11.0 // indirect
 	github.com/klauspost/pgzip v1.2.5 // indirect
@@ -27,6 +26,6 @@ require (
 	golang.org/x/sys v0.0.0-20200917073148-efd3b9a0ff20 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
-	gorm.io/driver/postgres v1.0.0
-	gorm.io/gorm v1.20.1
+	gorm.io/driver/postgres v1.0.5
+	gorm.io/gorm v1.20.4
 )
