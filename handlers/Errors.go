@@ -40,6 +40,9 @@ var (
 
 	// RErrPermissionDenied if a user has no permission to run a certain command
 	RErrPermissionDenied = NewRequestError("permission denied", http.StatusForbidden)
+
+	// RErrMissing if registration is not accepted
+	RErrRegistrationNotAccepted = NewRequestError("Registration not accepted", http.StatusForbidden)
 )
 
 // RequestError error appearing in a request

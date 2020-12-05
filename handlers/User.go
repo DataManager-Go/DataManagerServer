@@ -47,8 +47,7 @@ func Login(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) 
 // Register register handler
 func Register(handlerData web.HandlerData, w http.ResponseWriter, r *http.Request) error {
 	if !handlerData.Config.Server.AllowRegistration {
-		sendResponse(w, libdm.ResponseError, "Server doesn't accept registrations", nil, http.StatusForbidden)
-		return nil
+		return RErrRegistrationNotAccepted
 	}
 
 	var request libdm.CredentialsRequest

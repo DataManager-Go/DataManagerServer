@@ -52,6 +52,13 @@ func PrevievFileHandler(handlerData HandlerData, w http.ResponseWriter, r *http.
 		return nil
 	}
 
+	scheme := "http"
+	if len(handlerData.Config.Webserver.SchemeOverwrite) > 0 {
+		scheme = handlerData.Config.Webserver.SchemeOverwrite
+	} else if r.TLS != nil {
+		scheme = "https"
+	}
+
 	templateData := models.PreviewTemplate{
 		Filename:       file.Name,
 		PublicFilename: file.PublicFilename.String,
@@ -60,6 +67,7 @@ func PrevievFileHandler(handlerData HandlerData, w http.ResponseWriter, r *http.
 		FileSizeStr:    units.BinarySuffix(float64(file.FileSize)),
 		Encrypted:      (file.Encryption.Valid && libdm.EncryptionIValid(file.Encryption.Int32)),
 		MimeType:       file.FileType,
+		Scheme:         scheme,
 	}
 
 	//Serve preview

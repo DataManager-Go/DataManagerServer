@@ -6,6 +6,7 @@ import (
 	"github.com/DataManager-Go/DataManagerServer/models"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -16,7 +17,19 @@ func ConnectToDatabase(config *models.Config) (*gorm.DB, error) {
 		sslMode = "sslmode='" + config.Server.Database.SSLMode + "'"
 	}
 
-	db, err := gorm.Open(postgres.Open(fmt.Sprintf("host='%s' port='%d' user='%s' dbname='%s' password='%s' %s", config.Server.Database.Host, config.Server.Database.DatabasePort, config.Server.Database.Username, config.Server.Database.Database, config.Server.Database.Pass, sslMode)), &gorm.Config{})
+	var dialector gorm.Dialector
+	if config.Server.Database.Type == "postgres" {
+		dialector = postgres.Open(fmt.Sprintf("host='%s' port='%d' user='%s' dbname='%s' password='%s' %s", config.Server.Database.Host, config.Server.Database.DatabasePort, config.Server.Database.Username, config.Server.Database.Database, config.Server.Database.Pass, sslMode))
+	} else {
+		dbFile := config.Server.Database.Database
+		if len(dbFile) == 0 {
+			dbFile = "data.db"
+		}
+
+		dialector = sqlite.Open(dbFile)
+	}
+
+	db, err := gorm.Open(dialector, &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +67,11 @@ func createRoles(db *gorm.DB, config *models.Config) {
 }
 
 //CheckConnection return true if connected succesfully
-func CheckConnection(db *gorm.DB) (bool, error) {
+func CheckConnection(db *gorm.DB, config *models.Config) (bool, error) {
+	if config.Server.Database.Type == "sqlite" {
+		return true, nil
+	}
+
 	err := db.Exec("SELECT version();").Error
 	return err == nil, err
 }

@@ -1,63 +1,62 @@
 {{ define "content" }}
-        {{ if IsVideoPreview .PreviewType }}
-            <!-- Video Preview -->
+{{ if IsVideoPreview .PreviewType }}
+<!-- Video Preview -->
 
-            <div class="center">
-                <video controls>
-                    <source src='https://{{.Host}}/preview/raw/{{.PublicFilename}}' type="{{.MimeType}}">
-                    Your browser does not support HTML5 video.
-                </video>
-            </div>
-        {{ end }}
-        
-        {{ if IsImagePreview .PreviewType }}
-            <!-- image Preview -->
+<div class="center">
+    <video controls>
+        <source src='{{.Scheme}}://{{.Host}}/preview/raw/{{.PublicFilename}}' type="{{.MimeType}}">
+        Your browser does not support HTML5 video.
+    </video>
+</div>
+{{ end }}
 
-            <div class="center">
-                <img src='https://{{.Host}}/preview/raw/{{.PublicFilename}}'>
-            </div>
-        {{ end }}
+{{ if IsImagePreview .PreviewType }}
+<!-- image Preview -->
 
-        {{ if  IsTextPreview .PreviewType }}
-            <!-- Text preview -->
+<div class="center">
+    <img src='{{.Scheme}}://{{.Host}}/preview/raw/{{.PublicFilename}}'>
+</div>
+{{ end }}
 
-            <center><h1>{{.Filename}}</h1></center>
-            <textarea id="tdata" class="lined areapreview" style="width: 100%;min-height: 85vh;"></textarea>
-            <script>
-                $(function() {
-                    $(".lined").linedtextarea();
-                });
+{{ if  IsTextPreview .PreviewType }}
+<!-- Text preview -->
 
-                //Encode html
-                function htmlEncode(value){
-                    return $('<textarea/>').text(value).html();
-                }
+<center>
+    <h1>{{.Filename}}</h1>
+</center>
+<textarea id="tdata" class="lined areapreview" style="width: 100%;min-height: 85vh;"></textarea>
+<script>
+    $(function () {
+        $(".lined").linedtextarea();
+    });
 
-                //Request data
-                $.get("https://{{.Host}}/preview/raw/{{.PublicFilename}}",{}, function(data){
-                    document.getElementById("tdata").innerHTML = htmlEncode(data)
-                })
-            </script>
-        {{ end }}
+    //Encode html
+    function htmlEncode(value) {
+        return $('<textarea/>').text(value).html();
+    }
 
-        {{ if  IsDefaultPreview .PreviewType }}
-            <!-- Download View -->
+    //Request data
+    $.get("{{.Scheme}}://{{.Host}}/preview/raw/{{.PublicFilename}}", {}, function (data) {
+        document.getElementById("tdata").innerHTML = htmlEncode(data)
+    })
+</script>
+{{ end }}
 
-            <br>
-            <span style="text-align: center;">
-                <h1 style="color: black;font-size: 2.5em;">Can't view this shit. You have to press download</h1>
-            </span>
+{{ if  IsDefaultPreview .PreviewType }}
+<!-- Download View -->
 
-            <!-- Download button -->
-            <div class="centered">
-                <a href="https://{{.Host}}/preview/raw/{{.PublicFilename}}" class="downloadButton">Download</a>
-                <br>
-                <center>
-                    <span class="cv" style="font-size: 1.7rem;">({{.FileSizeStr}} {{ if .Encrypted}} encrypted{{ end }})</span>
-                </center>
-            </div>
+<br>
+<span style="text-align: center;">
+    <h1 style="color: black;font-size: 2.5em;">Can't view this shit. You have to press download</h1>
+</span>
 
-            <!-- GO -->
-            <img style="bottom: 0;left: 20%;;position: absolute;" src="https://keepcoding.io/es/wp-content/uploads/sites/4/2017/04/go-lenguaje-programacion.png" width="300px"> 
-        {{ end }}
+<!-- Download button -->
+<div class="centered">
+    <a href="{{.Scheme}}://{{.Host}}/preview/raw/{{.PublicFilename}}" class="downloadButton">Download</a>
+    <br>
+    <center>
+        <span class="cv" style="font-size: 1.7rem;">({{.FileSizeStr}} {{ if .Encrypted}} encrypted{{ end }})</span>
+    </center>
+</div>
+{{ end }}
 {{ end }}

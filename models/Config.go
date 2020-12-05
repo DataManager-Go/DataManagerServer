@@ -31,6 +31,7 @@ type webserverConf struct {
 	HTMLFiles            string `default:"./html/" required:"true"`
 	ReadTimeout          time.Duration
 	WriteTimeout         time.Duration
+	SchemeOverwrite      string
 	HTTP                 configHTTPstruct
 	HTTPS                configTLSStruct
 }
@@ -54,6 +55,7 @@ type pathConfig struct {
 }
 
 type configDBstruct struct {
+	Type         string
 	Host         string
 	Username     string
 	Database     string
@@ -220,10 +222,17 @@ func (config *Config) Check() bool {
 		}
 	}
 
-	// Check DB port
-	if config.Server.Database.DatabasePort < 1 || config.Server.Database.DatabasePort > 65535 {
-		log.Errorf("Invalid port for database %d\n", config.Server.Database.DatabasePort)
+	if config.Server.Database.Type != "sqlite" && config.Server.Database.Type != "postgres" {
+		log.Errorf("Unsupported database type: %s", config.Server.Database.Type)
 		return false
+	}
+
+	if config.Server.Database.Type == "postgres" {
+		// Check DB port
+		if config.Server.Database.DatabasePort < 1 || config.Server.Database.DatabasePort > 65535 {
+			log.Errorf("Invalid port for database %d\n", config.Server.Database.DatabasePort)
+			return false
+		}
 	}
 
 	// Check file exists file storage dir
