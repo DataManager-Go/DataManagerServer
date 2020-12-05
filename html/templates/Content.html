@@ -45,7 +45,7 @@
             var newHeight =
                 editor.getSession().getScreenLength()
                 * editor.renderer.lineHeight
-                + editor.renderer.scrollBar.getWidth();
+                + editor.renderer.scrollBar.getWidth()+1;
 
             $('#editor').height(newHeight.toString() + "px");
             $('#editor-section').height(newHeight.toString() + "px");

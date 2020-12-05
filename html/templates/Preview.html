@@ -77,7 +77,7 @@
         position: absolute;
         display: inline;
         overflow-y: auto;
-        overflow-x: hidden;
+        overflow-x: none;
         width: 100%;
     }
 
@@ -92,6 +92,7 @@
         bottom: 0;
         width: 100%;
         top: 100px;
+        overflow-x: none;
         z-index: 0;
     }
 
@@ -113,19 +114,30 @@
         box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
         -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
     }
+
+    body .ace_editor:hover .ace_scrollbar {
+        display: none;
+    }
 </style>
 
 <!-- Text preview -->
 <script src="/static/preview/ace/ace.js" type="text/javascript" charset="utf-8"></script>
 <script src="/static/preview/ace/theme-nord_dark.js" type="text/javascript" charset="utf-8"></script>
-<script src="/static/preview/ace/mode-golang.js" type="text/javascript" charset="utf-8"></script>
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
+{{ if not (eq (len .Lang) 0) }}
+<script src="/static/preview/ace/mode-{{.Lang}}.js" type="text/javascript" charset="utf-8"></script>
+{{ end }}
+
 <script>
-    var SyntaxMode = ace.require("ace/mode/golang").Mode;
+    var lang = "{{.Lang}}";
     var editor = ace.edit("editor");
+
     editor.setTheme("ace/theme/nord_dark");
-    editor.session.setMode(new SyntaxMode());
+    if (lang.length != 0) {
+        var SyntaxMode = ace.require("ace/mode/" + lang).Mode;
+        editor.session.setMode(new SyntaxMode());
+    }
 </script>
 {{ end }}
 

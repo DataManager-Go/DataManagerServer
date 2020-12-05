@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"net/http"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/DataManager-Go/DataManagerServer/models"
@@ -75,11 +76,30 @@ func PrevievFileHandler(handlerData HandlerData, w http.ResponseWriter, r *http.
 		Encrypted:      (file.Encryption.Valid && libdm.EncryptionIValid(file.Encryption.Int32)),
 		MimeType:       file.FileType,
 		Scheme:         scheme,
+		Lang:           getLang(file.Name),
 	}
 
 	//Serve preview
 	LogError(servePreviewTemplate(handlerData.Config, w, templateData))
 	return nil
+}
+
+func getLang(ext string) string {
+	ext = strings.ToLower(filepath.Ext(ext))
+	if len(ext) < 2 {
+		return ""
+	}
+
+	if strings.HasPrefix(ext, ".") {
+		ext = ext[1:]
+	}
+
+	switch ext {
+	case "go":
+		return "golang"
+	default:
+		return ""
+	}
 }
 
 func servePreviewTemplate(config *models.Config, w http.ResponseWriter, data interface{}) error {

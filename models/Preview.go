@@ -36,6 +36,7 @@ type PreviewTemplate struct {
 	Encrypted      bool
 	MimeType       string
 	Scheme         string
+	Lang           string
 }
 
 // PreviewTypeFromMime get Type to preview from mime
