@@ -1,12 +1,11 @@
-
-FROM golang:1.14.2-alpine as builder1
+FROM golang:1.15.6-alpine as builder1
 
 # Setting up environment for builder1
 ENV GO111MODULE=on
 WORKDIR /app/dmanager
 
 # install required package(s)
-RUN apk --no-cache add ca-certificates git
+RUN apk --no-cache add ca-certificates git alpine-sdk
 
 # Copy dependency list
 COPY go.mod .
