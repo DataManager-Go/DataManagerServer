@@ -55,6 +55,13 @@ func PrevievFileHandler(handlerData HandlerData, w http.ResponseWriter, r *http.
 	scheme := "http"
 	if len(handlerData.Config.Webserver.SchemeOverwrite) > 0 {
 		scheme = handlerData.Config.Webserver.SchemeOverwrite
+
+		// Prevent selecting other schemes than http(s)
+		switch scheme {
+		case "http", "https":
+		default:
+			scheme = "http"
+		}
 	} else if r.TLS != nil {
 		scheme = "https"
 	}

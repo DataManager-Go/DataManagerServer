@@ -18,44 +18,76 @@
 </div>
 {{ end }}
 
-{{ if  IsTextPreview .PreviewType }}
-<!-- Text preview -->
+{{ if IsTextPreview .PreviewType }}
+<div>
+    <table style="border: 0;padding-top: 20px;padding-left: 10px;font-size: 1.2em;">
+        <tr>
+            <td>File: </td>
+            <td>{{.Filename}}</td>
+        </tr>
+        <tr>
+            <td>Size: </td>
+            <td>{{.FileSizeStr}}</td>
+        </tr>
+    </table>
+</div>
 
-<center>
-    <h1>{{.Filename}}</h1>
-</center>
-<textarea id="tdata" class="lined areapreview" style="width: 100%;min-height: 85vh;"></textarea>
+<div id="editor" class="content">Loading...</div>
+<button class="fab_dl" onclick="dl()"><i class="material-icons">download</i></button>
+
 <script>
-    $(function () {
-        $(".lined").linedtextarea();
+    $.get("{{.Scheme}}://{{.Host}}/preview/raw/{{.PublicFilename}}", {}, function (data) {
+        editor.setValue(data, -1);
+
+        var heightUpdateFunction = function () {
+
+            // http://stackoverflow.com/questions/11584061/
+            var newHeight =
+                editor.getSession().getScreenLength()
+                * editor.renderer.lineHeight
+                + editor.renderer.scrollBar.getWidth();
+
+            $('#editor').height(newHeight.toString() + "px");
+            $('#editor-section').height(newHeight.toString() + "px");
+
+            // This call is required for the editor to fix all of
+            // its inner structure for adapting to a change in size
+            editor.resize();
+        };
+
+        // Set initial size to match initial content
+        heightUpdateFunction();
+
+        // Whenever a change happens inside the ACE editor, update
+        // the size again
+        editor.getSession().on('change', heightUpdateFunction);
     });
 
-    //Encode html
-    function htmlEncode(value) {
-        return $('<textarea/>').text(value).html();
+    function dl() {
+        window.location.href = "{{.Scheme}}://{{.Host}}/preview/raw/{{.PublicFilename}}";
     }
-
-    //Request data
-    $.get("{{.Scheme}}://{{.Host}}/preview/raw/{{.PublicFilename}}", {}, function (data) {
-        document.getElementById("tdata").innerHTML = htmlEncode(data)
-    })
 </script>
+
 {{ end }}
 
 {{ if  IsDefaultPreview .PreviewType }}
 <!-- Download View -->
 
 <br>
-<span style="text-align: center;">
-    <h1 style="color: black;font-size: 2.5em;">Can't view this shit. You have to press download</h1>
+<span style="text-align: center; color: lightgray">
+    <h1 style="color: lightgray;font-size: 2.5em;">Can't view this shit. You have to press download</h1>
 </span>
 
 <!-- Download button -->
-<div class="centered">
+<div class="centered" style="color: lightgray;">
+    <div style="font-size: 1.8em;">
+        <center> {{.Filename}} </center>
+    </div>
+    <br>
     <a href="{{.Scheme}}://{{.Host}}/preview/raw/{{.PublicFilename}}" class="downloadButton">Download</a>
     <br>
     <center>
-        <span class="cv" style="font-size: 1.7rem;">({{.FileSizeStr}} {{ if .Encrypted}} encrypted{{ end }})</span>
+        <span class="cv" style="font-size: 1.5rem;">({{.FileSizeStr}} {{ if .Encrypted}} encrypted{{ end }})</span>
     </center>
 </div>
 {{ end }}

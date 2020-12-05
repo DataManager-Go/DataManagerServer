@@ -61,10 +61,72 @@
 
 </head>
 
-<body
-    background="https://images.pexels.com/photos/1242348/pexels-photo-1242348.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
-    style="background-size: 300% auto;height: 100%;margin: 0;">
+<!-- background="https://images.pexels.com/photos/1242348/pexels-photo-1242348.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940" -->
+
+<body style="background-size: 300% auto;height: 100%;margin: 0;background-color:rgb(42, 45, 47);">
     {{template "content" .}}
 </body>
+
+{{ if IsTextPreview .PreviewType }}
+<style>
+    html {
+        color: lightgray;
+    }
+
+    #editor {
+        position: absolute;
+        display: inline;
+        overflow-y: auto;
+        overflow-x: hidden;
+        width: 100%;
+    }
+
+    .header {
+        height: 100px;
+        width: 100%;
+        font-size: 2.2em;
+    }
+
+    .content {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        top: 100px;
+        z-index: 0;
+    }
+
+    .fab_dl {
+        position: fixed;
+        bottom: 1%;
+        right: 1.5%;
+        width: 60px;
+        height: 60px;
+        background: #F44336;
+        background-color: #F44336;
+        color: #FFF;
+        border-radius: 100%;
+        cursor: pointer;
+        outline: none;
+        border: none;
+        font-size: 36px;
+        transition: .3s;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    }
+</style>
+
+<!-- Text preview -->
+<script src="/static/preview/ace/ace.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/preview/ace/theme-nord_dark.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/preview/ace/mode-golang.js" type="text/javascript" charset="utf-8"></script>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+<script>
+    var SyntaxMode = ace.require("ace/mode/golang").Mode;
+    var editor = ace.edit("editor");
+    editor.setTheme("ace/theme/nord_dark");
+    editor.session.setMode(new SyntaxMode());
+</script>
+{{ end }}
 
 </html>
