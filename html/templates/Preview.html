@@ -123,21 +123,16 @@
 <!-- Text preview -->
 <script src="/static/preview/ace/ace.js" type="text/javascript" charset="utf-8"></script>
 <script src="/static/preview/ace/theme-nord_dark.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/preview/ace/ext-modelist.js" type="text/javascript" charset="utf-8"></script>
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
-{{ if not (eq (len .Lang) 0) }}
-<script src="/static/preview/ace/mode-{{.Lang}}.js" type="text/javascript" charset="utf-8"></script>
-{{ end }}
-
 <script>
-    var lang = "{{.Lang}}";
     var editor = ace.edit("editor");
-
     editor.setTheme("ace/theme/nord_dark");
-    if (lang.length != 0) {
-        var SyntaxMode = ace.require("ace/mode/" + lang).Mode;
-        editor.session.setMode(new SyntaxMode());
-    }
+
+    var modelist = ace.require("ace/ext/modelist");
+    var mode = modelist.getModeForPath( "{{.Filename}}").mode;
+    editor.session.setMode(mode);
 </script>
 {{ end }}
 
