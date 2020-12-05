@@ -30,7 +30,7 @@ By default the config file is stored in `./data/config.yml`<br><br>
 ### Configurations:
 #### Server
 `database` A postgres database<br>
-`pathconfig.filestore` The local folder for files. If you want to store the files in a different folder, change this value`<br>
+`pathconfig.filestore` The local folder for files. If you want to store the files in a different folder, change this value<br>
 `roles` The default roles. You <b>must</b> change them <b>before</b> the first start of server. Changes later on will be ignored.<br>
 `allowregistration` Allows registrations from users<br>
 
