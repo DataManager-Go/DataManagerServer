@@ -75,6 +75,7 @@ func PrevievFileHandler(handlerData HandlerData, w http.ResponseWriter, r *http.
 		Encrypted:      (file.Encryption.Valid && libdm.EncryptionIValid(file.Encryption.Int32)),
 		MimeType:       file.FileType,
 		Scheme:         scheme,
+		AceTheme:       handlerData.Config.Webserver.AceTheme,
 	}
 
 	//Serve preview

@@ -34,6 +34,7 @@ type webserverConf struct {
 	SchemeOverwrite      string
 	HTTP                 configHTTPstruct
 	HTTPS                configTLSStruct
+	AceTheme             string
 }
 
 type configServer struct {
@@ -174,6 +175,7 @@ func InitConfig(confFile string, createMode bool) (*Config, bool) {
 					Enabled:       false,
 					ListenAddress: ":443",
 				},
+				AceTheme: "nord_dark",
 			},
 		}
 	}
