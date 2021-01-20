@@ -5,6 +5,7 @@ github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/DataManager-Go/libdatamanager v1.3.9 h1:RpStV793OutYtaOYqFEtdUxUjr9b60bI4OPQCC/ksO8=
 github.com/DataManager-Go/libdatamanager v1.3.9/go.mod h1:fXRE+SoEBDz8UK5Zhm3QBGEQDciOwmsAbzUfg2zKHXE=
+github.com/DataManager-Go/libdatamanager v1.4.0/go.mod h1:fXRE+SoEBDz8UK5Zhm3QBGEQDciOwmsAbzUfg2zKHXE=
 github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28 h1:nYoIExG+Z/gSLS9Jbpu6lnrh+m6e9gTxQfGhanTsExE=
 github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28/go.mod h1:j1kHFoYWAbLRPE5nyAAtODwUc0xwd2+ifPZ3uCAgv/g=
 github.com/JojiiOfficial/gaw v1.2.8 h1:crLd2hrRvTlCClZDtwqnr8AoVKs3uQAk8B2AdOfUCsg=
