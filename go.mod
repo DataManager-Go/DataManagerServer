@@ -13,7 +13,7 @@ require (
 	github.com/fatih/color v1.10.0
 	github.com/gabriel-vasile/mimetype v1.1.2
 	github.com/gorilla/mux v1.8.0
-	github.com/h2non/filetype v1.1.0
+	github.com/h2non/filetype v1.1.1
 	github.com/jackc/pgproto3/v2 v2.0.7 // indirect
 	github.com/jinzhu/gorm v1.9.16 // indirect
 	github.com/klauspost/compress v1.11.7 // indirect
