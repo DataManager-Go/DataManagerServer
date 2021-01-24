@@ -181,7 +181,7 @@ func (user *User) GetFileCount(db *gorm.DB) (int64, error) {
 func (user *User) GetTotalFilesize(db *gorm.DB) (int64, error) {
 	var c int64
 
-	rows, err := db.Table("files").Select("sum(file_size)").Where(&File{UserID: user.ID}).Rows()
+	rows, err := db.Debug().Table("files").Select("sum(file_size)").Where(&File{UserID: user.ID}).Where("deleted_at is NULL").Rows()
 	if err != nil {
 		return 0, err
 	}
