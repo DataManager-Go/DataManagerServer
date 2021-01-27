@@ -26,7 +26,7 @@ require (
 	golang.org/x/text v0.3.5 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gorm.io/driver/postgres v1.0.6
+	gorm.io/driver/postgres v1.0.7
 	gorm.io/driver/sqlite v1.1.4
-	gorm.io/gorm v1.20.11
+	gorm.io/gorm v1.20.12
 )
