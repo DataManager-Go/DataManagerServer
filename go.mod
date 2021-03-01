@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	filippo.io/age v1.0.0-beta7 // indirect
-	github.com/DataManager-Go/libdatamanager v1.4.0
+	github.com/DataManager-Go/libdatamanager v1.4.1
 	github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28
 	github.com/JojiiOfficial/gaw v1.2.8
 	github.com/JojiiOfficial/shred v1.2.1
