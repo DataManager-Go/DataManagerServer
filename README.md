@@ -1,3 +1,5 @@
+# Deprecated
+Use the new version: https://github.com/DataManager-Go/DataVault <br>
 # DataManager
 A data storing, managing and sharing solution for you or your business. Upload files to a server (this repository) using the [CLI Client](https://github.com/Yukaru-san/DataManager_Client) or the [GUI Client](https://github.com/DataManager-Go/DataManagerGUI). This stores it and allows sharing via a preview html page.
 
